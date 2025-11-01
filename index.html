@@ -10,6 +10,9 @@
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <meta name="theme-color" content="#5a6ff0">
 
+  <!-- JSZip für Export/Import -->
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+
   <style>
     :root{
       --bg:#fffaf3;
@@ -264,8 +267,11 @@
           <div id="progressBadge" class="progress-badge empty">0 von 26 Buchstaben aufgenommen</div>
           <p class="muted">Tippe einen Buchstaben an, um ihn aufzunehmen. Deine Aufnahmen werden <b>nur lokal</b> gespeichert.</p>
           <div id="statusGrid" class="status-grid" aria-label="Aufnahmestatus"></div>
-          <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
-            <button id="clearAll" class="btn danger">Alle Aufnahmen löschen</button>
+          <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+            <button id="exportBtn" class="btn secondary">📦 Exportieren</button>
+            <button id="importBtn" class="btn secondary">📥 Importieren</button>
+            <input type="file" id="importFile" accept=".zip" style="display:none">
+            <button id="clearAll" class="btn danger">Alle löschen</button>
             <span class="muted">Mikrofon benötigt https/localhost.</span>
           </div>
         </div>
@@ -661,6 +667,122 @@
         updateStatusGridFromDB();
         updateUIForRecordingState();
         if(currentLetter) selectLetter(currentLetter);
+      }
+    });
+
+    // ——————————————————————————————————————————
+    // Export/Import
+    // ——————————————————————————————————————————
+    document.getElementById('exportBtn').addEventListener('click', async ()=>{
+      try{
+        const keys = await idbKeys();
+        const audioKeys = keys.filter(k => k.startsWith('audio-'));
+
+        if(audioKeys.length === 0){
+          alert('Keine Aufnahmen zum Exportieren vorhanden.');
+          return;
+        }
+
+        const zip = new JSZip();
+
+        // Alle Aufnahmen zur ZIP hinzufügen
+        for(const key of audioKeys){
+          const blob = await idbGet(key);
+          if(blob){
+            // Dateiname: A.webm, B.webm, etc.
+            const letter = key.replace('audio-', '');
+            const extension = blob.type.includes('webm') ? 'webm' :
+                            blob.type.includes('ogg') ? 'ogg' :
+                            blob.type.includes('mp4') ? 'mp4' : 'audio';
+            zip.file(`${letter}.${extension}`, blob);
+          }
+        }
+
+        // ZIP generieren und herunterladen
+        const content = await zip.generateAsync({type: 'blob'});
+        const url = URL.createObjectURL(content);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `abc-abenteuer-aufnahmen-${new Date().toISOString().split('T')[0]}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+
+        alert(`✅ ${audioKeys.length} Aufnahmen erfolgreich exportiert!`);
+      }catch(e){
+        console.error('Export fehlgeschlagen:', e);
+        alert('❌ Export fehlgeschlagen: ' + e.message);
+      }
+    });
+
+    document.getElementById('importBtn').addEventListener('click', ()=>{
+      document.getElementById('importFile').click();
+    });
+
+    document.getElementById('importFile').addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file){
+        return;
+      }
+
+      try{
+        const zip = new JSZip();
+        const contents = await zip.loadAsync(file);
+
+        let importedCount = 0;
+        let errorCount = 0;
+
+        // Durch alle Dateien in der ZIP iterieren
+        for(const [filename, zipEntry] of Object.entries(contents.files)){
+          // Ignoriere Ordner und versteckte Dateien
+          if(zipEntry.dir || filename.startsWith('__MACOSX') || filename.startsWith('.')){
+            continue;
+          }
+
+          // Extrahiere Buchstaben aus Dateinamen (z.B. "A.webm" -> "A")
+          const letter = filename.split('.')[0].toUpperCase();
+
+          // Validierung: Muss ein einzelner Buchstabe A-Z sein
+          if(!/^[A-Z]$/.test(letter)){
+            console.warn(`Überspringe ungültige Datei: ${filename}`);
+            errorCount++;
+            continue;
+          }
+
+          // Blob aus ZIP extrahieren
+          const blob = await zipEntry.async('blob');
+
+          // Validierung: Muss Audio-Datei sein
+          if(!blob.type.startsWith('audio/') && !filename.match(/\.(webm|ogg|mp3|mp4|m4a|wav)$/i)){
+            console.warn(`Überspringe Nicht-Audio-Datei: ${filename}`);
+            errorCount++;
+            continue;
+          }
+
+          // In IndexedDB speichern
+          await idbSet('audio-' + letter, blob);
+          importedCount++;
+        }
+
+        // UI aktualisieren
+        updateStatusGridFromDB();
+        updateUIForRecordingState();
+        if(currentLetter) selectLetter(currentLetter);
+
+        // Reset file input
+        e.target.value = '';
+
+        // Feedback
+        if(importedCount > 0){
+          alert(`✅ ${importedCount} Aufnahmen erfolgreich importiert!${errorCount > 0 ? `\n⚠️ ${errorCount} Dateien übersprungen.` : ''}`);
+        }else{
+          alert('❌ Keine gültigen Aufnahmen in der ZIP-Datei gefunden.');
+        }
+      }catch(e){
+        console.error('Import fehlgeschlagen:', e);
+        alert('❌ Import fehlgeschlagen: ' + e.message);
+        e.target.value = '';
       }
     });
 
