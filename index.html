@@ -566,6 +566,9 @@
       // Fortschrittsanzeige in Einstellungen
       elProgressBadge.textContent = `${recordedCount} von 26 Buchstaben aufgenommen`;
       elProgressBadge.classList.toggle('empty', recordedCount === 0);
+
+      // Buchstaben-Buttons im Preview-Modus aktualisieren
+      updateLetterButtons();
     }
 
     // "Jetzt Aufnahmen machen" Button
@@ -665,11 +668,21 @@
         b.textContent=ch;
         b.setAttribute('data-letter',ch);
         b.setAttribute('aria-label', 'Buchstabe ' + ch);
-        b.addEventListener('click', onGuess);
+        b.addEventListener('click', onLetterClick);
         elLetters.appendChild(b);
       });
     }
     renderLetterGrid();
+
+    // Buchstaben-Buttons basierend auf verfügbaren Aufnahmen aktivieren/deaktivieren
+    async function updateLetterButtons(){
+      const keys = await idbKeys();
+      const hasSet = new Set(keys.filter(k=>k.startsWith('audio-')).map(k=> k.replace('audio-','')));
+      document.querySelectorAll('.btn-letter').forEach(btn => {
+        const letter = btn.getAttribute('data-letter');
+        btn.disabled = !hasSet.has(letter);
+      });
+    }
 
     // Status-Grid für Einstellungen
     function renderStatusGrid(hasSet=new Set()){
@@ -967,10 +980,31 @@
       document.querySelectorAll('.btn-letter').forEach(b=> b.disabled=false);
     }
 
-    async function onGuess(e){
-      if(!game || game.busy) return;
-      const guess = e.currentTarget.getAttribute('data-letter');
+    // Haupt-Handler für Buchstaben-Klick
+    async function onLetterClick(e){
+      const letter = e.currentTarget.getAttribute('data-letter');
       const btn = e.currentTarget;
+
+      // Preview-Modus: Kein Spiel läuft, Sound abspielen
+      if(!game){
+        // Buchstaben-Animation beim Klick
+        btn.classList.add('letter-bounce');
+        setTimeout(()=> btn.classList.remove('letter-bounce'), 500);
+
+        // Klick-Sound
+        playClickSound();
+
+        // Audio abspielen
+        const blob = await idbGet('audio-' + letter);
+        if(!blob) return;
+        const url = URL.createObjectURL(blob);
+        const audio = new Audio(url);
+        await audio.play().catch(()=>{});
+        return;
+      }
+
+      // Spiel-Modus: Normale Guess-Logik
+      if(game.busy) return;
 
       // Klick-Sperre für die Dauer der Animation
       game.busy=true;
@@ -982,7 +1016,7 @@
       // Klick-Sound
       playClickSound();
 
-      const correct = guess === game.target;
+      const correct = letter === game.target;
       if(correct) game.ok++; else game.bad++;
       elOk.textContent = game.ok; elBad.textContent = game.bad;
       const progress = Math.min(100, Math.round(((game.round) / game.rounds)*100));
@@ -1031,6 +1065,9 @@
       elHud.classList.add('hidden');
       elModal.classList.remove('hidden');
       game=null;
+
+      // Zurück in Preview-Modus: Buttons basierend auf Aufnahmen aktivieren
+      updateLetterButtons();
     }
 
     // ——————————————————————————————————————————
