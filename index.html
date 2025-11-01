@@ -347,7 +347,7 @@
 
   <div id="overlayBad" class="overlay hidden" role="alert" aria-live="assertive">
     <div class="panel monster">
-      <!-- „Generiertes“ Monster als Inline‑SVG -->
+      <!-- „Generiertes" Monster als Inline‑SVG -->
       <svg viewBox="0 0 300 300" width="240" height="240" aria-label="Monster">
         <defs>
           <filter id="shadow"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity=".25"/></filter>
@@ -374,7 +374,9 @@
           <ellipse cx="190" cy="260" rx="26" ry="10" fill="#6a52ff"/>
         </g>
       </svg>
-      <div class="tag">Fast! Versuch’s nochmal 👻</div>
+      <div class="tag">Fast! Versuch's nochmal 👻</div>
+      <div style="margin-top:16px; font-size:18px; color:#6b7896;">Das war:</div>
+      <div id="correctLetter" style="font-size:72px; font-weight:900; color:var(--brand); margin-top:8px; text-shadow:0 3px 8px rgba(124,58,237,.3);">A</div>
     </div>
   </div>
 
@@ -504,6 +506,7 @@
     const elHud = document.getElementById('hud');
     const elOverlayGood = document.getElementById('overlayGood');
     const elOverlayBad = document.getElementById('overlayBad');
+    const elCorrectLetter = document.getElementById('correctLetter');
     const elModal = document.getElementById('modal');
     const elResultTitle = document.getElementById('resultTitle');
     const elResultText = document.getElementById('resultText');
@@ -521,6 +524,12 @@
       });
       document.getElementById('spiel').classList.toggle('hidden', tabName !== 'spiel');
       document.getElementById('einstellungen').classList.toggle('hidden', tabName !== 'einstellungen');
+
+      // Beim Wechsel zu Einstellungen: UI aktualisieren
+      if (tabName === 'einstellungen') {
+        updateStatusGridFromDB();
+        updateUIForRecordingState();
+      }
     }
 
     tabsContainer.addEventListener('click', (e) => {
@@ -987,7 +996,7 @@
       }
 
       // Feedback zeigen
-      await showFeedback(correct);
+      await showFeedback(correct, game.target);
 
       // nächste Runde
       await nextRound();
@@ -997,8 +1006,10 @@
       el.classList.remove('hidden');
       return new Promise(res=> setTimeout(()=> { el.classList.add('hidden'); res(); }, 1200));
     }
-    function showFeedback(ok){
+    function showFeedback(ok, correctLetter){
       if(ok) return show(elOverlayGood);
+      // Bei Fehler: Korrekten Buchstaben anzeigen
+      elCorrectLetter.textContent = correctLetter;
       return show(elOverlayBad);
     }
 
@@ -1039,11 +1050,6 @@
       await updateStatusGridFromDB();
     })();
 
-    // Kleine Helfer: Tab-Switch Buttons
-    document.querySelector('button[data-tab="einstellungen"]').addEventListener('click', ()=> {
-      // Beim Wechsel zu Einstellungen die Statusanzeige aktualisieren
-      updateStatusGridFromDB();
-    });
 
     // PWA Service Worker Registrierung
     if ('serviceWorker' in navigator) {
