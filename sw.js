@@ -1,9 +1,9 @@
 const CACHE_NAME = 'abc-abenteuer-cache-v2';
 const FILES_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/sw.js'
+  './',
+  './index.html',
+  './manifest.json',
+  './sw.js'
 ];
 
 // 1. Installieren: Cache öffnen und App-Shell-Dateien hinzufügen
