@@ -15,18 +15,19 @@
 
   <style>
     :root{
-      --bg:#fffaf3;
-      --ink:#1d2340;
-      --muted:#7a8599;
-      --brand:#5a6ff0;
-      --brand-2:#ff8a00;
-      --ok:#18b87a;
-      --bad:#ff4d5a;
+      --bg:#fff8e7;
+      --ink:#2d1b4e;
+      --muted:#6b7896;
+      --brand:#7c3aed;
+      --brand-2:#fb923c;
+      --brand-3:#f472b6;
+      --ok:#22c55e;
+      --bad:#ef4444;
       --surface:#ffffff;
       --card:#ffffff;
-      --shadow: 0 10px 30px rgba(20,32,64,.12);
-      --radius:16px;
-      --radius-sm:12px;
+      --shadow: 0 12px 40px rgba(124,58,237,.15);
+      --radius:20px;
+      --radius-sm:14px;
     }
     *{box-sizing:border-box}
     html,body{height:100%}
@@ -39,19 +40,21 @@
     }
     header{
       position:sticky; top:0; z-index:5;
-      background:linear-gradient(90deg,var(--brand),#8a7dff 60%, #ff8a00);
-      color:#fff; padding:14px 18px;
+      background:linear-gradient(90deg,var(--brand),#a78bfa 50%, var(--brand-2));
+      color:#fff; padding:16px 20px;
       display:flex; align-items:center; gap:12px;
-      box-shadow:0 6px 18px rgba(20,32,64,.18);
+      box-shadow:0 8px 24px rgba(124,58,237,.25);
     }
     header h1{font-size:20px; margin:0; letter-spacing:.3px}
     .badge{font-weight:700; background:rgba(255,255,255,.18); padding:6px 10px; border-radius:999px; font-size:12px}
     main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
     .tabs{display:flex; gap:10px; margin-bottom:14px}
     .tabs button{
-      border:0; padding:10px 14px; border-radius:999px; background:#eef0ff; color:#243; cursor:pointer; font-weight:700;
+      border:0; padding:12px 20px; border-radius:999px; background:#f3e8ff; color:var(--ink); cursor:pointer; font-weight:800; font-size:15px;
+      transition:all .2s ease;
     }
-    .tabs button.active{background:#1b2055; color:#fff}
+    .tabs button:hover{background:#e9d5ff; transform:scale(1.02)}
+    .tabs button.active{background:var(--brand); color:#fff; box-shadow:0 4px 12px rgba(124,58,237,.3)}
     .card{
       background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px;
     }
@@ -60,13 +63,14 @@
       margin-top:12px;
     }
     .btn-letter{
-      aspect-ratio:1/1; border:0; border-radius:18px; background:#f8f9ff;
-      font-size:34px; font-weight:900; color:#111;
-      cursor:pointer; box-shadow: inset 0 0 0 2px #e3e7ff;
-      transition:transform .06s ease;
+      aspect-ratio:1/1; border:0; border-radius:20px; background:linear-gradient(145deg,#faf5ff,#f3e8ff);
+      font-size:42px; font-weight:900; color:var(--ink);
+      cursor:pointer; box-shadow: 0 4px 12px rgba(124,58,237,.12), inset 0 0 0 3px #e9d5ff;
+      transition:all .15s ease;
     }
-    .btn-letter:active{transform:scale(.98)}
-    .btn-letter[disabled]{opacity:.45; cursor:not-allowed}
+    .btn-letter:hover{transform:translateY(-2px); box-shadow: 0 8px 20px rgba(124,58,237,.2), inset 0 0 0 3px var(--brand-3)}
+    .btn-letter:active{transform:scale(.96)}
+    .btn-letter[disabled]{opacity:.4; cursor:not-allowed; filter:grayscale(.6)}
     .hud{
       display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px; margin:8px 0 14px;
     }
@@ -81,11 +85,15 @@
     .progress > i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--brand),#7b84ff,#ff8a00); transition:width .3s ease}
     .controls{display:flex; gap:8px; flex-wrap:wrap}
     .btn{
-      border:0; padding:10px 14px; border-radius:12px; font-weight:800; cursor:pointer;
-      background:#1b2055; color:#fff; box-shadow:0 6px 16px rgba(27,32,85,.18);
+      border:0; padding:12px 18px; border-radius:14px; font-weight:800; cursor:pointer; font-size:15px;
+      background:var(--brand); color:#fff; box-shadow:0 6px 18px rgba(124,58,237,.25);
+      transition:all .2s ease;
     }
-    .btn.secondary{background:#eef0ff; color:#1b2055}
-    .btn.ghost{background:transparent; box-shadow:none; color:#1b2055}
+    .btn:hover{transform:translateY(-1px); box-shadow:0 8px 24px rgba(124,58,237,.35)}
+    .btn:active{transform:translateY(0)}
+    .btn.secondary{background:#f3e8ff; color:var(--brand)}
+    .btn.secondary:hover{background:#e9d5ff}
+    .btn.ghost{background:transparent; box-shadow:none; color:var(--brand)}
     .btn.danger{background:var(--bad)}
     .muted{color:var(--muted); font-size:14px}
     .hidden{display:none !important}
@@ -95,22 +103,28 @@
     @media (max-width: 980px){ .settings-wrap{grid-template-columns:1fr} }
     .status-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(54px,1fr)); gap:10px}
     .status-tile{
-      background:#f6f7ff; border-radius:14px; text-align:center; padding:10px 6px; position:relative; cursor:pointer; user-select:none;
-      box-shadow: inset 0 0 0 2px #e3e7ff;
-      transition:transform .06s ease;
-      font-weight:900; font-size:26px; color:#101223;
+      background:linear-gradient(145deg,#faf5ff,#f3e8ff);
+      border-radius:16px; text-align:center; padding:12px 6px; position:relative; cursor:pointer; user-select:none;
+      box-shadow: 0 2px 8px rgba(124,58,237,.1), inset 0 0 0 2px #e9d5ff;
+      transition:all .15s ease;
+      font-weight:900; font-size:28px; color:var(--ink);
     }
+    .status-tile:hover{transform:translateY(-2px); box-shadow: 0 4px 12px rgba(124,58,237,.2), inset 0 0 0 2px var(--brand-3)}
     .status-tile:active{transform:scale(.98)}
-    .status-dot{position:absolute; top:6px; right:6px; width:10px; height:10px; border-radius:999px; background:#c3c7dd}
-    .status-tile.has{box-shadow: inset 0 0 0 3px #c6f4df}
-    .status-tile.has .status-dot{background:var(--ok)}
+    .status-dot{position:absolute; top:8px; right:8px; width:12px; height:12px; border-radius:999px; background:#d1d5db; box-shadow:inset 0 1px 2px rgba(0,0,0,.1)}
+    .status-tile.has{box-shadow: 0 2px 8px rgba(34,197,94,.15), inset 0 0 0 3px #86efac}
+    .status-tile.has .status-dot{background:var(--ok); box-shadow:0 0 8px rgba(34,197,94,.4)}
     .recorder{
-      position:sticky; top:86px; align-self:start; background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px;
+      position:sticky; top:86px; align-self:start; background:linear-gradient(145deg,#faf5ff,var(--surface));
+      border-radius:var(--radius); box-shadow:var(--shadow); padding:18px;
+      border:2px solid #f3e8ff;
     }
-    .recorder h3{margin:0 0 10px}
+    .recorder h3{margin:0 0 10px; color:var(--ink)}
     .rec-letter{
-      font-size:56px; font-weight:900; display:inline-flex; align-items:center; justify-content:center;
-      width:84px; height:84px; border-radius:18px; background:#f8f9ff; box-shadow: inset 0 0 0 2px #e3e7ff;
+      font-size:64px; font-weight:900; display:inline-flex; align-items:center; justify-content:center;
+      width:92px; height:92px; border-radius:20px;
+      background:linear-gradient(145deg,#fff,#f3e8ff);
+      box-shadow: 0 4px 16px rgba(124,58,237,.15), inset 0 0 0 3px #e9d5ff;
     }
     .timer{font-variant-numeric:tabular-nums; font-weight:700}
     .blink{animation:blink 1s steps(1) infinite}
@@ -133,6 +147,23 @@
       0%{transform:scale(.8) rotate(-8deg)}
       50%{transform:scale(1.06) rotate(6deg)}
       100%{transform:scale(1) rotate(0)}
+    }
+
+    /* Buchstaben-Animation beim Klick */
+    .letter-bounce{animation:letterBounce .5s ease both}
+    @keyframes letterBounce{
+      0%{transform:scale(1)}
+      25%{transform:scale(1.15) rotate(-5deg)}
+      50%{transform:scale(.95) rotate(5deg)}
+      75%{transform:scale(1.05) rotate(-2deg)}
+      100%{transform:scale(1) rotate(0)}
+    }
+
+    /* Puls-Animation für Buchstaben bei Spielstart */
+    .letter-pulse{animation:letterPulse 1.2s ease-in-out infinite}
+    @keyframes letterPulse{
+      0%, 100%{transform:scale(1); opacity:1}
+      50%{transform:scale(1.05); opacity:.85}
     }
 
     /* Regenbogen Zeichnen */
@@ -178,28 +209,29 @@
 
     /* Empty State Info Box */
     .info-box{
-      background:linear-gradient(135deg,#fff5e6,#fff);
-      border:2px solid #ffb84d;
+      background:linear-gradient(135deg,#fef3c7,#fef9e7);
+      border:3px solid var(--brand-2);
       border-radius:var(--radius);
-      padding:20px;
+      padding:24px;
       margin-bottom:16px;
       text-align:center;
+      box-shadow:0 6px 20px rgba(251,146,60,.15);
     }
-    .info-box h3{margin:0 0 8px; color:#1b2055; font-size:18px}
-    .info-box p{margin:8px 0; color:#5a5a5a; line-height:1.5}
-    .info-box .btn{margin-top:10px}
+    .info-box h3{margin:0 0 10px; color:var(--ink); font-size:20px}
+    .info-box p{margin:10px 0; color:var(--muted); line-height:1.6; font-size:15px}
+    .info-box .btn{margin-top:12px}
     .progress-badge{
       display:inline-block;
-      background:linear-gradient(135deg,#5a6ff0,#8a7dff);
+      background:linear-gradient(135deg,var(--brand),#a78bfa);
       color:#fff;
-      padding:8px 16px;
+      padding:10px 20px;
       border-radius:999px;
-      font-weight:800;
-      font-size:16px;
-      margin-bottom:12px;
-      box-shadow:0 4px 12px rgba(90,111,240,.25);
+      font-weight:900;
+      font-size:17px;
+      margin-bottom:14px;
+      box-shadow:0 6px 16px rgba(124,58,237,.3);
     }
-    .progress-badge.empty{background:#e3e7ff; color:#1b2055}
+    .progress-badge.empty{background:#f3e8ff; color:var(--brand); border:2px solid #e9d5ff}
 
     footer{max-width:1100px; margin:-52px auto 32px; padding:0 16px; color:#6b7280; font-size:13px}
 
@@ -381,6 +413,78 @@
     // ——————————————————————————————————————————
     // ABC-Abenteuer – Logik
     // ——————————————————————————————————————————
+
+    // ——————————————————————————————————————————
+    // Soundeffekte (Web Audio API)
+    // ——————————————————————————————————————————
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+
+    function initAudioContext(){
+      if(!audioCtx) audioCtx = new AudioContext();
+      return audioCtx;
+    }
+
+    // Erfolgs-Sound: Fröhlicher aufsteigender Ton
+    function playSuccessSound(){
+      const ctx = initAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+      osc.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.1); // G5
+      osc.frequency.exponentialRampToValueAtTime(1046.50, ctx.currentTime + 0.2); // C6
+
+      gain.gain.setValueAtTime(0.3, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.4);
+    }
+
+    // Fehler-Sound: Sanfter absteigender Ton
+    function playErrorSound(){
+      const ctx = initAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(329.63, ctx.currentTime); // E4
+      osc.frequency.exponentialRampToValueAtTime(246.94, ctx.currentTime + 0.15); // B3
+
+      gain.gain.setValueAtTime(0.2, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.3);
+    }
+
+    // Klick-Sound: Kurzer Feedback-Ton beim Buchstaben-Klick
+    function playClickSound(){
+      const ctx = initAudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
+
+      gain.gain.setValueAtTime(0.15, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
+
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.08);
+    }
+
     const LETTERS = Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
     const elLetters = document.getElementById('letters');
     const elStatusGrid = document.getElementById('statusGrid');
@@ -857,13 +961,30 @@
     async function onGuess(e){
       if(!game || game.busy) return;
       const guess = e.currentTarget.getAttribute('data-letter');
+      const btn = e.currentTarget;
+
       // Klick-Sperre für die Dauer der Animation
       game.busy=true;
+
+      // Buchstaben-Animation beim Klick
+      btn.classList.add('letter-bounce');
+      setTimeout(()=> btn.classList.remove('letter-bounce'), 500);
+
+      // Klick-Sound
+      playClickSound();
+
       const correct = guess === game.target;
       if(correct) game.ok++; else game.bad++;
       elOk.textContent = game.ok; elBad.textContent = game.bad;
       const progress = Math.min(100, Math.round(((game.round) / game.rounds)*100));
       elBar.style.width = progress + '%';
+
+      // Soundeffekte für richtig/falsch
+      if(correct){
+        playSuccessSound();
+      }else{
+        playErrorSound();
+      }
 
       // Feedback zeigen
       await showFeedback(correct);
