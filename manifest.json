@@ -1,0 +1,9 @@
+{
+  "name": "ABC-Abenteuer – Hör & Finde",
+  "short_name": "ABC-Abenteuer",
+  "description": "Ein Lernspiel für Kinder, um Buchstaben durch Hören zu finden.",
+  "start_url": "/alphabet.html",
+  "display": "standalone",
+  "background_color": "#fffaf3",
+  "theme_color": "#5a6ff0"
+}

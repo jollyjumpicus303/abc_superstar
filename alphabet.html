@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ABC‑Abenteuer – Hör & Finde (Prototyp)</title>
+
+  <!-- PWA Manifest & Theme -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#5a6ff0">
+
+  <style>
+    :root{
+      --bg:#fffaf3;
+      --ink:#1d2340;
+      --muted:#7a8599;
+      --brand:#5a6ff0;
+      --brand-2:#ff8a00;
+      --ok:#18b87a;
+      --bad:#ff4d5a;
+      --surface:#ffffff;
+      --card:#ffffff;
+      --shadow: 0 10px 30px rgba(20,32,64,.12);
+      --radius:16px;
+      --radius-sm:12px;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:linear-gradient(180deg,var(--bg),#fff);
+      color:var(--ink);
+      font-family: ui-rounded, "SF Pro Rounded", "Segoe UI", "Arial Rounded MT Bold", system-ui, -apple-system, Arial, sans-serif;
+      line-height:1.4;
+    }
+    header{
+      position:sticky; top:0; z-index:5;
+      background:linear-gradient(90deg,var(--brand),#8a7dff 60%, #ff8a00);
+      color:#fff; padding:14px 18px;
+      display:flex; align-items:center; gap:12px;
+      box-shadow:0 6px 18px rgba(20,32,64,.18);
+    }
+    header h1{font-size:20px; margin:0; letter-spacing:.3px}
+    .badge{font-weight:700; background:rgba(255,255,255,.18); padding:6px 10px; border-radius:999px; font-size:12px}
+    main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
+    .tabs{display:flex; gap:10px; margin-bottom:14px}
+    .tabs button{
+      border:0; padding:10px 14px; border-radius:999px; background:#eef0ff; color:#243; cursor:pointer; font-weight:700;
+    }
+    .tabs button.active{background:#1b2055; color:#fff}
+    .card{
+      background:var(--card); border-radius:var(--radius); box-shadow:var(--shadow); padding:18px;
+    }
+    .grid-letters{
+      display:grid; grid-template-columns:repeat(auto-fit,minmax(64px,1fr)); gap:12px;
+      margin-top:12px;
+    }
+    .btn-letter{
+      aspect-ratio:1/1; border:0; border-radius:18px; background:#f8f9ff;
+      font-size:34px; font-weight:900; color:#111;
+      cursor:pointer; box-shadow: inset 0 0 0 2px #e3e7ff;
+      transition:transform .06s ease;
+    }
+    .btn-letter:active{transform:scale(.98)}
+    .btn-letter[disabled]{opacity:.45; cursor:not-allowed}
+    .hud{
+      display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px; margin:8px 0 14px;
+    }
+    .score{
+      display:flex; gap:16px; font-weight:800; color:#1b2055;
+    }
+    .score .ok{color:var(--ok)} .score .bad{color:var(--bad)}
+    .progress{
+      height:10px; background:#eef0ff; border-radius:999px; overflow:hidden;
+      box-shadow: inset 0 1px 0 rgba(0,0,0,.05);
+    }
+    .progress > i{display:block; height:100%; width:0%; background:linear-gradient(90deg,var(--brand),#7b84ff,#ff8a00); transition:width .3s ease}
+    .controls{display:flex; gap:8px; flex-wrap:wrap}
+    .btn{
+      border:0; padding:10px 14px; border-radius:12px; font-weight:800; cursor:pointer;
+      background:#1b2055; color:#fff; box-shadow:0 6px 16px rgba(27,32,85,.18);
+    }
+    .btn.secondary{background:#eef0ff; color:#1b2055}
+    .btn.ghost{background:transparent; box-shadow:none; color:#1b2055}
+    .btn.danger{background:var(--bad)}
+    .muted{color:var(--muted); font-size:14px}
+    .hidden{display:none !important}
+
+    /* Einstellungen */
+    .settings-wrap{display:grid; grid-template-columns:1fr 370px; gap:16px}
+    @media (max-width: 980px){ .settings-wrap{grid-template-columns:1fr} }
+    .status-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(54px,1fr)); gap:10px}
+    .status-tile{
+      background:#f6f7ff; border-radius:14px; text-align:center; padding:10px 6px; position:relative; cursor:pointer; user-select:none;
+      box-shadow: inset 0 0 0 2px #e3e7ff;
+      transition:transform .06s ease;
+      font-weight:900; font-size:26px; color:#101223;
+    }
+    .status-tile:active{transform:scale(.98)}
+    .status-dot{position:absolute; top:6px; right:6px; width:10px; height:10px; border-radius:999px; background:#c3c7dd}
+    .status-tile.has{box-shadow: inset 0 0 0 3px #c6f4df}
+    .status-tile.has .status-dot{background:var(--ok)}
+    .recorder{
+      position:sticky; top:86px; align-self:start; background:var(--surface); border-radius:var(--radius); box-shadow:var(--shadow); padding:16px;
+    }
+    .recorder h3{margin:0 0 10px}
+    .rec-letter{
+      font-size:56px; font-weight:900; display:inline-flex; align-items:center; justify-content:center;
+      width:84px; height:84px; border-radius:18px; background:#f8f9ff; box-shadow: inset 0 0 0 2px #e3e7ff;
+    }
+    .timer{font-variant-numeric:tabular-nums; font-weight:700}
+    .blink{animation:blink 1s steps(1) infinite}
+    @keyframes blink{50%{opacity:.35}}
+
+    /* Overlays (Regenbogen, Monster, Pokal) */
+    .overlay{
+      position:fixed; inset:0; display:grid; place-items:center; background:rgba(255,255,255,.0);
+      pointer-events:none; z-index:50;
+    }
+    .overlay .panel{
+      display:grid; gap:12px; place-items:center;
+      padding:12px; border-radius:20px;
+      text-align:center; font-weight:900; font-size:20px; color:#1b2055;
+      text-shadow:0 2px 0 #fff;
+    }
+    .tag{font-size:12px; font-weight:800; padding:4px 8px; border-radius:999px; background:rgba(0,0,0,.06)}
+    .tada{animation:tada .8s ease both}
+    @keyframes tada{
+      0%{transform:scale(.8) rotate(-8deg)}
+      50%{transform:scale(1.06) rotate(6deg)}
+      100%{transform:scale(1) rotate(0)}
+    }
+
+    /* Regenbogen Zeichnen */
+    .rainbow svg path{
+      stroke-linecap:round;
+      stroke-dasharray:1; stroke-dashoffset:1;
+      animation:draw 900ms ease forwards;
+    }
+    .rainbow svg path:nth-child(1){animation-delay:0ms}
+    .rainbow svg path:nth-child(2){animation-delay:60ms}
+    .rainbow svg path:nth-child(3){animation-delay:120ms}
+    .rainbow svg path:nth-child(4){animation-delay:180ms}
+    .rainbow svg path:nth-child(5){animation-delay:240ms}
+    .rainbow svg path:nth-child(6){animation-delay:300ms}
+    @keyframes draw { to { stroke-dashoffset:0 } }
+
+    /* Monster Wackeln */
+    .monster svg .wiggle{animation:wiggle 680ms ease-in-out infinite}
+    .monster svg .blink-eye{transform-origin:center; animation:blinkEye 3.2s infinite}
+    @keyframes wiggle{
+      0%{transform:rotate(-2deg) translateY(0)}
+      50%{transform:rotate(2deg) translateY(-2px)}
+      100%{transform:rotate(-2deg) translateY(0)}
+    }
+    @keyframes blinkEye{
+      0%,10%,100%{transform:scaleY(1)}
+      11%,12%{transform:scaleY(.1)}
+      13%,100%{transform:scaleY(1)}
+    }
+
+    /* Modal */
+    .modal{position:fixed; inset:0; display:grid; place-items:center; z-index:60; background:rgba(0,0,0,.25)}
+    .dialog{background:#fff; border-radius:24px; box-shadow:var(--shadow);
+      width:min(560px,92vw); padding:20px; text-align:center}
+    .dialog h3{margin:.4rem 0}
+    .trophy{display:block; margin:6px auto 12px; width:160px; height:auto}
+    .result-line{font-weight:900; font-size:18px}
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce){
+      .rainbow svg path,.tada,.monster svg .wiggle{animation:none !important}
+    }
+
+    footer{max-width:1100px; margin:-52px auto 32px; padding:0 16px; color:#6b7280; font-size:13px}
+  </style>
+</head>
+<body>
+  <header>
+    <h1>ABC‑Abenteuer · Hör &amp; Finde</h1>
+    <span class="badge">Prototyp</span>
+  </header>
+
+  <main>
+    <nav class="tabs">
+      <button class="active" data-tab="spiel">Spiel</button>
+      <button data-tab="einstellungen">Einstellungen</button>
+    </nav>
+
+    <!-- SPIEL -->
+    <section id="spiel" class="card">
+      <div id="setup">
+        <p class="muted">Wähle die Rundenzahl und starte. Das Spiel nutzt nur Buchstaben, für die <b>bereits Aufnahmen</b> vorhanden sind.</p>
+        <div class="controls" style="margin:10px 0 6px">
+          <label>Runden:
+            <input id="rounds" type="range" min="5" max="26" value="10" step="1" style="vertical-align:middle">
+            <b><span id="roundsOut">10</span></b>
+          </label>
+          <button id="btnStart" class="btn">Spiel starten</button>
+          <button id="btnTestAudio" class="btn secondary" title="Letzten Buchstaben nochmals anhören" disabled>Nochmal anhören</button>
+        </div>
+      </div>
+
+      <div id="hud" class="hud hidden">
+        <div class="score">
+          <span>Runde <b id="roundNow">1</b>/<b id="roundMax">10</b></span>
+          <span class="ok">Richtig: <b id="okCount">0</b></span>
+          <span class="bad">Falsch: <b id="badCount">0</b></span>
+        </div>
+        <div class="progress"><i id="bar"></i></div>
+      </div>
+
+      <div id="letters" class="grid-letters" aria-label="Buchstaben-Auswahl"></div>
+    </section>
+
+    <!-- EINSTELLUNGEN -->
+    <section id="einstellungen" class="card hidden">
+      <div class="settings-wrap">
+        <div>
+          <p><b>Einstellungen · Aufnahmen</b></p>
+          <p class="muted">Tippe einen Buchstaben an, um ihn aufzunehmen. Deine Aufnahmen werden <b>nur lokal</b> gespeichert.</p>
+          <div id="statusGrid" class="status-grid" aria-label="Aufnahmestatus"></div>
+          <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
+            <button id="clearAll" class="btn danger">Alle Aufnahmen löschen</button>
+            <span class="muted">Mikrofon benötigt https/localhost.</span>
+          </div>
+        </div>
+
+        <aside class="recorder">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px">
+            <div id="recLetter" class="rec-letter">A</div>
+            <div>
+              <h3 style="margin:.2rem 0">Aufnahme: <span id="recTitle">A</span></h3>
+              <div class="muted">Status: <b id="recStatus">Keine Aufnahme</b></div>
+            </div>
+          </div>
+          <div class="controls" style="margin:10px 0">
+            <button id="btnRec" class="btn">🎙️ Aufnehmen</button>
+            <button id="btnStop" class="btn secondary" disabled>⏹️ Stop</button>
+            <button id="btnPlay" class="btn secondary" disabled>▶️ Testen</button>
+            <button id="btnDelete" class="btn ghost" disabled>🗑️ Löschen</button>
+            <span class="timer" id="timer">00:00</span>
+          </div>
+          <div class="muted">Tipp: Spreche klar und kurz (z. B. „B“ oder „B – wie Ball“).</div>
+        </aside>
+      </div>
+    </section>
+  </main>
+
+  <!-- Overlays: Regenbogen / Monster -->
+  <div id="overlayGood" class="overlay hidden" role="alert" aria-live="assertive">
+    <div class="panel rainbow tada">
+      <!-- Regenbogen SVG -->
+      <svg viewBox="0 0 600 320" width="320" height="170" aria-hidden="true">
+        <path d="M60,280 A240,240 0 0 1 540,280" stroke="#ff3b30" stroke-width="26" fill="none" pathLength="1"></path>
+        <path d="M90,280 A210,210 0 0 1 510,280" stroke="#ff9500" stroke-width="26" fill="none" pathLength="1"></path>
+        <path d="M120,280 A180,180 0 0 1 480,280" stroke="#ffcc00" stroke-width="26" fill="none" pathLength="1"></path>
+        <path d="M150,280 A150,150 0 0 1 450,280" stroke="#34c759" stroke-width="26" fill="none" pathLength="1"></path>
+        <path d="M180,280 A120,120 0 0 1 420,280" stroke="#0bb1ff" stroke-width="26" fill="none" pathLength="1"></path>
+        <path d="M210,280 A90,90 0 0 1 390,280" stroke="#af52de" stroke-width="26" fill="none" pathLength="1"></path>
+      </svg>
+      <div class="tag">Super! 🎉</div>
+    </div>
+  </div>
+
+  <div id="overlayBad" class="overlay hidden" role="alert" aria-live="assertive">
+    <div class="panel monster">
+      <!-- „Generiertes“ Monster als Inline‑SVG -->
+      <svg viewBox="0 0 300 300" width="240" height="240" aria-label="Monster">
+        <defs>
+          <filter id="shadow"><feDropShadow dx="0" dy="3" stdDeviation="4" flood-color="#000" flood-opacity=".25"/></filter>
+        </defs>
+        <!-- Körper -->
+        <g class="wiggle" filter="url(#shadow)">
+          <ellipse cx="150" cy="170" rx="100" ry="110" fill="#7b5cff"/>
+          <!-- Hörner -->
+          <path d="M85,85 L105,30 L125,85" fill="#ff8a00"/>
+          <path d="M175,85 L195,30 L215,85" fill="#ff8a00"/>
+          <!-- Augen -->
+          <circle cx="115" cy="140" r="26" fill="#fff"/>
+          <circle cx="185" cy="140" r="26" fill="#fff"/>
+          <circle class="blink-eye" cx="115" cy="140" r="11" fill="#111"/>
+          <circle class="blink-eye" cx="185" cy="140" r="11" fill="#111"/>
+          <!-- Mund -->
+          <rect x="105" y="190" width="90" height="30" rx="14" fill="#111"/>
+          <!-- Zähne -->
+          <polygon points="115,190 125,210 135,190" fill="#fff"/>
+          <polygon points="145,190 155,210 165,190" fill="#fff"/>
+          <polygon points="175,190 185,210 195,190" fill="#fff"/>
+          <!-- Füße -->
+          <ellipse cx="110" cy="260" rx="26" ry="10" fill="#6a52ff"/>
+          <ellipse cx="190" cy="260" rx="26" ry="10" fill="#6a52ff"/>
+        </g>
+      </svg>
+      <div class="tag">Fast! Versuch’s nochmal 👻</div>
+    </div>
+  </div>
+
+  <!-- Ergebnis-Modal -->
+  <div id="modal" class="modal hidden" aria-modal="true" role="dialog">
+    <div class="dialog">
+      <svg class="trophy" viewBox="0 0 200 200" aria-hidden="true">
+        <!-- Einfacher Pokal -->
+        <g id="cup">
+          <rect x="80" y="130" width="40" height="20" fill="#a8875a"/>
+          <rect x="60" y="150" width="80" height="12" fill="#6b5438"/>
+          <path d="M70,55 h60 v50 a30,22 0 0 1 -60,0 z" fill="#d6b36a" stroke="#a8875a" stroke-width="3"/>
+          <path d="M70,55 h60 v8 h-60 z" fill="#e8c675"/>
+          <path d="M70,105 a30,22 0 0 0 60,0" fill="none" stroke="#855e2e" stroke-width="3" opacity=".35"/>
+          <!-- Henkel -->
+          <path d="M130,65 c25,0 30,30 5,38" stroke="#a8875a" stroke-width="6" fill="none"/>
+          <path d="M70,65 c-25,0 -30,30 -5,38" stroke="#a8875a" stroke-width="6" fill="none"/>
+          <!-- Stern -->
+          <polygon id="star" points="100,82 106,94 120,96 110,105 112,118 100,112 88,118 90,105 80,96 94,94" fill="#fff176" stroke="#d6b36a"/>
+        </g>
+      </svg>
+      <h3 id="resultTitle">Toll gemacht!</h3>
+      <p class="result-line"><span id="resultText">8 von 10 richtig</span></p>
+      <div class="controls" style="justify-content:center; margin-top:10px">
+        <button id="again" class="btn">Nochmal spielen</button>
+        <button id="closeModal" class="btn secondary">Schließen</button>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <p>Made for kids 💜 · Alle Daten bleiben auf diesem Gerät. | <span class="muted">Bei iOS/Safari evtl. „Mikrofon erlauben“ bestätigen.</span></p>
+  </footer>
+
+  <script>
+    // ——————————————————————————————————————————
+    // ABC-Abenteuer – Logik
+    // ——————————————————————————————————————————
+    const LETTERS = Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+    const elLetters = document.getElementById('letters');
+    const elStatusGrid = document.getElementById('statusGrid');
+    const elRecLetter = document.getElementById('recLetter');
+    const elRecTitle = document.getElementById('recTitle');
+    const elRecStatus = document.getElementById('recStatus');
+    const elBtnRec = document.getElementById('btnRec');
+    const elBtnStop = document.getElementById('btnStop');
+    const elBtnPlay = document.getElementById('btnPlay');
+    const elBtnDelete = document.getElementById('btnDelete');
+    const elTimer = document.getElementById('timer');
+    const elRoundNow = document.getElementById('roundNow');
+    const elRoundMax = document.getElementById('roundMax');
+    const elOk = document.getElementById('okCount');
+    const elBad = document.getElementById('badCount');
+    const elBar = document.getElementById('bar');
+    const elHud = document.getElementById('hud');
+    const elOverlayGood = document.getElementById('overlayGood');
+    const elOverlayBad = document.getElementById('overlayBad');
+    const elModal = document.getElementById('modal');
+    const elResultTitle = document.getElementById('resultTitle');
+    const elResultText = document.getElementById('resultText');
+    const elBtnStart = document.getElementById('btnStart');
+    const elBtnTestAudio = document.getElementById('btnTestAudio');
+    const elRounds = document.getElementById('rounds');
+    const elRoundsOut = document.getElementById('roundsOut');
+
+    // Tabs
+    const tabsContainer = document.querySelector('.tabs');
+    tabsContainer.addEventListener('click', (e) => {
+      const targetButton = e.target.closest('button');
+      if (!targetButton) return;
+
+      tabsContainer.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      targetButton.classList.add('active');
+
+      const tab = targetButton.dataset.tab;
+      document.getElementById('spiel').classList.toggle('hidden', tab !== 'spiel');
+      document.getElementById('einstellungen').classList.toggle('hidden', tab !== 'einstellungen');
+    });
+
+    // Rundenanzeige
+    elRounds.addEventListener('input', ()=> elRoundsOut.textContent = elRounds.value);
+
+    // ——————————————————————————————————————————
+    // IndexedDB (Aufnahmen)
+    // ——————————————————————————————————————————
+    const DB_NAME='abc-abenteuer-db';
+    const STORE='recordings';
+    let dbPromise = new Promise((resolve,reject)=>{
+      const req = indexedDB.open(DB_NAME,1);
+      req.onupgradeneeded = ()=> {
+        const db = req.result;
+        if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+      };
+      req.onsuccess = ()=> resolve(req.result);
+      req.onerror = ()=> reject(req.error);
+    });
+
+    function idbGet(key){
+      return dbPromise.then(db=> new Promise((res,rej)=>{
+        const tx = db.transaction(STORE,'readonly');
+        const st = tx.objectStore(STORE);
+        const r = st.get(key);
+        r.onsuccess = ()=> res(r.result || null);
+        r.onerror = ()=> rej(r.error);
+      }));
+    }
+    function idbSet(key,val){
+      return dbPromise.then(db=> new Promise((res,rej)=>{
+        const tx = db.transaction(STORE,'readwrite');
+        const st = tx.objectStore(STORE);
+        const r = st.put(val,key);
+        r.onsuccess = ()=> res(true);
+        r.onerror = ()=> rej(r.error);
+      }));
+    }
+    function idbDel(key){
+      return dbPromise.then(db=> new Promise((res,rej)=>{
+        const tx = db.transaction(STORE,'readwrite');
+        const st = tx.objectStore(STORE);
+        const r = st.delete(key);
+        r.onsuccess = ()=> res(true);
+        r.onerror = ()=> rej(r.error);
+      }));
+    }
+    function idbKeys(){
+      return dbPromise.then(db=> new Promise((res,rej)=>{
+        const tx = db.transaction(STORE,'readonly');
+        const st = tx.objectStore(STORE);
+        const keys=[];
+        if(st.getAllKeys){
+          const r = st.getAllKeys();
+          r.onsuccess = ()=> res(r.result || []);
+          r.onerror = ()=> rej(r.error);
+        }else{
+          // Fallback über Cursor
+          st.openCursor().onsuccess = (e)=>{
+            const cursor = e.target.result;
+            if(cursor){ keys.push(cursor.key); cursor.continue(); }
+            else res(keys);
+          };
+        }
+      }));
+    }
+    function idbClear(){
+      return dbPromise.then(db=> new Promise((res,rej)=>{
+        const tx = db.transaction(STORE,'readwrite');
+        tx.objectStore(STORE).clear().onsuccess = ()=> res(true);
+        tx.onerror = ()=> rej(tx.error);
+      }));
+    }
+
+    // ——————————————————————————————————————————
+    // UI – Buchstabenraster
+    // ——————————————————————————————————————————
+    function renderLetterGrid(){
+      elLetters.innerHTML='';
+      LETTERS.forEach(ch=>{
+        const b=document.createElement('button');
+        b.className='btn-letter';
+        b.textContent=ch;
+        b.setAttribute('data-letter',ch);
+        b.setAttribute('aria-label', 'Buchstabe ' + ch);
+        b.addEventListener('click', onGuess);
+        elLetters.appendChild(b);
+      });
+    }
+    renderLetterGrid();
+
+    // Status-Grid für Einstellungen
+    function renderStatusGrid(hasSet=new Set()){
+      elStatusGrid.innerHTML='';
+      LETTERS.forEach(ch=>{
+        const t=document.createElement('div');
+        t.className='status-tile' + (hasSet.has(ch)?' has':'');
+        t.innerHTML=`${ch}<i class="status-dot"></i>`;
+        t.title = hasSet.has(ch) ? 'Aufnahme vorhanden' : 'Keine Aufnahme';
+        t.addEventListener('click', ()=> selectLetter(ch));
+        elStatusGrid.appendChild(t);
+      });
+    }
+
+    // ——————————————————————————————————————————
+    // Recorder
+    // ——————————————————————————————————————————
+    let mediaStream=null, recorder=null, recChunks=[];
+    let currentLetter='A', timerInt=null, timerStart=0, lastPlayed=null;
+
+    selectLetter('A');
+    updateStatusGridFromDB();
+
+    async function selectLetter(ch){
+      currentLetter = ch;
+      elRecLetter.textContent = ch;
+      elRecTitle.textContent = ch;
+      const blob = await idbGet('audio-' + ch);
+      const has = !!blob;
+      elRecStatus.textContent = has ? 'Aufnahme gespeichert' : 'Keine Aufnahme';
+      elBtnPlay.disabled = !has;
+      elBtnDelete.disabled = !has;
+      // Markierung im Statusgrid aktualisieren (sanft)
+      updateStatusGridFromDB();
+    }
+
+    async function updateStatusGridFromDB(){
+      const keys = await idbKeys();
+      const hasSet = new Set(keys.map(k=> k.replace('audio-','')));
+      renderStatusGrid(hasSet);
+      // Update Startbutton aktivierbar?
+      const count = hasSet.size;
+      elBtnStart.disabled = count < 3;
+      elBtnStart.title = count < 3 ? 'Mindestens 3 Aufnahmen empfehlen sich für den Start' : '';
+    }
+
+    function fmt(t){
+      const s=Math.floor(t/1000);
+      const mm=String(Math.floor(s/60)).padStart(2,'0');
+      const ss=String(s%60).padStart(2,'0');
+      return `${mm}:${ss}`;
+    }
+
+    elBtnRec.addEventListener('click', async ()=>{
+      try{
+        if(!mediaStream) mediaStream = await navigator.mediaDevices.getUserMedia({audio:true});
+      }catch(e){
+        alert('Mikrofonzugriff fehlgeschlagen. Bitte Browserberechtigungen prüfen.');
+        return;
+      }
+      const types = ['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4'];
+      let mimeType = types.find(t=> window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || '';
+      recorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : undefined);
+      recChunks = [];
+      recorder.ondataavailable = e=> e.data && recChunks.push(e.data);
+      recorder.onstop = async ()=>{
+        const blob = new Blob(recChunks, {type: recorder.mimeType || 'audio/webm'});
+        await idbSet('audio-' + currentLetter, blob);
+        elRecStatus.textContent='Aufnahme gespeichert';
+        elBtnPlay.disabled=false; elBtnDelete.disabled=false;
+        updateStatusGridFromDB();
+      };
+      recorder.start();
+      elBtnRec.disabled=true; elBtnStop.disabled=false; elBtnPlay.disabled=true; elBtnDelete.disabled=true;
+      timerStart = performance.now();
+      elTimer.classList.add('blink');
+      timerInt = setInterval(()=> elTimer.textContent = fmt(performance.now()-timerStart), 200);
+    });
+
+    elBtnStop.addEventListener('click', ()=>{
+      if(recorder && recorder.state==='recording') recorder.stop();
+      elBtnRec.disabled=false; elBtnStop.disabled=true;
+      clearInterval(timerInt); elTimer.classList.remove('blink'); elTimer.textContent='00:00';
+    });
+
+    elBtnPlay.addEventListener('click', async ()=>{
+      const blob = await idbGet('audio-' + currentLetter);
+      if(!blob){ alert('Keine Aufnahme gefunden.'); return; }
+      const url = URL.createObjectURL(blob);
+      const a = new Audio(url);
+      a.play();
+    });
+
+    elBtnDelete.addEventListener('click', async ()=>{
+      if(confirm('Aufnahme für "'+currentLetter+'" löschen?')){
+        await idbDel('audio-' + currentLetter);
+        elRecStatus.textContent='Keine Aufnahme';
+        elBtnPlay.disabled=true; elBtnDelete.disabled=true;
+        updateStatusGridFromDB();
+      }
+    });
+
+    document.getElementById('clearAll').addEventListener('click', async ()=>{
+      if(confirm('Wirklich ALLE Aufnahmen löschen?')){
+        await idbClear();
+        updateStatusGridFromDB();
+        if(currentLetter) selectLetter(currentLetter);
+      }
+    });
+
+    // ——————————————————————————————————————————
+    // Spiel-Logik
+    // ——————————————————————————————————————————
+    let game = null;
+
+    elBtnStart.addEventListener('click', startGame);
+    elBtnTestAudio.addEventListener('click', ()=> { if(lastPlayed) { lastPlayed.currentTime=0; lastPlayed.play(); }});
+    document.getElementById('again').addEventListener('click', ()=> { closeModal(); startGame(); });
+    document.getElementById('closeModal').addEventListener('click', closeModal);
+
+    function closeModal(){ elModal.classList.add('hidden'); }
+
+    async function startGame(){
+      // stelle sicher, dass es genug Buchstaben gibt
+      const keys = await idbKeys();
+      const set = new Set(keys.filter(k=>k.startsWith('audio-')).map(k=> k.replace('audio-','')));
+      if(set.size===0){ alert('Bitte nimm zuerst Buchstaben auf (mindestens 1).'); return; }
+      const rounds = parseInt(elRounds.value,10);
+      game = {
+        recorded: Array.from(set),
+        rounds,
+        round: 0,
+        ok: 0,
+        bad: 0,
+        target: null,
+        busy: false
+      };
+      elRoundMax.textContent = rounds;
+      elOk.textContent=0; elBad.textContent=0;
+      elBar.style.width='0%';
+      document.getElementById('setup').classList.add('hidden');
+      elHud.classList.remove('hidden');
+      // sichere Tab: gehe auf "Spiel"
+      document.querySelectorAll('.tabs button').forEach(b=>{
+        const active = b.dataset.tab==='spiel';
+        b.classList.toggle('active', active);
+      });
+      document.getElementById('spiel').classList.remove('hidden');
+      document.getElementById('einstellungen').classList.add('hidden');
+
+      // Runde 1
+      await nextRound();
+    }
+
+    async function nextRound(){
+      if(!game) return;
+      game.round++;
+      if(game.round > game.rounds){ return finishGame(); }
+      elRoundNow.textContent = game.round;
+      // neuen Zielbuchstaben ziehen
+      const pick = game.recorded[Math.floor(Math.random()*game.recorded.length)];
+      game.target = pick;
+      // Audio abspielen
+      const blob = await idbGet('audio-' + pick);
+      if(!blob){
+        // falls unerwartet weg, sofort nächste Runde
+        return nextRound();
+      }
+      const url = URL.createObjectURL(blob);
+      lastPlayed = new Audio(url);
+      elBtnTestAudio.disabled=false;
+      await lastPlayed.play().catch(()=>{}); // Autoplay-Beschränkung? Der Klick auf "Spiel starten" reicht i.d.R. als Interaktion
+      // Eingaben erlauben
+      game.busy=false;
+      // visuelles Reset
+      document.querySelectorAll('.btn-letter').forEach(b=> b.disabled=false);
+    }
+
+    async function onGuess(e){
+      if(!game || game.busy) return;
+      const guess = e.currentTarget.getAttribute('data-letter');
+      // Klick-Sperre für die Dauer der Animation
+      game.busy=true;
+      const correct = guess === game.target;
+      if(correct) game.ok++; else game.bad++;
+      elOk.textContent = game.ok; elBad.textContent = game.bad;
+      const progress = Math.min(100, Math.round(((game.round) / game.rounds)*100));
+      elBar.style.width = progress + '%';
+
+      // Feedback zeigen
+      await showFeedback(correct);
+
+      // nächste Runde
+      await nextRound();
+    }
+
+    function show(el){
+      el.classList.remove('hidden');
+      return new Promise(res=> setTimeout(()=> { el.classList.add('hidden'); res(); }, 1200));
+    }
+    function showFeedback(ok){
+      if(ok) return show(elOverlayGood);
+      return show(elOverlayBad);
+    }
+
+    function finishGame(){
+      const total = game.rounds;
+      const ok = game.ok;
+      const pct = Math.round((ok/total)*100);
+      const msg = `${ok} von ${total} richtig (${pct} %)`;
+      // Pokalfarben anpassen (einfach über Füllung)
+      const cup = elModal.querySelector('#cup');
+      const star = elModal.querySelector('#star');
+      if(pct>=90){ cup.querySelector('path').setAttribute('fill','#ffd369'); star.setAttribute('fill','#fff176'); elResultTitle.textContent='Gold! Fantastisch ✨'; }
+      else if(pct>=70){ cup.querySelector('path').setAttribute('fill','#d6b36a'); star.setAttribute('fill','#ffe082'); elResultTitle.textContent='Silber! Super gemacht 🥈'; }
+      else if(pct>=50){ cup.querySelector('path').setAttribute('fill','#c39a5a'); star.setAttribute('fill','#ffd54f'); elResultTitle.textContent='Bronze! Weiter so 🥉'; }
+      else { cup.querySelector('path').setAttribute('fill','#c9c9c9'); star.setAttribute('fill','#e0e0e0'); elResultTitle.textContent='Stark gekämpft! 💪'; }
+      elResultText.textContent = msg;
+
+      document.getElementById('setup').classList.remove('hidden');
+      elHud.classList.add('hidden');
+      elModal.classList.remove('hidden');
+      game=null;
+    }
+
+    // ——————————————————————————————————————————
+    // Zugänglichkeit / Kleinigkeiten
+    // ——————————————————————————————————————————
+    // Tastatursteuerung: Enter/Space hören, Fokus
+    elLetters.addEventListener('keydown', (e)=>{
+      const btn = e.target.closest('button');
+      if(!btn) return;
+      if(e.key==='Enter' || e.key===' '){
+        e.preventDefault(); btn.click();
+      }
+    });
+
+    // Inhalte initial
+    (async function init(){
+      await updateStatusGridFromDB();
+    })();
+
+    // Kleine Helfer: Tab-Switch Buttons
+    document.querySelector('button[data-tab="einstellungen"]').addEventListener('click', ()=> {
+      // Beim Wechsel zu Einstellungen die Statusanzeige aktualisieren
+      updateStatusGridFromDB();
+    });
+
+    // PWA Service Worker Registrierung
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker registriert:', reg))
+          .catch(err => console.log('Service Worker Registrierung fehlgeschlagen:', err));
+      });
+    }
+  </script>
+</body>
+</html>
