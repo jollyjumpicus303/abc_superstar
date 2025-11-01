@@ -173,6 +173,31 @@
       .rainbow svg path,.tada,.monster svg .wiggle{animation:none !important}
     }
 
+    /* Empty State Info Box */
+    .info-box{
+      background:linear-gradient(135deg,#fff5e6,#fff);
+      border:2px solid #ffb84d;
+      border-radius:var(--radius);
+      padding:20px;
+      margin-bottom:16px;
+      text-align:center;
+    }
+    .info-box h3{margin:0 0 8px; color:#1b2055; font-size:18px}
+    .info-box p{margin:8px 0; color:#5a5a5a; line-height:1.5}
+    .info-box .btn{margin-top:10px}
+    .progress-badge{
+      display:inline-block;
+      background:linear-gradient(135deg,#5a6ff0,#8a7dff);
+      color:#fff;
+      padding:8px 16px;
+      border-radius:999px;
+      font-weight:800;
+      font-size:16px;
+      margin-bottom:12px;
+      box-shadow:0 4px 12px rgba(90,111,240,.25);
+    }
+    .progress-badge.empty{background:#e3e7ff; color:#1b2055}
+
     footer{max-width:1100px; margin:-52px auto 32px; padding:0 16px; color:#6b7280; font-size:13px}
 
     /* Install Button */
@@ -201,6 +226,13 @@
     <!-- SPIEL -->
     <section id="spiel" class="card">
       <div id="setup">
+        <!-- Info-Box bei fehlenden Aufnahmen -->
+        <div id="emptyState" class="info-box hidden">
+          <h3>🎙️ Noch keine Aufnahmen vorhanden</h3>
+          <p>Um das Spiel zu starten, musst du zuerst deine Stimme für mindestens einen Buchstaben aufnehmen.</p>
+          <button id="goToSettings" class="btn">Jetzt Aufnahmen machen</button>
+        </div>
+
         <p class="muted">Wähle die Rundenzahl und starte. Das Spiel nutzt nur Buchstaben, für die <b>bereits Aufnahmen</b> vorhanden sind.</p>
         <div class="controls" style="margin:10px 0 6px">
           <label>Runden:
@@ -229,6 +261,7 @@
       <div class="settings-wrap">
         <div>
           <p><b>Einstellungen · Aufnahmen</b></p>
+          <div id="progressBadge" class="progress-badge empty">0 von 26 Buchstaben aufgenommen</div>
           <p class="muted">Tippe einen Buchstaben an, um ihn aufzunehmen. Deine Aufnahmen werden <b>nur lokal</b> gespeichert.</p>
           <div id="statusGrid" class="status-grid" aria-label="Aufnahmestatus"></div>
           <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap">
@@ -371,20 +404,67 @@
 
     // Tabs
     const tabsContainer = document.querySelector('.tabs');
+    function switchToTab(tabName) {
+      tabsContainer.querySelectorAll('button').forEach(b => {
+        const isActive = b.dataset.tab === tabName;
+        b.classList.toggle('active', isActive);
+      });
+      document.getElementById('spiel').classList.toggle('hidden', tabName !== 'spiel');
+      document.getElementById('einstellungen').classList.toggle('hidden', tabName !== 'einstellungen');
+    }
+
     tabsContainer.addEventListener('click', (e) => {
       const targetButton = e.target.closest('button');
       if (!targetButton) return;
-
-      tabsContainer.querySelectorAll('button').forEach(b => b.classList.remove('active'));
-      targetButton.classList.add('active');
-
-      const tab = targetButton.dataset.tab;
-      document.getElementById('spiel').classList.toggle('hidden', tab !== 'spiel');
-      document.getElementById('einstellungen').classList.toggle('hidden', tab !== 'einstellungen');
+      switchToTab(targetButton.dataset.tab);
     });
 
     // Rundenanzeige
     elRounds.addEventListener('input', ()=> elRoundsOut.textContent = elRounds.value);
+
+    // UX: Aufnahmen-Status prüfen und UI aktualisieren
+    const elEmptyState = document.getElementById('emptyState');
+    const elProgressBadge = document.getElementById('progressBadge');
+
+    async function updateUIForRecordingState() {
+      const keys = await idbKeys();
+      const recordedCount = keys.filter(k => k.startsWith('audio-')).length;
+      const hasRecordings = recordedCount > 0;
+
+      // Spiel-Tab: Empty State anzeigen/verstecken
+      elEmptyState.classList.toggle('hidden', hasRecordings);
+
+      // Button "Spiel starten" aktivieren/deaktivieren
+      elBtnStart.disabled = !hasRecordings;
+      if (!hasRecordings) {
+        elBtnStart.style.opacity = '0.5';
+        elBtnStart.style.cursor = 'not-allowed';
+      } else {
+        elBtnStart.style.opacity = '1';
+        elBtnStart.style.cursor = 'pointer';
+      }
+
+      // Fortschrittsanzeige in Einstellungen
+      elProgressBadge.textContent = `${recordedCount} von 26 Buchstaben aufgenommen`;
+      elProgressBadge.classList.toggle('empty', recordedCount === 0);
+    }
+
+    // "Jetzt Aufnahmen machen" Button
+    document.getElementById('goToSettings').addEventListener('click', () => {
+      switchToTab('einstellungen');
+    });
+
+    // Beim ersten Besuch: Prüfen ob Aufnahmen vorhanden, sonst zu Einstellungen
+    (async function checkFirstVisit() {
+      await updateUIForRecordingState();
+      const keys = await idbKeys();
+      const hasRecordings = keys.filter(k => k.startsWith('audio-')).length > 0;
+
+      // Wenn keine Aufnahmen: Automatisch zu Einstellungen wechseln
+      if (!hasRecordings) {
+        switchToTab('einstellungen');
+      }
+    })();
 
     // ——————————————————————————————————————————
     // IndexedDB (Aufnahmen)
@@ -542,6 +622,7 @@
         elRecStatus.textContent='Aufnahme gespeichert';
         elBtnPlay.disabled=false; elBtnDelete.disabled=false;
         updateStatusGridFromDB();
+        updateUIForRecordingState();
       };
       recorder.start();
       elBtnRec.disabled=true; elBtnStop.disabled=false; elBtnPlay.disabled=true; elBtnDelete.disabled=true;
@@ -570,6 +651,7 @@
         elRecStatus.textContent='Keine Aufnahme';
         elBtnPlay.disabled=true; elBtnDelete.disabled=true;
         updateStatusGridFromDB();
+        updateUIForRecordingState();
       }
     });
 
@@ -577,6 +659,7 @@
       if(confirm('Wirklich ALLE Aufnahmen löschen?')){
         await idbClear();
         updateStatusGridFromDB();
+        updateUIForRecordingState();
         if(currentLetter) selectLetter(currentLetter);
       }
     });
