@@ -173,12 +173,22 @@
     }
 
     footer{max-width:1100px; margin:-52px auto 32px; padding:0 16px; color:#6b7280; font-size:13px}
+
+    /* Install Button */
+    .install-btn{
+      display:none; margin-left:auto; border:0; padding:8px 14px; border-radius:999px;
+      background:rgba(255,255,255,.22); color:#fff; font-weight:700; font-size:13px;
+      cursor:pointer; transition:background .2s ease; white-space:nowrap;
+    }
+    .install-btn:hover{background:rgba(255,255,255,.32)}
+    .install-btn.show{display:block}
   </style>
 </head>
 <body>
   <header>
     <h1>ABC‑Abenteuer · Hör &amp; Finde</h1>
     <span class="badge">Prototyp</span>
+    <button id="installBtn" class="install-btn">📱 Installieren</button>
   </header>
 
   <main>
@@ -716,6 +726,40 @@
           .catch(err => console.log('Service Worker Registrierung fehlgeschlagen:', err));
       });
     }
+
+    // PWA Install Prompt
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+      // Verhindere automatisches Anzeigen des Browser-Prompts
+      e.preventDefault();
+      // Speichere das Event für später
+      deferredPrompt = e;
+      // Zeige eigenen Install-Button
+      installBtn.classList.add('show');
+      console.log('beforeinstallprompt Event gefeuert');
+    });
+
+    installBtn.addEventListener('click', async () => {
+      if (!deferredPrompt) {
+        return;
+      }
+      // Zeige Install-Prompt
+      deferredPrompt.prompt();
+      // Warte auf Benutzer-Entscheidung
+      const { outcome } = await deferredPrompt.userChoice;
+      console.log(`Install-Prompt Ergebnis: ${outcome}`);
+      // Reset
+      deferredPrompt = null;
+      installBtn.classList.remove('show');
+    });
+
+    window.addEventListener('appinstalled', () => {
+      console.log('PWA wurde installiert');
+      installBtn.classList.remove('show');
+      deferredPrompt = null;
+    });
   </script>
 </body>
 </html>

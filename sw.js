@@ -1,28 +1,86 @@
-const CACHE_NAME = 'abc-abenteuer-cache-v1';
+const CACHE_NAME = 'abc-abenteuer-cache-v2';
 const FILES_TO_CACHE = [
-  '/alphabet.html'
-  // Die Icons werden vom Browser automatisch gecacht, wenn sie im Manifest referenziert sind.
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/sw.js'
 ];
 
 // 1. Installieren: Cache öffnen und App-Shell-Dateien hinzufügen
 self.addEventListener('install', (event) => {
+  console.log('[ServiceWorker] Installing...');
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
         console.log('[ServiceWorker] Pre-caching App Shell');
         return cache.addAll(FILES_TO_CACHE);
       })
+      .then(() => {
+        // Sofort aktivieren, ohne auf alte Tabs zu warten
+        return self.skipWaiting();
+      })
   );
 });
 
-// 2. Abrufen: Anfragen abfangen und aus dem Cache bedienen
+// 2. Aktivieren: Alte Caches aufräumen
+self.addEventListener('activate', (event) => {
+  console.log('[ServiceWorker] Activating...');
+  event.waitUntil(
+    caches.keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cacheName) => {
+            if (cacheName !== CACHE_NAME) {
+              console.log('[ServiceWorker] Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            }
+          })
+        );
+      })
+      .then(() => {
+        // Service Worker übernimmt sofort alle offenen Tabs
+        return self.clients.claim();
+      })
+  );
+});
+
+// 3. Abrufen: Cache-First-Strategie mit Network-Fallback
 self.addEventListener('fetch', (event) => {
+  // Nur GET-Anfragen cachen
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   event.respondWith(
     caches.match(event.request)
       .then((response) => {
-        // Wenn die Anfrage im Cache gefunden wird, wird sie von dort zurückgegeben.
-        // Andernfalls wird die Anfrage normal an das Netzwerk weitergeleitet.
-        return response || fetch(event.request);
+        if (response) {
+          // Im Cache gefunden - zurückgeben
+          return response;
+        }
+
+        // Nicht im Cache - vom Netzwerk laden und cachen
+        return fetch(event.request)
+          .then((fetchResponse) => {
+            // Nur erfolgreiche Antworten cachen
+            if (!fetchResponse || fetchResponse.status !== 200 || fetchResponse.type === 'error') {
+              return fetchResponse;
+            }
+
+            // Response klonen, da sie nur einmal gelesen werden kann
+            const responseToCache = fetchResponse.clone();
+
+            caches.open(CACHE_NAME)
+              .then((cache) => {
+                cache.put(event.request, responseToCache);
+              });
+
+            return fetchResponse;
+          })
+          .catch(() => {
+            // Netzwerk fehlgeschlagen und nicht im Cache
+            console.log('[ServiceWorker] Fetch failed for:', event.request.url);
+          });
       })
   );
 });

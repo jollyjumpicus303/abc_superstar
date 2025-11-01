@@ -3,7 +3,11 @@
   "short_name": "ABC-Abenteuer",
   "description": "Ein Lernspiel für Kinder, um Buchstaben durch Hören zu finden.",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#fffaf3",
-  "theme_color": "#5a6ff0"
+  "theme_color": "#5a6ff0",
+  "categories": ["education", "kids"],
+  "lang": "de"
 }
