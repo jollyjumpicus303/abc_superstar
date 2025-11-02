@@ -441,8 +441,11 @@
         </g>
       </svg>
       <div class="tag">Fast! Versuch's nochmal 👻</div>
-      <div style="margin-top:16px; font-size:18px; color:#6b7896;">Das war:</div>
-      <div id="correctLetter" style="font-size:72px; font-weight:900; color:var(--brand); margin-top:8px; text-shadow:0 3px 8px rgba(124,58,237,.3);">A</div>
+      <div style="background:#fff; border-radius:20px; padding:20px; margin-top:16px; box-shadow:0 8px 24px rgba(0,0,0,.15);">
+        <div style="font-size:18px; color:#6b7896; margin-bottom:8px;">Das war:</div>
+        <div id="correctLetter" style="font-size:72px; font-weight:900; color:var(--brand); text-shadow:0 3px 8px rgba(124,58,237,.3);">A</div>
+      </div>
+      <div style="margin-top:16px; font-size:14px; color:#6b7896; opacity:.8;">👆 Tippe zum Weitermachen</div>
     </div>
   </div>
 
@@ -1081,6 +1084,8 @@
           await setActiveSet(set.id);
           await renderSetsList();
           await updateRecordingUI();
+          // Buchstaben-Grid im Spiel-Tab aktualisieren
+          await updateLetterButtons();
         });
 
         elSetsList.appendChild(card);
@@ -1711,15 +1716,32 @@
       await nextRound();
     }
 
-    function show(el){
+    function show(el, autoHide = true){
       el.classList.remove('hidden');
-      return new Promise(res=> setTimeout(()=> { el.classList.add('hidden'); res(); }, 1200));
+      if(autoHide){
+        el.style.pointerEvents = 'none';
+        return new Promise(res=> setTimeout(()=> { el.classList.add('hidden'); res(); }, 1200));
+      } else {
+        // Click-to-dismiss
+        el.style.pointerEvents = 'auto';
+        el.style.cursor = 'pointer';
+        return new Promise(res=> {
+          const dismiss = () => {
+            el.classList.add('hidden');
+            el.style.pointerEvents = 'none';
+            el.style.cursor = 'default';
+            el.removeEventListener('click', dismiss);
+            res();
+          };
+          el.addEventListener('click', dismiss);
+        });
+      }
     }
     function showFeedback(ok, correctLetter){
-      if(ok) return show(elOverlayGood);
-      // Bei Fehler: Korrekten Buchstaben anzeigen
+      if(ok) return show(elOverlayGood, true); // Auto-hide bei Erfolg
+      // Bei Fehler: Korrekten Buchstaben anzeigen + Click-to-dismiss
       elCorrectLetter.textContent = correctLetter;
-      return show(elOverlayBad);
+      return show(elOverlayBad, false); // Muss weggeklickt werden
     }
 
     function finishGame(){
