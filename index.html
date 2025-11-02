@@ -273,12 +273,21 @@
 
     /* Install Button */
     .install-btn{
-      display:none; margin-left:auto; border:0; padding:8px 14px; border-radius:999px;
+      display:none; border:0; padding:8px 14px; border-radius:999px;
       background:rgba(255,255,255,.22); color:#fff; font-weight:700; font-size:13px;
       cursor:pointer; transition:background .2s ease; white-space:nowrap;
     }
     .install-btn:hover{background:rgba(255,255,255,.32)}
     .install-btn.show{display:block}
+
+    /* Settings Button (Zahnrad) */
+    .settings-btn{
+      border:0; padding:10px; border-radius:50%; width:42px; height:42px;
+      background:rgba(255,255,255,.22); color:#fff; font-size:20px;
+      cursor:pointer; transition:all .2s ease; display:grid; place-items:center;
+      margin-left:auto;
+    }
+    .settings-btn:hover{background:rgba(255,255,255,.32); transform:rotate(30deg)}
   </style>
 </head>
 <body>
@@ -286,13 +295,13 @@
     <h1>ABC‑Abenteuer · Hör &amp; Finde</h1>
     <span class="badge">Prototyp</span>
     <button id="installBtn" class="install-btn">📱 Installieren</button>
+    <button id="settingsBtn" class="settings-btn" title="Einstellungen">⚙️</button>
   </header>
 
   <main>
     <nav class="tabs">
       <button class="active" data-tab="spiel">Spiel</button>
       <button data-tab="album">🎁 Mein Album</button>
-      <button data-tab="einstellungen">Einstellungen</button>
     </nav>
 
     <!-- SPIEL -->
@@ -305,7 +314,15 @@
           <button id="goToSettings" class="btn">Jetzt Aufnahmen machen</button>
         </div>
 
-        <p class="muted">Wähle die Rundenzahl und starte. Das Spiel nutzt nur Buchstaben, für die <b>bereits Aufnahmen</b> vorhanden sind.</p>
+        <p class="muted">Wähle das Set, die Rundenzahl und starte. Das Spiel nutzt nur Buchstaben, für die <b>bereits Aufnahmen</b> vorhanden sind.</p>
+
+        <div style="margin:16px 0">
+          <label style="font-weight:800; display:block; margin-bottom:8px">🎤 Welche Aufnahmen?</label>
+          <select id="setSelector" class="btn secondary" style="width:100%; max-width:300px; text-align:left; font-size:16px; padding:12px">
+            <option value="">Lade...</option>
+          </select>
+        </div>
+
         <div class="controls" style="margin:10px 0 6px">
           <label>Runden:
             <input id="rounds" type="range" min="5" max="26" value="10" step="1" style="vertical-align:middle">
@@ -652,6 +669,18 @@
     // "Jetzt Aufnahmen machen" Button
     document.getElementById('goToSettings').addEventListener('click', () => {
       switchToTab('einstellungen');
+    });
+
+    // Settings-Zahnrad Button (oben rechts)
+    document.getElementById('settingsBtn').addEventListener('click', () => {
+      switchToTab('einstellungen');
+    });
+
+    // Set-Selector im Spiel-Tab für Kinder
+    document.getElementById('setSelector').addEventListener('change', async (e) => {
+      await setActiveSet(e.target.value);
+      await updateLetterButtons();
+      await updateRecordingUI();
     });
 
     // Beim ersten Besuch: Prüfen ob Aufnahmen vorhanden, sonst zu Einstellungen
@@ -1086,6 +1115,7 @@
           await updateRecordingUI();
           // Buchstaben-Grid im Spiel-Tab aktualisieren
           await updateLetterButtons();
+          await populateSetSelector();
         });
 
         elSetsList.appendChild(card);
@@ -1104,6 +1134,7 @@
       await setActiveSet(setId);
       await renderSetsList();
       await updateRecordingUI();
+      await populateSetSelector();
     });
 
     // Set-Aktionen (Bearbeiten/Löschen)
@@ -1137,6 +1168,7 @@
 
           await renderSetsList();
           await updateRecordingUI();
+          await populateSetSelector();
         }
       }
 
@@ -1152,6 +1184,7 @@
 
         await updateSet(setId, name || setData.name, emoji || setData.emoji);
         await renderSetsList();
+        await populateSetSelector();
       }
     });
 
@@ -1160,6 +1193,22 @@
       await updateStatusGridFromDB();
       await updateUIForRecordingState();
       if(currentLetter) await selectLetter(currentLetter);
+    }
+
+    // Hilfsfunktion: Set-Selector für Kinder im Spiel-Tab befüllen
+    async function populateSetSelector(){
+      const sets = await getAllSets();
+      const activeSetId = await getActiveSet();
+      const selector = document.getElementById('setSelector');
+
+      selector.innerHTML = '';
+      for(const set of sets) {
+        const option = document.createElement('option');
+        option.value = set.id;
+        option.textContent = `${set.emoji} ${set.name}`;
+        option.selected = set.id === activeSetId;
+        selector.appendChild(option);
+      }
     }
 
     // ——————————————————————————————————————————
@@ -1816,6 +1865,7 @@
       await getActiveSet();
       await renderSetsList();
       await updateStatusGridFromDB();
+      await populateSetSelector();
     })();
 
 
