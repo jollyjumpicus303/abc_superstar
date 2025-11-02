@@ -115,20 +115,92 @@ Custom Install-Button erscheint noch nicht auf Android Chrome/Brave. App ist abe
 
 ---
 
-## 6. Modus-Auswahl ⬜
+### 6. Modus‑Auswahl ✅
 
-**Priorität:** Niedrig | **Aufwand:** Mittel
+**Ziel:** Flexible Lernstufen, klarer Fortschritt, adaptive Wiederholung – ohne Frust  
+**Abhängigkeiten:** 6.1 → 6.2 → 6.3 → 6.4/6.5 → 6.6 → 6.7/6.8  
+**DoD (Definition of Done):**
+- Modi sind in der App umschaltbar (Einstellungen).  
+- Fortschritt & Fehlerhistorie werden lokal persistiert.  
+- Kein Buchstabe zweimal direkt hintereinander.  
+- Falsche Antworten werden später gezielt wiederholt (gewichtete Auswahl).  
+- Alle Akzeptanzkriterien der Teilaufgaben erfüllt (siehe verlinkte SPECS).
+- Nach Abschluss der UI-Integration (Tasks 6.4–6.6) gemeinsamen Push & UI-Test auf GitHub einplanen.
 
-### Ziele:
-- Flexibilität für verschiedene Lernstufen
-- Anpassung an individuellen Fortschritt
+#### 6.1 Persistenz & Datenmodell (Basis)
+**Priorität:** Hoch | **Aufwand:** Klein–Mittel  
+**Beschreibung:** Zentrales `progressStore`‑Modul (LocalStorage/IndexedDB) für Lernfortschritt, Fehler, freigeschaltete Buchstaben.  
+**Akzeptanzkriterien:**
+- [x] `getProgress()`, `saveProgress(p)`, `resetProgress()` vorhanden.  
+- [x] `markCorrect(letter)` reduziert Fehlergewicht; `markWrong(letter[])` erhöht es.  
+- [x] `version`‑basierte Migration vorhanden.  
+**Details:** siehe `SPECS/DATA_MODEL.md`
 
-### Aufgaben:
-- [ ] Modus "Nur aufgenommene Buchstaben"
-- [ ] Modus "Alle Buchstaben"
-- [ ] "Lernweg"-Modus: Schrittweise Einführung neuer Buchstaben
-- [ ] Schwierigkeitsgrad-Anpassung (größere/kleinere Auswahl)
-- [ ] Einstellungs-UI für Modi
+#### 6.2 LetterPool & Auswahlregeln (Kernlogik)
+**Priorität:** Hoch | **Aufwand:** Mittel  
+**Beschreibung:** Reines Utility `letterPool` (deterministisch, testbar) zur Auswahl des nächsten Zielbuchstabens und Generieren der Button‑Optionen.  
+**Akzeptanzkriterien:**
+- [x] `pickNext({pool, last, wrongCounts, recent=[]}) → letter`  
+- [x] `makeOptions({correct, pool, size}) → letter[]` (ohne Duplikate)  
+- [x] Unit‑Tests: kein Direkt‑Repeat; Fehlergewichtung greift; stabile Verteilung.  
+**Details:** siehe `SPECS/LETTER_POOL.md`
+
+#### 6.3 Lernweg‑Modus (Abenteuer‑Pfad)
+**Priorität:** Hoch | **Aufwand:** Mittel  
+**Beschreibung:** Automatischer Progress: Start mit 4 Buchstaben → nach **2 fehlerfreien Läufen** +4 Buchstaben freischalten → bis 26. Danach: Audio‑Set‑Wechsel & gruppierte Anordnung.  
+**Akzeptanzkriterien:**
+- [ ] `unlocked` & `flawlessStreak` werden korrekt geführt.  
+- [ ] Nach 2 erfolgreichen Läufen bei 26 Buchstaben (Set **ANLAUT**) → Wechsel zu **OHNE_ANLAUT**.  
+- [ ] UI‑Feedback „Nächste Stufe freigeschaltet!“.  
+**Details:** siehe `SPECS/PROGRESSION_RULES.md`
+
+#### 6.4 Freier Modus (manuelle Wahl)
+**Priorität:** Mittel | **Aufwand:** Klein  
+**Beschreibung:** Eltern wählen Buchstabenmenge (4/8/12/26), Audio‑Set (ANLAUT/OHNE_ANLAUT) und Schwierigkeit (LEICHT/MITTEL/SCHWER/PROFI).  
+**Akzeptanzkriterien:**
+- [ ] Einstellungen wirken sofort & persistieren.  
+- [ ] Bei fehlenden Aufnahmen: Hinweis/Degradierung.  
+**Details:** siehe `SPECS/MODE_SELECTION.md`
+
+#### 6.5 Fehler‑Wiederholung (Adaptive Übung)
+**Priorität:** Mittel | **Aufwand:** Klein–Mittel  
+**Beschreibung:** Fehler werden gesammelt und mit höherer Wahrscheinlichkeit erneut abgefragt, anschließend mit „Decay“ wieder abgebaut.  
+**Akzeptanzkriterien:**
+- [ ] Mind. jede 3. Runde ein Pick aus Fehlerliste (falls nicht leer).  
+- [ ] Decay nach Korrekt‑Serien.  
+- [ ] Eltern‑Tipp im Report (lokal).  
+**Details:** siehe `SPECS/ADAPTIVE_PRACTICE.md`
+
+#### 6.6 Einstellungs‑UI (Modus + Schwierigkeit)
+**Priorität:** Mittel | **Aufwand:** Klein  
+**Beschreibung:** Umschalter „Modus“ (FREI/LERNWEG), und – falls FREI – Auswahl für Buchstabenmenge/Set/Schwierigkeit.  
+**Akzeptanzkriterien:**
+- [ ] Mobile‑geeignet; klare Labels; aktiver Zustand visuell.  
+- [ ] Hinweis bei fehlenden Aufnahmen inkl. Direktlink „Jetzt aufnehmen“.  
+**Details:** siehe `SPECS/UX_UI.md`
+
+#### 6.7 SFX‑Integration (optional)
+**Priorität:** Niedrig | **Aufwand:** Klein  
+**Beschreibung:** „Yay!“, „Oops!“, Fanfare; globaler Lautstärke‑Regler & Vorladen.  
+**Details:** siehe `SPECS/SFX.md`
+
+#### 6.8 Qualität & Tests
+**Priorität:** Mittel | **Aufwand:** Klein  
+**Beschreibung:** Unit‑Tests für LetterPool; manuelle Checkliste für Lernweg.  
+**Details:** siehe `SPECS/QA_CHECKLIST.md`
+
+#### 6.9 Audio-Varianten nach Schwierigkeit
+**Priorität:** Mittel | **Aufwand:** Mittel  
+**Beschreibung:** Aufnahme- und Wiedergabe-Flow der Audio-Sets um Varianten mit
+Schwierigkeits-Tag erweitern.  
+**Akzeptanzkriterien:**
+- [ ] Aufnahme-UI erlaubt das Setzen eines Schwierigkeits-Tags pro Clip
+      (Standard `LEICHT`).  
+- [ ] Mehrere Clips pro Buchstabe & Schwierigkeit sind möglich und einzeln
+      löschbar.  
+- [ ] Spiel nutzt für die aktive Schwierigkeit einen zufälligen Clip der
+      passenden Wertigkeit (Fallback wie in der Spec beschrieben).  
+**Details:** siehe `SPECS/AUDIO_SETS.md`
 
 ---
 
