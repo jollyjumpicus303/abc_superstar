@@ -98,23 +98,6 @@ Custom Install-Button erscheint noch nicht auf Android Chrome/Brave. App ist abe
 
 ---
 
-## 4. Aufnahme-Assistent ⬜
-
-**Priorität:** Mittel | **Aufwand:** Hoch
-
-### Ziele:
-- Aufnahme-Prozess vereinfachen
-- Qualität der Aufnahmen verbessern
-
-### Aufgaben:
-- [ ] Batch-Recording: Alle 26 Buchstaben nacheinander aufnehmen
-- [ ] Auto-Trimming: Stille am Anfang/Ende automatisch entfernen
-- [ ] Pegel-Anzeige: Visuelles Feedback während Aufnahme
-- [ ] Playback-Funktion vor dem Speichern
-- [ ] "Neu aufnehmen"-Option falls unzufrieden
-
----
-
 ## 5. Sticker-Album & Belohnungssystem ⬜
 
 **Priorität:** Mittel | **Aufwand:** Hoch
@@ -178,6 +161,23 @@ Custom Install-Button erscheint noch nicht auf Android Chrome/Brave. App ist abe
 - [ ] Audio für Objektnamen aufnehmen/einbinden
 - [ ] Spiel: Objekt zeigen → Anfangsbuchstaben zuordnen
 - [ ] Bilder in verschiedenen Kategorien (Tiere, Essen, Spielzeug)
+
+---
+
+## 8.1. Aufnahme-Assistent ⬜
+
+**Priorität:** Mittel | **Aufwand:** Hoch
+
+### Ziele:
+- Aufnahme-Prozess vereinfachen
+- Qualität der Aufnahmen verbessern
+
+### Aufgaben:
+- [ ] Batch-Recording: Alle 26 Buchstaben nacheinander aufnehmen
+- [ ] Auto-Trimming: Stille am Anfang/Ende automatisch entfernen
+- [ ] Pegel-Anzeige: Visuelles Feedback während Aufnahme
+- [ ] Playback-Funktion vor dem Speichern
+- [ ] "Neu aufnehmen"-Option falls unzufrieden
 
 ---
 
