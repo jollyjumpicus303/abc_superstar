@@ -670,6 +670,42 @@
       updateLetterButtons();
     }
 
+    // Hilfsfunktion: Set-Selector für Kinder im Spiel-Tab befüllen
+    async function populateSetSelector(){
+      const sets = await getAllSets();
+      const activeSetId = await getActiveSet();
+      const selector = document.getElementById('setSelector');
+
+      if(!selector) return; // Element existiert nicht
+
+      selector.innerHTML = '';
+      for(const set of sets) {
+        const option = document.createElement('option');
+        option.value = set.id;
+        option.textContent = `${set.emoji} ${set.name}`;
+        option.selected = set.id === activeSetId;
+        selector.appendChild(option);
+      }
+    }
+
+    // Hilfsfunktion: Standard-Set-Selector in Einstellungen befüllen
+    async function populateDefaultSetSelector(){
+      const sets = await getAllSets();
+      const activeSetId = await getActiveSet();
+      const selector = document.getElementById('defaultSetSelector');
+
+      if(!selector) return; // Element existiert nicht
+
+      selector.innerHTML = '';
+      for(const set of sets) {
+        const option = document.createElement('option');
+        option.value = set.id;
+        option.textContent = `${set.emoji} ${set.name}`;
+        option.selected = set.id === activeSetId;
+        selector.appendChild(option);
+      }
+    }
+
     // "Jetzt Aufnahmen machen" Button
     document.getElementById('goToSettings').addEventListener('click', () => {
       switchToTab('einstellungen');
@@ -1211,38 +1247,6 @@
       await updateStatusGridFromDB();
       await updateUIForRecordingState();
       if(currentLetter) await selectLetter(currentLetter);
-    }
-
-    // Hilfsfunktion: Set-Selector für Kinder im Spiel-Tab befüllen
-    async function populateSetSelector(){
-      const sets = await getAllSets();
-      const activeSetId = await getActiveSet();
-      const selector = document.getElementById('setSelector');
-
-      selector.innerHTML = '';
-      for(const set of sets) {
-        const option = document.createElement('option');
-        option.value = set.id;
-        option.textContent = `${set.emoji} ${set.name}`;
-        option.selected = set.id === activeSetId;
-        selector.appendChild(option);
-      }
-    }
-
-    // Hilfsfunktion: Standard-Set-Selector in Einstellungen befüllen
-    async function populateDefaultSetSelector(){
-      const sets = await getAllSets();
-      const activeSetId = await getActiveSet();
-      const selector = document.getElementById('defaultSetSelector');
-
-      selector.innerHTML = '';
-      for(const set of sets) {
-        const option = document.createElement('option');
-        option.value = set.id;
-        option.textContent = `${set.emoji} ${set.name}`;
-        option.selected = set.id === activeSetId;
-        selector.appendChild(option);
-      }
     }
 
     // ——————————————————————————————————————————
