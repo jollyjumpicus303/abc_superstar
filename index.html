@@ -277,6 +277,7 @@
   <main>
     <nav class="tabs">
       <button class="active" data-tab="spiel">Spiel</button>
+      <button data-tab="album">🎁 Mein Album</button>
       <button data-tab="einstellungen">Einstellungen</button>
     </nav>
 
@@ -845,6 +846,171 @@
     }
 
     // ——————————————————————————————————————————
+    // Sticker-Album & Belohnungssystem
+    // ——————————————————————————————————————————
+
+    // Sticker-Katalog: 4 Themen × 12 Sticker
+    const STICKER_CATALOG = {
+      animals: {
+        name: 'Tiere',
+        emoji: '🦁',
+        stickers: [
+          {id: 'a1', emoji: '🦁', name: 'Löwe'},
+          {id: 'a2', emoji: '🐘', name: 'Elefant'},
+          {id: 'a3', emoji: '🦒', name: 'Giraffe'},
+          {id: 'a4', emoji: '🦓', name: 'Zebra'},
+          {id: 'a5', emoji: '🐼', name: 'Panda'},
+          {id: 'a6', emoji: '🦊', name: 'Fuchs'},
+          {id: 'a7', emoji: '🐨', name: 'Koala'},
+          {id: 'a8', emoji: '🦘', name: 'Känguru'},
+          {id: 'a9', emoji: '🐯', name: 'Tiger'},
+          {id: 'a10', emoji: '🐻', name: 'Bär'},
+          {id: 'a11', emoji: '🐧', name: 'Pinguin'},
+          {id: 'a12', emoji: '🦉', name: 'Eule'}
+        ]
+      },
+      space: {
+        name: 'Weltraum',
+        emoji: '🚀',
+        stickers: [
+          {id: 's1', emoji: '🚀', name: 'Rakete'},
+          {id: 's2', emoji: '🛸', name: 'UFO'},
+          {id: 's3', emoji: '🌙', name: 'Mond'},
+          {id: 's4', emoji: '⭐', name: 'Stern'},
+          {id: 's5', emoji: '🌟', name: 'Glitzerstern'},
+          {id: 's6', emoji: '🪐', name: 'Saturn'},
+          {id: 's7', emoji: '🌍', name: 'Erde'},
+          {id: 's8', emoji: '☄️', name: 'Komet'},
+          {id: 's9', emoji: '🌌', name: 'Galaxie'},
+          {id: 's10', emoji: '👾', name: 'Alien'},
+          {id: 's11', emoji: '🛰️', name: 'Satellit'},
+          {id: 's12', emoji: '🔭', name: 'Teleskop'}
+        ]
+      },
+      ocean: {
+        name: 'Unterwasser',
+        emoji: '🐠',
+        stickers: [
+          {id: 'o1', emoji: '🐠', name: 'Fisch'},
+          {id: 'o2', emoji: '🐡', name: 'Kugelfisch'},
+          {id: 'o3', emoji: '🐟', name: 'Goldfisch'},
+          {id: 'o4', emoji: '🐬', name: 'Delfin'},
+          {id: 'o5', emoji: '🐳', name: 'Wal'},
+          {id: 'o6', emoji: '🦈', name: 'Hai'},
+          {id: 'o7', emoji: '🐙', name: 'Oktopus'},
+          {id: 'o8', emoji: '🦀', name: 'Krabbe'},
+          {id: 'o9', emoji: '🦞', name: 'Hummer'},
+          {id: 'o10', emoji: '🐚', name: 'Muschel'},
+          {id: 'o11', emoji: '⭐', name: 'Seestern'},
+          {id: 'o12', emoji: '🪸', name: 'Koralle'}
+        ]
+      },
+      fairy: {
+        name: 'Märchen',
+        emoji: '🏰',
+        stickers: [
+          {id: 'f1', emoji: '🏰', name: 'Schloss'},
+          {id: 'f2', emoji: '👑', name: 'Krone'},
+          {id: 'f3', emoji: '🧙', name: 'Zauberer'},
+          {id: 'f4', emoji: '🧚', name: 'Fee'},
+          {id: 'f5', emoji: '🐉', name: 'Drache'},
+          {id: 'f6', emoji: '🦄', name: 'Einhorn'},
+          {id: 'f7', emoji: '🗡️', name: 'Schwert'},
+          {id: 'f8', emoji: '🛡️', name: 'Schild'},
+          {id: 'f9', emoji: '💎', name: 'Diamant'},
+          {id: 'f10', emoji: '🔮', name: 'Kristallkugel'},
+          {id: 'f11', emoji: '📜', name: 'Schriftrolle'},
+          {id: 'f12', emoji: '🪄', name: 'Zauberstab'}
+        ]
+      }
+    };
+
+    // Alle Sticker-IDs sammeln
+    const ALL_STICKER_IDS = Object.values(STICKER_CATALOG)
+      .flatMap(theme => theme.stickers.map(s => s.id));
+
+    // Sticker finden nach ID
+    function getStickerById(stickerId){
+      for(const theme of Object.values(STICKER_CATALOG)){
+        const sticker = theme.stickers.find(s => s.id === stickerId);
+        if(sticker) return sticker;
+      }
+      return null;
+    }
+
+    // Sterne abrufen
+    async function getStars(){
+      const stars = await idbGet('stars');
+      return stars || 0;
+    }
+
+    // Sterne setzen
+    async function setStars(count){
+      await idbSet('stars', count);
+    }
+
+    // Sterne hinzufügen
+    async function addStars(count){
+      const current = await getStars();
+      await setStars(current + count);
+      return current + count;
+    }
+
+    // Gesammelte Sticker abrufen
+    async function getCollectedStickers(){
+      const stickers = await idbGet('collectedStickers');
+      return stickers || [];
+    }
+
+    // Sticker hinzufügen
+    async function addSticker(stickerId){
+      const collected = await getCollectedStickers();
+      if(!collected.includes(stickerId)){
+        collected.push(stickerId);
+        await idbSet('collectedStickers', collected);
+        return true; // Neu gesammelt
+      }
+      return false; // Duplikat
+    }
+
+    // Buchstaben-Statistik abrufen
+    async function getLetterStats(){
+      const stats = await idbGet('letterStats');
+      return stats || {}; // {A: 5, B: 3, ...}
+    }
+
+    // Buchstaben-Statistik inkrementieren
+    async function incrementLetterStat(letter){
+      const stats = await getLetterStats();
+      stats[letter] = (stats[letter] || 0) + 1;
+      await idbSet('letterStats', stats);
+      return stats[letter];
+    }
+
+    // Badge-Level für Buchstabe berechnen (Bronze: 3, Silber: 10, Gold: 25)
+    function getLetterBadge(count){
+      if(count >= 25) return {level: 'gold', emoji: '🥇', name: 'Gold'};
+      if(count >= 10) return {level: 'silver', emoji: '🥈', name: 'Silber'};
+      if(count >= 3) return {level: 'bronze', emoji: '🥉', name: 'Bronze'};
+      return null;
+    }
+
+    // Zufälliges Sticker-Pack öffnen (3 zufällige Sticker, keine Duplikate im Pack)
+    function openStickerPack(){
+      const available = [...ALL_STICKER_IDS];
+      const pack = [];
+
+      // 3 zufällige Sticker ziehen
+      for(let i = 0; i < 3 && available.length > 0; i++){
+        const randomIndex = Math.floor(Math.random() * available.length);
+        const stickerId = available.splice(randomIndex, 1)[0];
+        pack.push(stickerId);
+      }
+
+      return pack;
+    }
+
+    // ——————————————————————————————————————————
     // UI – Set-Verwaltung
     // ——————————————————————————————————————————
     const elSetsList = document.getElementById('setsList');
@@ -1395,7 +1561,13 @@
       playClickSound();
 
       const correct = letter === game.target;
-      if(correct) game.ok++; else game.bad++;
+      if(correct){
+        game.ok++;
+        // Buchstaben-Statistik für Belohnungssystem tracken
+        await incrementLetterStat(game.target);
+      } else {
+        game.bad++;
+      }
       elOk.textContent = game.ok; elBad.textContent = game.bad;
       const progress = Math.min(100, Math.round(((game.round) / game.rounds)*100));
       elBar.style.width = progress + '%';
@@ -1437,6 +1609,34 @@
       else if(pct>=70){ cup.querySelector('path').setAttribute('fill','#d6b36a'); star.setAttribute('fill','#ffe082'); elResultTitle.textContent='Silber! Super gemacht 🥈'; }
       else if(pct>=50){ cup.querySelector('path').setAttribute('fill','#c39a5a'); star.setAttribute('fill','#ffd54f'); elResultTitle.textContent='Bronze! Weiter so 🥉'; }
       else { cup.querySelector('path').setAttribute('fill','#c9c9c9'); star.setAttribute('fill','#e0e0e0'); elResultTitle.textContent='Stark gekämpft! 💪'; }
+      // Sterne für richtige Antworten vergeben
+      const earnedStars = ok;
+      let fullMsg = msg;
+
+      // Async-Teil für Sterne und Pack-Öffnung
+      (async () => {
+        const totalStars = await addStars(earnedStars);
+
+        // Prüfen ob Pack geöffnet werden kann
+        const canOpenPack = totalStars >= 10;
+        let packsToOpen = 0;
+        if(canOpenPack){
+          packsToOpen = Math.floor(totalStars / 10);
+        }
+
+        // Erweiterte Nachricht mit Sternen
+        if(earnedStars > 0){
+          fullMsg += `\n⭐ +${earnedStars} Stern${earnedStars > 1 ? 'e' : ''}! (${totalStars} gesamt)`;
+        }
+        if(packsToOpen > 0){
+          fullMsg += `\n\n🎁 ${packsToOpen} Sticker-Pack${packsToOpen > 1 ? 's' : ''} verfügbar!`;
+        }
+
+        elResultText.textContent = fullMsg;
+
+        // TODO: Pack-Öffnen UI hier integrieren wenn packsToOpen > 0
+      })();
+
       elResultText.textContent = msg;
 
       document.getElementById('setup').classList.remove('hidden');
