@@ -235,6 +235,28 @@
 
     footer{max-width:1100px; margin:-52px auto 32px; padding:0 16px; color:#6b7280; font-size:13px}
 
+    /* Set-Karten */
+    .set-card{
+      background:linear-gradient(145deg,#fff,#f3e8ff);
+      border-radius:16px; padding:14px 18px; min-width:200px;
+      box-shadow:0 4px 12px rgba(124,58,237,.15), inset 0 0 0 2px #e9d5ff;
+      cursor:pointer; transition:all .2s ease; position:relative;
+    }
+    .set-card:hover{transform:translateY(-2px); box-shadow:0 6px 18px rgba(124,58,237,.25), inset 0 0 0 2px var(--brand)}
+    .set-card.active{background:linear-gradient(145deg,var(--brand),#a78bfa); color:#fff; box-shadow:0 6px 18px rgba(124,58,237,.35), inset 0 0 0 3px rgba(255,255,255,.2)}
+    .set-card.active .set-emoji{text-shadow:0 2px 4px rgba(0,0,0,.2)}
+    .set-card.active .set-name{font-weight:900}
+    .set-card.active .set-count{color:rgba(255,255,255,.9)}
+    .set-emoji{font-size:32px; margin-bottom:6px; display:block}
+    .set-name{font-weight:800; font-size:16px; margin-bottom:4px}
+    .set-count{font-size:13px; color:var(--muted); font-weight:600}
+    .set-actions{position:absolute; top:10px; right:10px; display:flex; gap:4px; opacity:0; transition:opacity .2s}
+    .set-card:hover .set-actions{opacity:1}
+    .set-btn{border:0; background:rgba(255,255,255,.9); width:28px; height:28px; border-radius:50%; cursor:pointer; font-size:14px; display:grid; place-items:center; transition:all .15s}
+    .set-btn:hover{transform:scale(1.1); background:#fff}
+    .set-card.active .set-btn{background:rgba(255,255,255,.25); color:#fff}
+    .set-card.active .set-btn:hover{background:rgba(255,255,255,.4)}
+
     /* Install Button */
     .install-btn{
       display:none; margin-left:auto; border:0; padding:8px 14px; border-radius:999px;
@@ -293,6 +315,18 @@
 
     <!-- EINSTELLUNGEN -->
     <section id="einstellungen" class="card hidden">
+      <!-- Set-Verwaltung -->
+      <div style="margin-bottom:24px; padding-bottom:24px; border-bottom:2px solid #f3e8ff">
+        <p><b>Aufnahme-Sets verwalten</b></p>
+        <p class="muted">Erstelle verschiedene Aufnahme-Sets (z.B. "Mit Wörtern", "Nur Buchstaben", "Kinderstimme") und wechsle zwischen ihnen.</p>
+
+        <div id="setsList" style="display:flex; gap:10px; flex-wrap:wrap; margin:16px 0"></div>
+
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px">
+          <button id="btnCreateSet" class="btn secondary">➕ Neues Set erstellen</button>
+        </div>
+      </div>
+
       <div class="settings-wrap">
         <div>
           <p><b>Einstellungen · Aufnahmen</b></p>
@@ -527,6 +561,7 @@
 
       // Beim Wechsel zu Einstellungen: UI aktualisieren
       if (tabName === 'einstellungen') {
+        renderSetsList();
         updateStatusGridFromDB();
         updateUIForRecordingState();
       }
@@ -546,8 +581,10 @@
     const elProgressBadge = document.getElementById('progressBadge');
 
     async function updateUIForRecordingState() {
+      const setId = await getActiveSet();
       const keys = await idbKeys();
-      const recordedCount = keys.filter(k => k.startsWith('audio-')).length;
+      const prefix = 'audio-' + setId + '-';
+      const recordedCount = keys.filter(k => k.startsWith(prefix)).length;
       const hasRecordings = recordedCount > 0;
 
       // Spiel-Tab: Empty State anzeigen/verstecken
@@ -579,8 +616,10 @@
     // Beim ersten Besuch: Prüfen ob Aufnahmen vorhanden, sonst zu Einstellungen
     (async function checkFirstVisit() {
       await updateUIForRecordingState();
+      const setId = await getActiveSet();
       const keys = await idbKeys();
-      const hasRecordings = keys.filter(k => k.startsWith('audio-')).length > 0;
+      const prefix = 'audio-' + setId + '-';
+      const hasRecordings = keys.filter(k => k.startsWith(prefix)).length > 0;
 
       // Wenn keine Aufnahmen: Automatisch zu Einstellungen wechseln
       if (!hasRecordings) {
@@ -589,15 +628,25 @@
     })();
 
     // ——————————————————————————————————————————
-    // IndexedDB (Aufnahmen)
+    // IndexedDB (Aufnahmen & Sets)
     // ——————————————————————————————————————————
     const DB_NAME='abc-abenteuer-db';
     const STORE='recordings';
+    const DB_VERSION = 2;
+
     let dbPromise = new Promise((resolve,reject)=>{
-      const req = indexedDB.open(DB_NAME,1);
-      req.onupgradeneeded = ()=> {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = (e)=> {
         const db = req.result;
-        if(!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+        const oldVersion = e.oldVersion;
+
+        // Version 1: Recordings Store erstellen
+        if(!db.objectStoreNames.contains(STORE)) {
+          db.createObjectStore(STORE);
+        }
+
+        // Version 2: Migration für Multi-Sets (wird später bei Bedarf durchgeführt)
+        // Alte "audio-X" Keys bleiben vorerst, werden bei erster Nutzung migriert
       };
       req.onsuccess = ()=> resolve(req.result);
       req.onerror = ()=> reject(req.error);
@@ -658,6 +707,254 @@
     }
 
     // ——————————————————————————————————————————
+    // Set-Management
+    // ——————————————————————————————————————————
+    let currentSetId = null;
+
+    // UUID generieren
+    function generateUUID(){
+      return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+    }
+
+    // Neues Set erstellen
+    async function createSet(name, emoji){
+      const setId = generateUUID();
+      const setData = {
+        name: name || 'Neues Set',
+        emoji: emoji || '🎤',
+        created: Date.now()
+      };
+      await idbSet('set-' + setId, setData);
+      return setId;
+    }
+
+    // Alle Sets abrufen
+    async function getAllSets(){
+      const keys = await idbKeys();
+      const setKeys = keys.filter(k => k.startsWith('set-'));
+      const sets = [];
+      for(const key of setKeys){
+        const data = await idbGet(key);
+        if(data){
+          sets.push({
+            id: key.replace('set-', ''),
+            ...data
+          });
+        }
+      }
+      // Sortieren nach Erstellungsdatum
+      return sets.sort((a,b) => a.created - b.created);
+    }
+
+    // Set löschen (inkl. aller Aufnahmen)
+    async function deleteSet(setId){
+      // Set-Metadaten löschen
+      await idbDel('set-' + setId);
+
+      // Alle Audio-Aufnahmen des Sets löschen
+      const keys = await idbKeys();
+      const audioKeys = keys.filter(k => k.startsWith('audio-' + setId + '-'));
+      for(const key of audioKeys){
+        await idbDel(key);
+      }
+    }
+
+    // Set umbenennen
+    async function updateSet(setId, name, emoji){
+      const setData = await idbGet('set-' + setId);
+      if(setData){
+        setData.name = name;
+        setData.emoji = emoji;
+        await idbSet('set-' + setId, setData);
+      }
+    }
+
+    // Aktives Set setzen
+    async function setActiveSet(setId){
+      currentSetId = setId;
+      await idbSet('activeSet', setId);
+    }
+
+    // Aktives Set laden
+    async function getActiveSet(){
+      if(currentSetId) return currentSetId;
+      const saved = await idbGet('activeSet');
+      if(saved){
+        currentSetId = saved;
+        return saved;
+      }
+      // Kein aktives Set? Erstes verfügbares Set nutzen oder Default erstellen
+      const sets = await getAllSets();
+      if(sets.length > 0){
+        currentSetId = sets[0].id;
+        await setActiveSet(currentSetId);
+        return currentSetId;
+      }
+      // Default-Set erstellen
+      const defaultId = await createSet('Meine Aufnahmen', '🎤');
+      await setActiveSet(defaultId);
+      return defaultId;
+    }
+
+    // Anzahl Aufnahmen pro Set
+    async function getSetRecordingCount(setId){
+      const keys = await idbKeys();
+      return keys.filter(k => k.startsWith('audio-' + setId + '-')).length;
+    }
+
+    // Migration: Alte Aufnahmen (audio-X) in neues Format (audio-SETID-X) migrieren
+    async function migrateOldRecordings(){
+      const keys = await idbKeys();
+
+      // Prüfe ob alte Keys (audio-X statt audio-UUID-X) vorhanden sind
+      const oldKeys = keys.filter(k => {
+        if(!k.startsWith('audio-')) return false;
+        const parts = k.split('-');
+        // Altes Format: audio-A, audio-B, etc. (2 Teile)
+        // Neues Format: audio-UUID-A (3+ Teile wegen UUID mit Bindestrichen)
+        return parts.length === 2 && /^[A-Z]$/.test(parts[1]);
+      });
+
+      if(oldKeys.length === 0) return; // Keine Migration nötig
+
+      console.log(`Migriere ${oldKeys.length} alte Aufnahmen...`);
+
+      // Default-Set erstellen für Migration
+      const migrationSetId = await createSet('Meine Aufnahmen', '🎤');
+      await setActiveSet(migrationSetId);
+
+      // Alle alten Aufnahmen migrieren
+      for(const oldKey of oldKeys){
+        const letter = oldKey.replace('audio-', '');
+        const blob = await idbGet(oldKey);
+        if(blob){
+          // In neuem Format speichern
+          await idbSet('audio-' + migrationSetId + '-' + letter, blob);
+          // Alten Key löschen
+          await idbDel(oldKey);
+        }
+      }
+
+      console.log(`Migration abgeschlossen: ${oldKeys.length} Aufnahmen migriert.`);
+    }
+
+    // ——————————————————————————————————————————
+    // UI – Set-Verwaltung
+    // ——————————————————————————————————————————
+    const elSetsList = document.getElementById('setsList');
+    const elBtnCreateSet = document.getElementById('btnCreateSet');
+
+    // Sets-Liste rendern
+    async function renderSetsList(){
+      const sets = await getAllSets();
+      const activeSetId = await getActiveSet();
+
+      elSetsList.innerHTML = '';
+
+      for(const set of sets){
+        const count = await getSetRecordingCount(set.id);
+        const isActive = set.id === activeSetId;
+
+        const card = document.createElement('div');
+        card.className = 'set-card' + (isActive ? ' active' : '');
+        card.innerHTML = `
+          <div class="set-actions">
+            <button class="set-btn" data-action="edit" data-id="${set.id}" title="Bearbeiten">✏️</button>
+            <button class="set-btn" data-action="delete" data-id="${set.id}" title="Löschen">🗑️</button>
+          </div>
+          <span class="set-emoji">${set.emoji}</span>
+          <div class="set-name">${set.name}</div>
+          <div class="set-count">${count} / 26 Buchstaben</div>
+        `;
+
+        // Klick auf Karte: Set aktivieren
+        card.addEventListener('click', async (e) => {
+          // Nicht aktivieren wenn auf Buttons geklickt wurde
+          if(e.target.closest('.set-btn')) return;
+          await setActiveSet(set.id);
+          await renderSetsList();
+          await updateRecordingUI();
+        });
+
+        elSetsList.appendChild(card);
+      }
+    }
+
+    // Set erstellen Dialog
+    elBtnCreateSet.addEventListener('click', async () => {
+      const name = prompt('Name des Sets:', 'Neues Set');
+      if(!name) return;
+
+      const emoji = prompt('Emoji für das Set (z.B. 🍎, 🔤, 👶):', '🎤');
+      if(emoji === null) return;
+
+      const setId = await createSet(name, emoji || '🎤');
+      await setActiveSet(setId);
+      await renderSetsList();
+      await updateRecordingUI();
+    });
+
+    // Set-Aktionen (Bearbeiten/Löschen)
+    elSetsList.addEventListener('click', async (e) => {
+      const btn = e.target.closest('.set-btn');
+      if(!btn) return;
+
+      e.stopPropagation();
+
+      const action = btn.dataset.action;
+      const setId = btn.dataset.id;
+
+      if(action === 'delete'){
+        const sets = await getAllSets();
+        if(sets.length <= 1){
+          alert('Du musst mindestens ein Set behalten!');
+          return;
+        }
+
+        if(confirm('Set wirklich löschen? Alle Aufnahmen gehen verloren!')){
+          const wasActive = (await getActiveSet()) === setId;
+          await deleteSet(setId);
+
+          // Wenn das aktive Set gelöscht wurde, erstes verfügbares Set aktivieren
+          if(wasActive){
+            const remainingSets = await getAllSets();
+            if(remainingSets.length > 0){
+              await setActiveSet(remainingSets[0].id);
+            }
+          }
+
+          await renderSetsList();
+          await updateRecordingUI();
+        }
+      }
+
+      if(action === 'edit'){
+        const setData = await idbGet('set-' + setId);
+        if(!setData) return;
+
+        const name = prompt('Name des Sets:', setData.name);
+        if(name === null) return;
+
+        const emoji = prompt('Emoji für das Set:', setData.emoji);
+        if(emoji === null) return;
+
+        await updateSet(setId, name || setData.name, emoji || setData.emoji);
+        await renderSetsList();
+      }
+    });
+
+    // Hilfsfunktion: Komplettes UI der Aufnahmen aktualisieren
+    async function updateRecordingUI(){
+      await updateStatusGridFromDB();
+      await updateUIForRecordingState();
+      if(currentLetter) await selectLetter(currentLetter);
+    }
+
+    // ——————————————————————————————————————————
     // UI – Buchstabenraster
     // ——————————————————————————————————————————
     function renderLetterGrid(){
@@ -676,8 +973,13 @@
 
     // Buchstaben-Buttons basierend auf verfügbaren Aufnahmen aktivieren/deaktivieren
     async function updateLetterButtons(){
+      const setId = await getActiveSet();
       const keys = await idbKeys();
-      const hasSet = new Set(keys.filter(k=>k.startsWith('audio-')).map(k=> k.replace('audio-','')));
+      const prefix = 'audio-' + setId + '-';
+      const hasSet = new Set(
+        keys.filter(k => k.startsWith(prefix))
+           .map(k => k.replace(prefix, ''))
+      );
       document.querySelectorAll('.btn-letter').forEach(btn => {
         const letter = btn.getAttribute('data-letter');
         btn.disabled = !hasSet.has(letter);
@@ -710,7 +1012,8 @@
       currentLetter = ch;
       elRecLetter.textContent = ch;
       elRecTitle.textContent = ch;
-      const blob = await idbGet('audio-' + ch);
+      const setId = await getActiveSet();
+      const blob = await idbGet('audio-' + setId + '-' + ch);
       const has = !!blob;
       elRecStatus.textContent = has ? 'Aufnahme gespeichert' : 'Keine Aufnahme';
       elBtnPlay.disabled = !has;
@@ -720,8 +1023,14 @@
     }
 
     async function updateStatusGridFromDB(){
+      const setId = await getActiveSet();
       const keys = await idbKeys();
-      const hasSet = new Set(keys.map(k=> k.replace('audio-','')));
+      // Nur Aufnahmen des aktiven Sets berücksichtigen
+      const prefix = 'audio-' + setId + '-';
+      const hasSet = new Set(
+        keys.filter(k => k.startsWith(prefix))
+           .map(k => k.replace(prefix, ''))
+      );
       renderStatusGrid(hasSet);
       // Update Startbutton aktivierbar?
       const count = hasSet.size;
@@ -750,11 +1059,13 @@
       recorder.ondataavailable = e=> e.data && recChunks.push(e.data);
       recorder.onstop = async ()=>{
         const blob = new Blob(recChunks, {type: recorder.mimeType || 'audio/webm'});
-        await idbSet('audio-' + currentLetter, blob);
+        const setId = await getActiveSet();
+        await idbSet('audio-' + setId + '-' + currentLetter, blob);
         elRecStatus.textContent='Aufnahme gespeichert';
         elBtnPlay.disabled=false; elBtnDelete.disabled=false;
         updateStatusGridFromDB();
         updateUIForRecordingState();
+        renderSetsList();
       };
       recorder.start();
       elBtnRec.disabled=true; elBtnStop.disabled=false; elBtnPlay.disabled=true; elBtnDelete.disabled=true;
@@ -770,7 +1081,8 @@
     });
 
     elBtnPlay.addEventListener('click', async ()=>{
-      const blob = await idbGet('audio-' + currentLetter);
+      const setId = await getActiveSet();
+      const blob = await idbGet('audio-' + setId + '-' + currentLetter);
       if(!blob){ alert('Keine Aufnahme gefunden.'); return; }
       const url = URL.createObjectURL(blob);
       const a = new Audio(url);
@@ -779,11 +1091,13 @@
 
     elBtnDelete.addEventListener('click', async ()=>{
       if(confirm('Aufnahme für "'+currentLetter+'" löschen?')){
-        await idbDel('audio-' + currentLetter);
+        const setId = await getActiveSet();
+        await idbDel('audio-' + setId + '-' + currentLetter);
         elRecStatus.textContent='Keine Aufnahme';
         elBtnPlay.disabled=true; elBtnDelete.disabled=true;
         updateStatusGridFromDB();
         updateUIForRecordingState();
+        renderSetsList();
       }
     });
 
@@ -801,41 +1115,62 @@
     // ——————————————————————————————————————————
     document.getElementById('exportBtn').addEventListener('click', async ()=>{
       try{
-        const keys = await idbKeys();
-        const audioKeys = keys.filter(k => k.startsWith('audio-'));
+        const sets = await getAllSets();
 
-        if(audioKeys.length === 0){
-          alert('Keine Aufnahmen zum Exportieren vorhanden.');
+        if(sets.length === 0){
+          alert('Keine Sets zum Exportieren vorhanden.');
           return;
         }
 
         const zip = new JSZip();
 
-        // Alle Aufnahmen zur ZIP hinzufügen
-        for(const key of audioKeys){
-          const blob = await idbGet(key);
-          if(blob){
-            // Dateiname: A.webm, B.webm, etc.
-            const letter = key.replace('audio-', '');
-            const extension = blob.type.includes('webm') ? 'webm' :
-                            blob.type.includes('ogg') ? 'ogg' :
-                            blob.type.includes('mp4') ? 'mp4' : 'audio';
-            zip.file(`${letter}.${extension}`, blob);
+        // Set-Metadaten exportieren
+        const setsMetadata = [];
+        let totalAudio = 0;
+
+        for(const set of sets){
+          setsMetadata.push({
+            id: set.id,
+            name: set.name,
+            emoji: set.emoji,
+            created: set.created
+          });
+
+          // Alle Aufnahmen des Sets exportieren
+          const keys = await idbKeys();
+          const prefix = 'audio-' + set.id + '-';
+          const audioKeys = keys.filter(k => k.startsWith(prefix));
+
+          const setFolder = zip.folder(set.id);
+
+          for(const key of audioKeys){
+            const blob = await idbGet(key);
+            if(blob){
+              const letter = key.replace(prefix, '');
+              const extension = blob.type.includes('webm') ? 'webm' :
+                              blob.type.includes('ogg') ? 'ogg' :
+                              blob.type.includes('mp4') ? 'mp4' : 'audio';
+              setFolder.file(`${letter}.${extension}`, blob);
+              totalAudio++;
+            }
           }
         }
+
+        // sets.json hinzufügen
+        zip.file('sets.json', JSON.stringify(setsMetadata, null, 2));
 
         // ZIP generieren und herunterladen
         const content = await zip.generateAsync({type: 'blob'});
         const url = URL.createObjectURL(content);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `abc-abenteuer-aufnahmen-${new Date().toISOString().split('T')[0]}.zip`;
+        a.download = `abc-abenteuer-sets-${new Date().toISOString().split('T')[0]}.zip`;
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         URL.revokeObjectURL(url);
 
-        alert(`✅ ${audioKeys.length} Aufnahmen erfolgreich exportiert!`);
+        alert(`✅ ${sets.length} Set(s) mit insgesamt ${totalAudio} Aufnahmen exportiert!`);
       }catch(e){
         console.error('Export fehlgeschlagen:', e);
         alert('❌ Export fehlgeschlagen: ' + e.message);
@@ -856,55 +1191,89 @@
         const zip = new JSZip();
         const contents = await zip.loadAsync(file);
 
-        let importedCount = 0;
+        let importedSets = 0;
+        let importedAudio = 0;
         let errorCount = 0;
 
-        // Durch alle Dateien in der ZIP iterieren
-        for(const [filename, zipEntry] of Object.entries(contents.files)){
-          // Ignoriere Ordner und versteckte Dateien
-          if(zipEntry.dir || filename.startsWith('__MACOSX') || filename.startsWith('.')){
-            continue;
+        // Prüfe ob sets.json vorhanden ist (neues Format)
+        const setsJsonFile = contents.files['sets.json'];
+
+        if(setsJsonFile){
+          // Neues Format: Sets mit Metadaten
+          const setsJsonText = await setsJsonFile.async('text');
+          const setsMetadata = JSON.parse(setsJsonText);
+
+          for(const setMeta of setsMetadata){
+            // Set erstellen
+            await idbSet('set-' + setMeta.id, {
+              name: setMeta.name,
+              emoji: setMeta.emoji,
+              created: setMeta.created
+            });
+
+            // Aufnahmen des Sets importieren
+            const setPrefix = setMeta.id + '/';
+            for(const [filename, zipEntry] of Object.entries(contents.files)){
+              if(zipEntry.dir || !filename.startsWith(setPrefix)) continue;
+
+              const letter = filename.replace(setPrefix, '').split('.')[0].toUpperCase();
+              if(!/^[A-Z]$/.test(letter)) continue;
+
+              const blob = await zipEntry.async('blob');
+              if(!blob.type.startsWith('audio/') && !filename.match(/\.(webm|ogg|mp3|mp4|m4a|wav)$/i)){
+                errorCount++;
+                continue;
+              }
+
+              await idbSet('audio-' + setMeta.id + '-' + letter, blob);
+              importedAudio++;
+            }
+
+            importedSets++;
           }
 
-          // Extrahiere Buchstaben aus Dateinamen (z.B. "A.webm" -> "A")
-          const letter = filename.split('.')[0].toUpperCase();
+          alert(`✅ ${importedSets} Set(s) mit ${importedAudio} Aufnahmen importiert!${errorCount > 0 ? `\n⚠️ ${errorCount} Dateien übersprungen.` : ''}`);
 
-          // Validierung: Muss ein einzelner Buchstabe A-Z sein
-          if(!/^[A-Z]$/.test(letter)){
-            console.warn(`Überspringe ungültige Datei: ${filename}`);
-            errorCount++;
-            continue;
+        } else {
+          // Altes Format: Direkte Audio-Dateien ohne Sets
+          // Importiere in aktuelles Set
+          const currentSetId = await getActiveSet();
+
+          for(const [filename, zipEntry] of Object.entries(contents.files)){
+            if(zipEntry.dir || filename.startsWith('__MACOSX') || filename.startsWith('.')) continue;
+
+            const letter = filename.split('.')[0].toUpperCase();
+            if(!/^[A-Z]$/.test(letter)){
+              errorCount++;
+              continue;
+            }
+
+            const blob = await zipEntry.async('blob');
+            if(!blob.type.startsWith('audio/') && !filename.match(/\.(webm|ogg|mp3|mp4|m4a|wav)$/i)){
+              errorCount++;
+              continue;
+            }
+
+            await idbSet('audio-' + currentSetId + '-' + letter, blob);
+            importedAudio++;
           }
 
-          // Blob aus ZIP extrahieren
-          const blob = await zipEntry.async('blob');
-
-          // Validierung: Muss Audio-Datei sein
-          if(!blob.type.startsWith('audio/') && !filename.match(/\.(webm|ogg|mp3|mp4|m4a|wav)$/i)){
-            console.warn(`Überspringe Nicht-Audio-Datei: ${filename}`);
-            errorCount++;
-            continue;
+          if(importedAudio > 0){
+            alert(`✅ ${importedAudio} Aufnahmen in aktuelles Set importiert!${errorCount > 0 ? `\n⚠️ ${errorCount} Dateien übersprungen.` : ''}`);
+          } else {
+            alert('❌ Keine gültigen Aufnahmen gefunden.');
           }
-
-          // In IndexedDB speichern
-          await idbSet('audio-' + letter, blob);
-          importedCount++;
         }
 
         // UI aktualisieren
-        updateStatusGridFromDB();
-        updateUIForRecordingState();
-        if(currentLetter) selectLetter(currentLetter);
+        await renderSetsList();
+        await updateStatusGridFromDB();
+        await updateUIForRecordingState();
+        if(currentLetter) await selectLetter(currentLetter);
 
         // Reset file input
         e.target.value = '';
 
-        // Feedback
-        if(importedCount > 0){
-          alert(`✅ ${importedCount} Aufnahmen erfolgreich importiert!${errorCount > 0 ? `\n⚠️ ${errorCount} Dateien übersprungen.` : ''}`);
-        }else{
-          alert('❌ Keine gültigen Aufnahmen in der ZIP-Datei gefunden.');
-        }
       }catch(e){
         console.error('Import fehlgeschlagen:', e);
         alert('❌ Import fehlgeschlagen: ' + e.message);
@@ -926,11 +1295,17 @@
 
     async function startGame(){
       // stelle sicher, dass es genug Buchstaben gibt
+      const setId = await getActiveSet();
       const keys = await idbKeys();
-      const set = new Set(keys.filter(k=>k.startsWith('audio-')).map(k=> k.replace('audio-','')));
+      const prefix = 'audio-' + setId + '-';
+      const set = new Set(
+        keys.filter(k => k.startsWith(prefix))
+           .map(k => k.replace(prefix, ''))
+      );
       if(set.size===0){ alert('Bitte nimm zuerst Buchstaben auf (mindestens 1).'); return; }
       const rounds = parseInt(elRounds.value,10);
       game = {
+        setId,
         recorded: Array.from(set),
         rounds,
         round: 0,
@@ -965,7 +1340,7 @@
       const pick = game.recorded[Math.floor(Math.random()*game.recorded.length)];
       game.target = pick;
       // Audio abspielen
-      const blob = await idbGet('audio-' + pick);
+      const blob = await idbGet('audio-' + game.setId + '-' + pick);
       if(!blob){
         // falls unerwartet weg, sofort nächste Runde
         return nextRound();
@@ -995,7 +1370,8 @@
         playClickSound();
 
         // Audio abspielen
-        const blob = await idbGet('audio-' + letter);
+        const setId = await getActiveSet();
+        const blob = await idbGet('audio-' + setId + '-' + letter);
         if(!blob) return;
         const url = URL.createObjectURL(blob);
         const audio = new Audio(url);
@@ -1084,6 +1460,12 @@
 
     // Inhalte initial
     (async function init(){
+      // Migration alter Aufnahmen (falls vorhanden)
+      await migrateOldRecordings();
+
+      // Default-Set sicherstellen und UI initialisieren
+      await getActiveSet();
+      await renderSetsList();
       await updateStatusGridFromDB();
     })();
 
