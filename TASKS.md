@@ -149,34 +149,34 @@ Custom Install-Button erscheint noch nicht auf Android Chrome/Brave. App ist abe
 **Priorität:** Hoch | **Aufwand:** Mittel  
 **Beschreibung:** Automatischer Progress: Start mit 4 Buchstaben → nach **2 fehlerfreien Läufen** +4 Buchstaben freischalten → bis 26. Danach: Audio‑Set‑Wechsel & gruppierte Anordnung.  
 **Akzeptanzkriterien:**
-- [ ] `unlocked` & `flawlessStreak` werden korrekt geführt.  
-- [ ] Nach 2 erfolgreichen Läufen bei 26 Buchstaben (Set **ANLAUT**) → Wechsel zu **OHNE_ANLAUT**.  
-- [ ] UI‑Feedback „Nächste Stufe freigeschaltet!“.  
+- [x] `unlocked` & `flawlessStreak` werden korrekt geführt.  
+- [x] Nach 2 erfolgreichen Läufen bei 26 Buchstaben (Set **ANLAUT**) → Wechsel zu **OHNE_ANLAUT**.  
+- [x] UI‑Feedback „Nächste Stufe freigeschaltet!“.  
 **Details:** siehe `SPECS/PROGRESSION_RULES.md`
 
 #### 6.4 Freier Modus (manuelle Wahl)
 **Priorität:** Mittel | **Aufwand:** Klein  
 **Beschreibung:** Eltern wählen Buchstabenmenge (4/8/12/26), Audio‑Set (ANLAUT/OHNE_ANLAUT) und Schwierigkeit (LEICHT/MITTEL/SCHWER/PROFI).  
 **Akzeptanzkriterien:**
-- [ ] Einstellungen wirken sofort & persistieren.  
-- [ ] Bei fehlenden Aufnahmen: Hinweis/Degradierung.  
+- [x] Einstellungen wirken sofort & persistieren.  
+- [x] Bei fehlenden Aufnahmen: Hinweis/Degradierung.  
 **Details:** siehe `SPECS/MODE_SELECTION.md`
 
 #### 6.5 Fehler‑Wiederholung (Adaptive Übung)
 **Priorität:** Mittel | **Aufwand:** Klein–Mittel  
 **Beschreibung:** Fehler werden gesammelt und mit höherer Wahrscheinlichkeit erneut abgefragt, anschließend mit „Decay“ wieder abgebaut.  
 **Akzeptanzkriterien:**
-- [ ] Mind. jede 3. Runde ein Pick aus Fehlerliste (falls nicht leer).  
-- [ ] Decay nach Korrekt‑Serien.  
-- [ ] Eltern‑Tipp im Report (lokal).  
+- [x] Mind. jede 3. Runde ein Pick aus Fehlerliste (falls nicht leer).  
+- [x] Decay nach Korrekt‑Serien.  
+- [x] Eltern‑Tipp im Report (lokal).  
 **Details:** siehe `SPECS/ADAPTIVE_PRACTICE.md`
 
 #### 6.6 Einstellungs‑UI (Modus + Schwierigkeit)
 **Priorität:** Mittel | **Aufwand:** Klein  
 **Beschreibung:** Umschalter „Modus“ (FREI/LERNWEG), und – falls FREI – Auswahl für Buchstabenmenge/Set/Schwierigkeit.  
 **Akzeptanzkriterien:**
-- [ ] Mobile‑geeignet; klare Labels; aktiver Zustand visuell.  
-- [ ] Hinweis bei fehlenden Aufnahmen inkl. Direktlink „Jetzt aufnehmen“.  
+- [x] Mobile‑geeignet; klare Labels; aktiver Zustand visuell.  
+- [x] Hinweis bei fehlenden Aufnahmen inkl. Direktlink „Jetzt aufnehmen“.  
 **Details:** siehe `SPECS/UX_UI.md`
 
 #### 6.7 SFX‑Integration (optional)
@@ -194,12 +194,14 @@ Custom Install-Button erscheint noch nicht auf Android Chrome/Brave. App ist abe
 **Beschreibung:** Aufnahme- und Wiedergabe-Flow der Audio-Sets um Varianten mit
 Schwierigkeits-Tag erweitern.  
 **Akzeptanzkriterien:**
-- [ ] Aufnahme-UI erlaubt das Setzen eines Schwierigkeits-Tags pro Clip
+- [x] Aufnahme-UI erlaubt das Setzen eines Schwierigkeits-Tags pro Clip
       (Standard `LEICHT`).  
-- [ ] Mehrere Clips pro Buchstabe & Schwierigkeit sind möglich und einzeln
+- [x] Mehrere Clips pro Buchstabe & Schwierigkeit sind möglich und einzeln
       löschbar.  
-- [ ] Spiel nutzt für die aktive Schwierigkeit einen zufälligen Clip der
+- [x] Spiel nutzt für die aktive Schwierigkeit einen zufälligen Clip der
       passenden Wertigkeit (Fallback wie in der Spec beschrieben).  
+- [x] Aufnahme-Assistent springt nach jedem Clip automatisch zum nächsten
+      Buchstaben (semi-automatisches Batch-Recording).  
 **Details:** siehe `SPECS/AUDIO_SETS.md`
 
 ---

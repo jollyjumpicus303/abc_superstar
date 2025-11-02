@@ -71,6 +71,7 @@
     .btn-letter:hover{transform:translateY(-2px); box-shadow: 0 8px 20px rgba(124,58,237,.2), inset 0 0 0 3px var(--brand-3)}
     .btn-letter:active{transform:scale(.96)}
     .btn-letter[disabled]{opacity:.4; cursor:not-allowed; filter:grayscale(.6)}
+    .btn-letter.locked{opacity:.3; border-style:dashed;}
     .hud{
       display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px; margin:8px 0 14px;
     }
@@ -112,6 +113,32 @@
     .status-tile:hover{transform:translateY(-2px); box-shadow: 0 4px 12px rgba(124,58,237,.2), inset 0 0 0 2px var(--brand-3)}
     .status-tile:active{transform:scale(.98)}
     .status-dot{position:absolute; top:8px; right:8px; width:12px; height:12px; border-radius:999px; background:#d1d5db; box-shadow:inset 0 1px 2px rgba(0,0,0,.1)}
+    .status-diffs{
+      display:flex;
+      gap:4px;
+      justify-content:center;
+      margin-top:4px;
+      flex-wrap:wrap;
+    }
+    .status-pill{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      min-width:18px;
+      height:18px;
+      border-radius:12px;
+      background:#ede9fe;
+      color:#4c1d95;
+      font-size:11px;
+      font-weight:600;
+      padding:0 5px;
+      opacity:.35;
+    }
+    .status-pill.filled{
+      opacity:1;
+      background:#c4b5fd;
+      color:#2e1065;
+    }
     .status-tile.has{box-shadow: 0 2px 8px rgba(34,197,94,.15), inset 0 0 0 3px #86efac}
     .status-tile.has .status-dot{background:var(--ok); box-shadow:0 0 8px rgba(34,197,94,.4)}
     .recorder{
@@ -119,6 +146,72 @@
       border-radius:var(--radius); box-shadow:var(--shadow); padding:18px;
       border:2px solid #f3e8ff;
     }
+    .mode-section{
+      margin:24px 0 32px;
+      padding:24px;
+      background:linear-gradient(145deg,#faf5ff,var(--surface));
+      border-radius:var(--radius);
+      box-shadow:var(--shadow);
+      display:grid;
+      gap:20px;
+    }
+    .mode-section h2{margin:0; font-size:24px; color:var(--ink);}
+    .mode-cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px;}
+    .mode-card{
+      border:0;
+      border-radius:24px;
+      padding:18px;
+      text-align:left;
+      background:linear-gradient(160deg,#fff,#f3e8ff);
+      box-shadow:0 10px 24px rgba(124,58,237,.18);
+      color:var(--ink);
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .15s ease, box-shadow .15s ease;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+    }
+    .mode-card span{font-size:14px; color:#6b7896; font-weight:600;}
+    .mode-card strong{font-size:18px; display:block; font-weight:800;}
+    .mode-card:hover{transform:translateY(-2px); box-shadow:0 16px 30px rgba(124,58,237,.25);}
+    .mode-card:active{transform:scale(.98);}
+    .mode-card.active{outline:3px solid var(--brand); box-shadow:0 18px 30px rgba(124,58,237,.35);}
+    .mode-controls{display:grid; gap:18px; padding:18px; border-radius:18px; background:#fff; box-shadow:0 6px 18px rgba(15,23,42,.12);}
+    .mode-controls h3{margin:0 0 8px; font-size:18px; color:var(--ink);}
+    .chip-group{display:flex; gap:8px; flex-wrap:wrap;}
+    .chip{
+      border:0;
+      padding:10px 16px;
+      border-radius:999px;
+      background:#f3e8ff;
+      color:var(--brand);
+      font-weight:700;
+      cursor:pointer;
+      transition:transform .15s ease, box-shadow .15s ease;
+    }
+    .chip:hover{transform:translateY(-1px); box-shadow:0 8px 16px rgba(124,58,237,.2);}
+    .chip.active{background:var(--brand); color:#fff; box-shadow:0 12px 20px rgba(124,58,237,.3);}
+    .mode-warning{padding:12px 16px; border-radius:14px; background:rgba(251,191,36,.15); color:#92400e; font-weight:600; display:flex; gap:10px; align-items:center;}
+    .mode-warning button{margin-left:auto; border:0; background:#f59e0b; color:#fff; padding:8px 14px; border-radius:999px; font-weight:700; cursor:pointer; box-shadow:0 10px 16px rgba(234,179,8,.3);}
+    @media (max-width: 720px){
+      .mode-section{padding:18px;}
+      .mode-card{padding:16px;}
+      .mode-controls{padding:14px;}
+    }
+    .mode-dialog .dialog{max-width:480px; text-align:center; padding:28px;}
+    .mode-dialog h3{margin-top:0; font-size:24px; color:var(--ink);}
+    .mode-dialog-cards{display:grid; gap:12px; margin:18px 0;}
+    .mode-dialog-card{border:0; border-radius:20px; padding:18px; background:#fff; box-shadow:0 10px 20px rgba(15,23,42,.15);
+      font-size:16px; font-weight:700; color:var(--ink); display:flex; flex-direction:column; gap:6px; cursor:pointer;
+      transition:transform .15s ease, box-shadow .15s ease;
+    }
+    .mode-dialog-card strong{font-size:20px;}
+    .mode-dialog-card span{font-size:14px; font-weight:600; color:#6b7896;}
+    .mode-dialog-card:hover{transform:translateY(-2px); box-shadow:0 16px 30px rgba(124,58,237,.2);}
+    .mode-dialog-card:active{transform:scale(.98);}
+    .mode-dialog-card.active{outline:3px solid var(--brand); box-shadow:0 16px 36px rgba(124,58,237,.3);}
+    .mode-dialog-actions{display:flex; gap:12px; justify-content:center; margin-top:18px; flex-wrap:wrap;}
     .recorder h3{margin:0 0 10px; color:var(--ink)}
     .rec-letter{
       font-size:64px; font-weight:900; display:inline-flex; align-items:center; justify-content:center;
@@ -126,6 +219,42 @@
       background:linear-gradient(145deg,#fff,#f3e8ff);
       box-shadow: 0 4px 16px rgba(124,58,237,.15), inset 0 0 0 3px #e9d5ff;
     }
+    .clip-list{max-height:220px; overflow:auto; padding-right:4px;}
+    .clip-item{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding:8px 10px;
+      border-radius:12px;
+      background:#f5f3ff;
+      border:1px solid #e0d5ff;
+      transition:box-shadow .2s ease, transform .15s ease;
+    }
+    .clip-item.active{
+      background:#fff;
+      box-shadow:0 0 0 2px var(--brand-3);
+      transform:translateY(-1px);
+    }
+    .clip-info{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .clip-badge{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      background:#ede9fe;
+      color:#4c1d95;
+      font-size:12px;
+      font-weight:700;
+      border-radius:999px;
+      padding:2px 8px;
+    }
+    .clip-meta{font-size:11px; color:#6b7896;}
+    .clip-actions{display:flex; gap:6px; align-items:center;}
+    .clip-actions .btn{min-width:36px; padding:4px 6px; font-size:14px;}
     .timer{font-variant-numeric:tabular-nums; font-weight:700}
     .blink{animation:blink 1s steps(1) infinite}
     @keyframes blink{50%{opacity:.35}}
@@ -140,6 +269,37 @@
       padding:12px; border-radius:20px;
       text-align:center; font-weight:900; font-size:20px; color:#1b2055;
       text-shadow:0 2px 0 #fff;
+    }
+    .unlock-banner{
+      position:fixed;
+      top:24px;
+      left:50%;
+      transform:translate(-50%,-10px);
+      background:var(--brand);
+      color:#fff;
+      padding:16px 24px;
+      border-radius:999px;
+      box-shadow:0 18px 40px rgba(124,58,237,.35);
+      display:flex;
+      align-items:center;
+      gap:12px;
+      font-weight:600;
+      z-index:1000;
+      opacity:0;
+      transition:opacity .3s ease, transform .3s ease;
+    }
+    .unlock-banner.visible{
+      opacity:1;
+      transform:translate(-50%,0);
+    }
+    .unlock-banner strong{
+      display:block;
+      font-size:16px;
+    }
+    .unlock-banner span{
+      font-size:14px;
+      font-weight:500;
+      line-height:1.3;
     }
     .tag{font-size:12px; font-weight:800; padding:4px 8px; border-radius:999px; background:rgba(0,0,0,.06)}
     .tada{animation:tada .8s ease both}
@@ -329,7 +489,9 @@
             <b><span id="roundsOut">10</span></b>
           </label>
           <button id="btnStart" class="btn">Spiel starten</button>
+          <button id="btnChangeMode" class="btn secondary" type="button">Modus wechseln</button>
         </div>
+        <p id="modeHint" class="muted hidden" style="margin-top:-6px"></p>
       </div>
 
       <div id="hud" class="hud hidden">
@@ -380,6 +542,12 @@
         </div>
       </div>
 
+      <div class="info-box" style="margin-bottom:24px;">
+        <h3 style="margin-top:0">Spielmodus &amp; Audio-Stil</h3>
+        <p class="muted">Den Modus (Anfänger, Lernweg, Meister) und den Audio-Stil (Auto, Buchstabe + Anlaut, …) wählst du jetzt direkt beim Spielstart.</p>
+        <button id="btnParentModeDialog" class="btn secondary" type="button">Modusauswahl anzeigen</button>
+      </div>
+
       <div class="settings-wrap">
         <div>
           <p><b>Einstellungen · Aufnahmen</b></p>
@@ -403,17 +571,32 @@
               <div class="muted">Status: <b id="recStatus">Keine Aufnahme</b></div>
             </div>
           </div>
+          <div id="recordDifficultyGroup" class="chip-group" style="margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap">
+            <button type="button" class="chip active" data-record-difficulty="LEICHT">Leicht</button>
+            <button type="button" class="chip" data-record-difficulty="MITTEL">Mittel</button>
+            <button type="button" class="chip" data-record-difficulty="SCHWER">Schwer</button>
+            <button type="button" class="chip" data-record-difficulty="PROFI">Profi</button>
+          </div>
           <div class="controls" style="margin:10px 0">
             <button id="btnRec" class="btn">🎙️ Aufnehmen</button>
             <button id="btnPlay" class="btn secondary" disabled>▶️ Testen</button>
             <button id="btnDelete" class="btn ghost" disabled>🗑️ Löschen</button>
             <span class="timer" id="timer">00:00</span>
           </div>
+          <div id="clipList" class="clip-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px"></div>
           <div class="muted">Tipp: Spreche klar und kurz (z. B. „B“ oder „B – wie Ball“).</div>
         </aside>
       </div>
-    </section>
-  </main>
+  </section>
+</main>
+
+  <div id="unlockBanner" class="unlock-banner hidden" role="status" aria-live="polite">
+    <span aria-hidden="true">🎉</span>
+    <span>
+      <strong>Nächste Stufe freigeschaltet!</strong>
+      <span id="unlockBannerText">Weiter geht's!</span>
+    </span>
+  </div>
 
   <!-- Overlays: Regenbogen / Monster -->
   <div id="overlayGood" class="overlay hidden" role="alert" aria-live="assertive">
@@ -496,11 +679,56 @@
     </div>
   </div>
 
+  <div id="modeDialog" class="modal hidden mode-dialog" role="dialog" aria-modal="true" aria-labelledby="modeDialogTitle">
+    <div class="dialog">
+      <h3 id="modeDialogTitle">Wie möchtest du spielen?</h3>
+      <p class="muted" style="margin:0 0 12px">Tippe eine Karte, dann geht es los!</p>
+      <div class="mode-dialog-cards" role="group" aria-label="Moduswahl">
+        <button type="button" class="mode-dialog-card" data-mode-option data-mode="FREI" data-difficulty="LEICHT" data-count="4">
+          <strong>🐣 Anfänger</strong>
+          <span>4 Buchstaben · leicht</span>
+        </button>
+        <button type="button" class="mode-dialog-card" data-mode-option data-mode="LERNWEG">
+          <strong>🦋 Lernweg</strong>
+          <span>Geführter Pfad mit Belohnungen</span>
+        </button>
+        <button type="button" class="mode-dialog-card" data-mode="FREI" data-mode-option data-difficulty="PROFI" data-count="26">
+          <strong>🦸 Meister</strong>
+          <span>Alle Buchstaben · Profi</span>
+        </button>
+      </div>
+      <div class="chip-group" id="dialogAudioGroup" role="group" aria-label="Audio-Stil">
+        <button type="button" class="chip" data-audio-style="AUTO">Auto (wir wählen für dich)</button>
+        <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="LEICHT">Buchstabe + Anlaut</button>
+        <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="MITTEL">Nur Buchstabe</button>
+        <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="SCHWER">Beispielwort</button>
+        <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="PROFI">Super-Schwer</button>
+      </div>
+      <div class="mode-dialog-actions">
+        <button id="modeDialogCancel" class="btn secondary" type="button">Zurück</button>
+        <button id="modeDialogMore" class="btn ghost" type="button">Mehr Optionen (Eltern)</button>
+        <button id="modeDialogStart" class="btn" type="button" disabled>Los geht's!</button>
+      </div>
+    </div>
+  </div>
+
   <footer>
     <p>Made for kids 💜 · Alle Daten bleiben auf diesem Gerät. | <span class="muted">Bei iOS/Safari evtl. „Mikrofon erlauben“ bestätigen.</span></p>
   </footer>
 
-  <script>
+  <script type="module">
+    import {
+      getProgress,
+      saveProgress,
+      markCorrect,
+      markWrong
+    } from './app/progressStore.js';
+    import { pickNext } from './app/letterPool.js';
+    import { advanceAfterRun } from './app/progression.js';
+
+    // Persisted Lernfortschritt wird sofort initialisiert
+    getProgress();
+
     // ——————————————————————————————————————————
     // ABC-Abenteuer – Logik
     // ——————————————————————————————————————————
@@ -510,6 +738,7 @@
     // ——————————————————————————————————————————
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
+    let unlockBannerTimer = null;
 
     function initAudioContext(){
       if(!audioCtx) audioCtx = new AudioContext();
@@ -585,8 +814,24 @@
     const elBtnRec = document.getElementById('btnRec');
     const elBtnPlay = document.getElementById('btnPlay');
     const elBtnDelete = document.getElementById('btnDelete');
+    const elRecordDifficultyGroup = document.getElementById('recordDifficultyGroup');
+    const elClipList = document.getElementById('clipList');
     const elTimer = document.getElementById('timer');
     const elRoundNow = document.getElementById('roundNow');
+    const elUnlockBanner = document.getElementById('unlockBanner');
+    const elUnlockBannerText = document.getElementById('unlockBannerText');
+    const modeCards = Array.from(document.querySelectorAll('[data-mode-card]'));
+    const dialogModeCards = Array.from(document.querySelectorAll('[data-mode-option]'));
+    const elModeDialog = document.getElementById('modeDialog');
+    const elModeDialogStart = document.getElementById('modeDialogStart');
+    const elModeDialogCancel = document.getElementById('modeDialogCancel');
+    const elModeDialogMore = document.getElementById('modeDialogMore');
+    const dialogAudioGroup = document.getElementById('dialogAudioGroup');
+    const elModeControls = document.getElementById('modeControls');
+    const elFreeCountGroup = document.getElementById('freeCountGroup');
+    const elAudioSetGroup = document.getElementById('audioSetGroup');
+    const elDifficultyGroup = document.getElementById('difficultyGroup');
+    const elAudioStyleGroup = document.getElementById('audioStyleGroup');
     const elRoundMax = document.getElementById('roundMax');
     const elOk = document.getElementById('okCount');
     const elBad = document.getElementById('badCount');
@@ -599,6 +844,9 @@
     const elResultTitle = document.getElementById('resultTitle');
     const elResultText = document.getElementById('resultText');
     const elBtnStart = document.getElementById('btnStart');
+    const elBtnChangeMode = document.getElementById('btnChangeMode');
+    const elBtnParentModeDialog = document.getElementById('btnParentModeDialog');
+    const elModeHint = document.getElementById('modeHint');
     const elBtnTestAudio = document.getElementById('btnTestAudio');
     const elRounds = document.getElementById('rounds');
     const elRoundsOut = document.getElementById('roundsOut');
@@ -633,6 +881,192 @@
       switchToTab(targetButton.dataset.tab);
     });
 
+    modeCards.forEach(card => {
+      card.addEventListener('click', () => {
+        const mode = card.dataset.mode || 'FREI';
+        const updates = { mode };
+        if(mode === 'FREI'){
+          if(card.dataset.count){
+            updates.freeLetterCount = Number(card.dataset.count);
+          }
+          if(card.dataset.difficulty){
+            updates.difficulty = card.dataset.difficulty;
+            updates.audioStyle = 'MANUAL';
+          }
+        }
+        if(mode === 'LERNWEG'){
+          updates.audioStyle = 'AUTO';
+        }
+        saveAndApply(updates);
+      });
+    });
+
+    dialogModeCards.forEach(card => {
+      card.addEventListener('click', () => {
+        if (!pendingModeSelection) {
+          pendingModeSelection = extractSelectionFromProgress(getProgress());
+        }
+        const mode = card.dataset.mode || 'FREI';
+        pendingModeSelection.mode = mode;
+        if(mode === 'FREI'){
+          if(card.dataset.count){
+            pendingModeSelection.freeLetterCount = Number(card.dataset.count);
+          }
+          if(card.dataset.difficulty){
+            pendingModeSelection.difficulty = card.dataset.difficulty;
+            pendingModeSelection.audioStyle = 'MANUAL';
+          }
+        }
+        if(mode === 'LERNWEG'){
+          pendingModeSelection.audioStyle = 'AUTO';
+          const current = getProgress();
+          const synthetic = {
+            ...current,
+            mode: 'LERNWEG',
+            audioStyle: 'AUTO',
+          };
+          pendingModeSelection.difficulty = resolveAudioDifficulty(synthetic);
+        }
+        updateModeDialogCards(pendingModeSelection);
+        updateModeDialogAudioChips(pendingModeSelection);
+      });
+    });
+
+    if(dialogAudioGroup){
+      dialogAudioGroup.addEventListener('click', (e) => {
+        const chip = e.target.closest('[data-audio-style]');
+        if(!chip) return;
+        if (!pendingModeSelection) {
+          pendingModeSelection = extractSelectionFromProgress(getProgress());
+        }
+        const style = (chip.dataset.audioStyle || 'AUTO').toUpperCase();
+        pendingModeSelection.audioStyle = style;
+        if(style === 'MANUAL'){
+          pendingModeSelection.difficulty = chip.dataset.audioDifficulty || pendingModeSelection.difficulty || 'LEICHT';
+        } else {
+          const current = getProgress();
+          const synthetic = {
+            ...current,
+            mode: pendingModeSelection.mode,
+            freeLetterCount: pendingModeSelection.freeLetterCount,
+            audioStyle: 'AUTO',
+          };
+          pendingModeSelection.difficulty = resolveAudioDifficulty(synthetic);
+        }
+        updateModeDialogAudioChips(pendingModeSelection);
+        updateModeDialogCards(pendingModeSelection);
+      });
+    }
+
+    if(elBtnStart){
+      elBtnStart.addEventListener('click', () => {
+        if (elBtnStart.disabled) return;
+        openModeDialog();
+      });
+    }
+
+    if(elBtnChangeMode){
+      elBtnChangeMode.addEventListener('click', () => {
+        openModeDialog();
+      });
+    }
+
+    if(elBtnParentModeDialog){
+      elBtnParentModeDialog.addEventListener('click', () => {
+        openModeDialog();
+      });
+    }
+
+    if(elModeDialogCancel){
+      elModeDialogCancel.addEventListener('click', () => {
+        closeModeDialog();
+      });
+    }
+
+    if(elModeDialogMore){
+      elModeDialogMore.addEventListener('click', () => {
+        closeModeDialog();
+        switchToTab('einstellungen');
+        elBtnParentModeDialog?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
+    if(elModeDialogStart){
+      elModeDialogStart.addEventListener('click', () => {
+        if(!pendingModeSelection) return;
+        const updates = { mode: pendingModeSelection.mode };
+        if(pendingModeSelection.mode === 'FREI'){
+          updates.freeLetterCount = pendingModeSelection.freeLetterCount || 4;
+          if(pendingModeSelection.audioStyle === 'AUTO'){
+            updates.audioStyle = 'AUTO';
+          } else {
+            updates.audioStyle = 'MANUAL';
+            updates.difficulty = pendingModeSelection.difficulty || 'LEICHT';
+          }
+        } else {
+          updates.audioStyle = pendingModeSelection.audioStyle || 'AUTO';
+          if(updates.audioStyle === 'MANUAL'){
+            updates.difficulty = pendingModeSelection.difficulty || 'LEICHT';
+          }
+        }
+        saveAndApply(updates);
+        closeModeDialog();
+        startGame();
+      });
+    }
+
+    if(elFreeCountGroup){
+      elFreeCountGroup.addEventListener('click', (e) => {
+        const chip = e.target.closest('[data-free-count]');
+        if(!chip) return;
+        const count = Number(chip.dataset.freeCount || 0);
+        if(!count) return;
+        saveAndApply({ mode: 'FREI', freeLetterCount: count });
+      });
+    }
+
+    if(elAudioSetGroup){
+      elAudioSetGroup.addEventListener('click', (e) => {
+        const chip = e.target.closest('[data-audio-set]');
+        if(!chip) return;
+        const value = chip.dataset.audioSet;
+        if(!value) return;
+        saveAndApply({ mode: 'FREI', audioSet: value });
+      });
+    }
+
+    if(elAudioStyleGroup){
+      elAudioStyleGroup.addEventListener('click', (e) => {
+        const chip = e.target.closest('[data-audio-style]');
+        if(!chip) return;
+        const style = (chip.dataset.audioStyle || 'AUTO').toUpperCase();
+        if(style === 'AUTO'){
+          saveAndApply({ audioStyle: 'AUTO' });
+        } else {
+          const diff = chip.dataset.audioDifficulty || 'LEICHT';
+          saveAndApply({ audioStyle: 'MANUAL', difficulty: diff });
+        }
+      });
+    }
+
+    if(elDifficultyGroup){
+      elDifficultyGroup.addEventListener('click', (e) => {
+        const chip = e.target.closest('[data-difficulty]');
+        if(!chip) return;
+        const value = chip.dataset.difficulty;
+        if(!value) return;
+        saveAndApply({ mode: 'FREI', difficulty: value, audioStyle: 'MANUAL' });
+      });
+    }
+
+    const elModeWarningAction = document.getElementById('modeWarningAction');
+    if(elModeWarningAction){
+      elModeWarningAction.addEventListener('click', () => {
+        switchToTab('einstellungen');
+        elStatusGrid?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
     // Rundenanzeige
     elRounds.addEventListener('input', ()=> elRoundsOut.textContent = elRounds.value);
 
@@ -642,22 +1076,86 @@
 
     async function updateUIForRecordingState() {
       const setId = await getActiveSet();
-      const keys = await idbKeys();
-      const prefix = 'audio-' + setId + '-';
-      const recordedCount = keys.filter(k => k.startsWith(prefix)).length;
+      const setData = await loadSetData(setId);
+      const clips = setData && setData.clips ? setData.clips : [];
+      const recordedLetters = clips.map(clip => clip.letter);
+      const recordedSet = new Set(recordedLetters);
+      const byDifficulty = aggregateClipsByLetter(clips);
+      const recordedCount = recordedSet.size;
       const hasRecordings = recordedCount > 0;
 
       // Spiel-Tab: Empty State anzeigen/verstecken
       elEmptyState.classList.toggle('hidden', hasRecordings);
 
-      // Button "Spiel starten" aktivieren/deaktivieren
-      elBtnStart.disabled = !hasRecordings;
-      if (!hasRecordings) {
-        elBtnStart.style.opacity = '0.5';
-        elBtnStart.style.cursor = 'not-allowed';
+      const progress = getProgress();
+      const mode = progress && progress.mode ? progress.mode : 'FREI';
+      const desiredFreeCount = progress && typeof progress.freeLetterCount === 'number' ? progress.freeLetterCount : 4;
+      const unlockedForPath = progress && typeof progress.unlocked === 'number' ? progress.unlocked : 4;
+      updateStartButtonLabel(progress);
+
+      const baseWarnings = [];
+      const manualWarnings = [];
+      const audioStyle = progress && progress.audioStyle ? progress.audioStyle : 'AUTO';
+      const manualDifficulty = progress && progress.difficulty ? progress.difficulty : 'LEICHT';
+      if(hasRecordings){
+        if(mode === 'FREI'){
+          const targetLetters = LETTERS.slice(0, desiredFreeCount);
+          const missingBase = targetLetters.filter(letter => !recordedSet.has(letter));
+          if(missingBase.length){
+            baseWarnings.push(desiredFreeCount === 26
+              ? `Für alle 26 Buchstaben fehlen noch ${missingBase.length}.`
+              : `Es fehlen Aufnahmen für: ${missingBase.join(', ')}`);
+          }
+          if(audioStyle === 'MANUAL'){
+            const missingDiff = targetLetters.filter(letter => {
+              if(!recordedSet.has(letter)) return false; // bereits in Basiswarnung enthalten
+              const diffCounts = byDifficulty.get(letter);
+              return !diffCounts || !(diffCounts[manualDifficulty] > 0);
+            });
+            if(missingDiff.length){
+              const label = formatDifficultyLabel(manualDifficulty);
+              manualWarnings.push(`Für ${label} fehlen Aufnahmen für: ${missingDiff.join(', ')}`);
+            }
+          }
+        } else if(mode === 'LERNWEG'){
+          const requiredLetters = LETTERS.slice(0, unlockedForPath);
+          const missingBase = requiredLetters.filter(letter => !recordedSet.has(letter));
+          if(missingBase.length){
+            baseWarnings.push(`Für den Lernweg fehlen Aufnahmen für: ${missingBase.join(', ')}`);
+          }
+          if(audioStyle === 'MANUAL'){
+            const missingDiff = requiredLetters.filter(letter => {
+              if(!recordedSet.has(letter)) return false;
+              const diffCounts = byDifficulty.get(letter);
+              return !diffCounts || !(diffCounts[manualDifficulty] > 0);
+            });
+            if(missingDiff.length){
+              const label = formatDifficultyLabel(manualDifficulty);
+              manualWarnings.push(`Im Lernweg fehlen ${label}-Aufnahmen für: ${missingDiff.join(', ')}`);
+            }
+          }
+        }
+      }
+
+      const warningMessage = [...baseWarnings, ...manualWarnings].join(' ');
+      const canStart = hasRecordings && baseWarnings.length === 0;
+      elBtnStart.disabled = !canStart;
+      elBtnStart.style.opacity = canStart ? '1' : '0.5';
+      elBtnStart.style.cursor = canStart ? 'pointer' : 'not-allowed';
+      if(canStart){
+        elBtnStart.title = manualWarnings.length ? manualWarnings.join(' ') : '';
       } else {
-        elBtnStart.style.opacity = '1';
-        elBtnStart.style.cursor = 'pointer';
+        elBtnStart.title = hasRecordings ? 'Bitte nimm die fehlenden Buchstaben auf, bevor du startest.' : 'Bitte nimm zuerst mindestens eine Aufnahme auf.';
+      }
+
+      if(elModeHint){
+        if(warningMessage){
+          elModeHint.textContent = `⚠️ ${warningMessage}`;
+          elModeHint.classList.remove('hidden');
+        } else {
+          elModeHint.textContent = '';
+          elModeHint.classList.add('hidden');
+        }
       }
 
       // Fortschrittsanzeige in Einstellungen
@@ -665,7 +1163,7 @@
       elProgressBadge.classList.toggle('empty', recordedCount === 0);
 
       // Buchstaben-Buttons im Preview-Modus aktualisieren
-      updateLetterButtons();
+      await updateLetterButtons();
     }
 
     // Hilfsfunktion: Set-Selector für Kinder im Spiel-Tab befüllen
@@ -735,9 +1233,8 @@
     (async function checkFirstVisit() {
       await updateUIForRecordingState();
       const setId = await getActiveSet();
-      const keys = await idbKeys();
-      const prefix = 'audio-' + setId + '-';
-      const hasRecordings = keys.filter(k => k.startsWith(prefix)).length > 0;
+      const setData = await loadSetData(setId);
+      const hasRecordings = !!(setData && setData.clips && setData.clips.length);
 
       // Wenn keine Aufnahmen: Automatisch zu Einstellungen wechseln
       if (!hasRecordings) {
@@ -839,12 +1336,110 @@
     }
 
     // Neues Set erstellen
+    const AUDIO_DIFFICULTIES = ['LEICHT', 'MITTEL', 'SCHWER', 'PROFI'];
+
+    function normaliseLetterInput(value){
+      if(typeof value !== 'string') return null;
+      const trimmed = value.trim().toUpperCase();
+      return trimmed && /^[A-ZÄÖÜ]$/.test(trimmed) ? trimmed : null;
+    }
+
+    function normaliseDifficultyInput(value){
+      const fallback = 'LEICHT';
+      if(!value) return fallback;
+      const normalised = value.toString().trim().toUpperCase();
+      return AUDIO_DIFFICULTIES.includes(normalised) ? normalised : fallback;
+    }
+
+    async function loadSetData(setId){
+      if(!setId) return null;
+      const setKey = 'set-' + setId;
+      const raw = await idbGet(setKey);
+      if(!raw){
+        return null;
+      }
+
+      let changed = false;
+      const data = {
+        name: raw.name || 'Meine Aufnahmen',
+        emoji: raw.emoji || '🎤',
+        created: raw.created || Date.now(),
+        clips: Array.isArray(raw.clips) ? raw.clips.slice() : [],
+      };
+
+      const seen = new Set();
+      data.clips = data.clips
+        .filter(clip => clip && typeof clip.id === 'string' && clip.id)
+        .map(clip => {
+          const id = clip.id;
+          if(seen.has(id)) return null;
+          seen.add(id);
+          const letter = normaliseLetterInput(clip.letter) || 'A';
+          const difficulty = normaliseDifficultyInput(clip.difficulty);
+          return {
+            id,
+            letter,
+            difficulty,
+            created: typeof clip.created === 'number' ? clip.created : Date.now(),
+          };
+        })
+        .filter(Boolean);
+
+      if(!Array.isArray(raw.clips) || raw.clips.length !== data.clips.length){
+        changed = true;
+      }
+
+      const migrated = await migrateLegacyRecordingsForSet(setId, data);
+      changed = changed || migrated;
+
+      if(changed){
+        await idbSet(setKey, data);
+      }
+
+      return data;
+    }
+
+    async function migrateLegacyRecordingsForSet(setId, setData){
+      const prefix = 'audio-' + setId + '-';
+      const keys = await idbKeys();
+      const knownIds = new Set(setData.clips.map(clip => clip.id));
+      const legacyKeys = keys.filter(key => key.startsWith(prefix));
+      let updated = false;
+
+      for(const key of legacyKeys){
+        const suffix = key.slice(prefix.length);
+        if(knownIds.has(suffix)){
+          continue;
+        }
+
+        if(/^[A-ZÄÖÜ]$/.test(suffix)){
+          const letter = suffix;
+          const blob = await idbGet(key);
+          if(!blob) continue;
+          const clip = {
+            id: generateUUID(),
+            letter,
+            difficulty: 'LEICHT',
+            created: Date.now(),
+          };
+          await idbSet('audio-' + setId + '-' + clip.id, blob);
+          await idbDel(key);
+          setData.clips.push(clip);
+          knownIds.add(clip.id);
+          updated = true;
+        }
+      }
+
+      return updated;
+    }
+
     async function createSet(name, emoji){
       const setId = generateUUID();
       const setData = {
         name: name || 'Neues Set',
         emoji: emoji || '🎤',
-        created: Date.now()
+        created: Date.now(),
+        clips: [],
       };
       await idbSet('set-' + setId, setData);
       return setId;
@@ -856,16 +1451,13 @@
       const setKeys = keys.filter(k => k.startsWith('set-'));
       const sets = [];
       for(const key of setKeys){
-        const data = await idbGet(key);
+        const id = key.replace('set-', '');
+        const data = await loadSetData(id);
         if(data){
-          sets.push({
-            id: key.replace('set-', ''),
-            ...data
-          });
+          sets.push({ id, ...data });
         }
       }
-      // Sortieren nach Erstellungsdatum
-      return sets.sort((a,b) => a.created - b.created);
+      return sets.sort((a,b) => (a.created || 0) - (b.created || 0));
     }
 
     // Set löschen (inkl. aller Aufnahmen)
@@ -883,7 +1475,7 @@
 
     // Set umbenennen
     async function updateSet(setId, name, emoji){
-      const setData = await idbGet('set-' + setId);
+      const setData = await loadSetData(setId);
       if(setData){
         setData.name = name;
         setData.emoji = emoji;
@@ -920,42 +1512,41 @@
 
     // Anzahl Aufnahmen pro Set
     async function getSetRecordingCount(setId){
-      const keys = await idbKeys();
-      return keys.filter(k => k.startsWith('audio-' + setId + '-')).length;
+      const data = await loadSetData(setId);
+      if(!data) return 0;
+      const uniqueLetters = new Set(data.clips.map(clip => clip.letter));
+      return uniqueLetters.size;
     }
 
     // Migration: Alte Aufnahmen (audio-X) in neues Format (audio-SETID-X) migrieren
     async function migrateOldRecordings(){
       const keys = await idbKeys();
 
-      // Prüfe ob alte Keys (audio-X statt audio-UUID-X) vorhanden sind
-      const oldKeys = keys.filter(k => {
-        if(!k.startsWith('audio-')) return false;
-        const parts = k.split('-');
-        // Altes Format: audio-A, audio-B, etc. (2 Teile)
-        // Neues Format: audio-UUID-A (3+ Teile wegen UUID mit Bindestrichen)
-        return parts.length === 2 && /^[A-Z]$/.test(parts[1]);
-      });
-
-      if(oldKeys.length === 0) return; // Keine Migration nötig
+      const oldKeys = keys.filter(k => k.startsWith('audio-') && /^[A-ZÄÖÜ]$/.test(k.replace('audio-', '')));
+      if(oldKeys.length === 0) return;
 
       console.log(`Migriere ${oldKeys.length} alte Aufnahmen...`);
 
-      // Default-Set erstellen für Migration
       const migrationSetId = await createSet('Meine Aufnahmen', '🎤');
-      await setActiveSet(migrationSetId);
+      const setData = await loadSetData(migrationSetId) || { clips: [] };
 
-      // Alle alten Aufnahmen migrieren
       for(const oldKey of oldKeys){
         const letter = oldKey.replace('audio-', '');
         const blob = await idbGet(oldKey);
-        if(blob){
-          // In neuem Format speichern
-          await idbSet('audio-' + migrationSetId + '-' + letter, blob);
-          // Alten Key löschen
-          await idbDel(oldKey);
-        }
+        if(!blob) continue;
+        const clip = {
+          id: generateUUID(),
+          letter,
+          difficulty: 'LEICHT',
+          created: Date.now(),
+        };
+        await idbSet('audio-' + migrationSetId + '-' + clip.id, blob);
+        setData.clips.push(clip);
+        await idbDel(oldKey);
       }
+
+      await idbSet('set-' + migrationSetId, setData);
+      await setActiveSet(migrationSetId);
 
       console.log(`Migration abgeschlossen: ${oldKeys.length} Aufnahmen migriert.`);
     }
@@ -1224,7 +1815,7 @@
       }
 
       if(action === 'edit'){
-        const setData = await idbGet('set-' + setId);
+        const setData = await loadSetData(setId);
         if(!setData) return;
 
         const name = prompt('Name des Sets:', setData.name);
@@ -1357,29 +1948,530 @@
     // Buchstaben-Buttons basierend auf verfügbaren Aufnahmen aktivieren/deaktivieren
     async function updateLetterButtons(){
       const setId = await getActiveSet();
-      const keys = await idbKeys();
-      const prefix = 'audio-' + setId + '-';
-      const hasSet = new Set(
-        keys.filter(k => k.startsWith(prefix))
-           .map(k => k.replace(prefix, ''))
-      );
+      const setData = await loadSetData(setId);
+      const hasSet = new Set((setData && setData.clips ? setData.clips : []).map(clip => clip.letter));
+      const progress = getProgress();
+      const unlockedCount = progress && progress.unlocked ? progress.unlocked : 4;
+      const freeCount = progress && typeof progress.freeLetterCount === 'number' ? progress.freeLetterCount : 4;
+      const mode = progress && progress.mode ? progress.mode : 'FREI';
+      const allowedSet = mode === 'LERNWEG'
+        ? new Set(LETTERS.slice(0, unlockedCount))
+        : mode === 'FREI'
+          ? new Set(LETTERS.slice(0, freeCount))
+          : null;
       document.querySelectorAll('.btn-letter').forEach(btn => {
         const letter = btn.getAttribute('data-letter');
-        btn.disabled = !hasSet.has(letter);
+        let disabled = !hasSet.has(letter);
+        if(!disabled && allowedSet && !allowedSet.has(letter)){
+          disabled = true;
+        }
+        btn.disabled = disabled;
+        if(allowedSet){
+          btn.classList.toggle('locked', !allowedSet.has(letter));
+        } else {
+          btn.classList.remove('locked');
+        }
       });
     }
 
-    // Status-Grid für Einstellungen
-    function renderStatusGrid(hasSet=new Set()){
+    function setActiveChip(group, predicate){
+      if(!group) return;
+      let matched = false;
+      group.querySelectorAll('.chip').forEach(chip => {
+        const active = predicate(chip);
+        chip.classList.toggle('active', active);
+        if(active) matched = true;
+      });
+      if(!matched){
+        const first = group.querySelector('.chip');
+        if(first) first.classList.add('active');
+      }
+    }
+
+    function applyModeToUI(progress){
+      const mode = (progress && progress.mode) || 'FREI';
+      let matchedCard = false;
+      modeCards.forEach(card => {
+        let active = false;
+        const cardMode = card.dataset.mode;
+        if(cardMode === 'LERNWEG'){
+          active = mode === 'LERNWEG';
+        } else if(cardMode === 'FREI' && mode === 'FREI'){
+          const cardCount = Number(card.dataset.count || NaN);
+          if(!Number.isNaN(cardCount)){
+            active = progress.freeLetterCount === cardCount;
+          } else {
+            active = true;
+          }
+        }
+        card.classList.toggle('active', active);
+        if(active) matchedCard = true;
+      });
+
+      if(!matchedCard){
+        if(mode === 'FREI'){
+          const fallback = modeCards.find(card => card.dataset.mode === 'FREI' && card.dataset.difficulty === 'LEICHT');
+          if(fallback) fallback.classList.add('active');
+        } else {
+          const fallback = modeCards.find(card => card.dataset.mode === 'LERNWEG');
+          if(fallback) fallback.classList.add('active');
+        }
+      }
+
+      if(elModeControls){
+        elModeControls.classList.toggle('hidden', mode !== 'FREI');
+      }
+
+      if(mode === 'FREI'){
+        const desiredCount = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
+        const audioSet = progress && progress.audioSet ? progress.audioSet : 'ANLAUT';
+        const difficulty = progress && progress.difficulty ? progress.difficulty : 'LEICHT';
+
+        setActiveChip(elFreeCountGroup, chip => Number(chip.dataset.freeCount || 0) === desiredCount);
+        setActiveChip(elAudioSetGroup, chip => (chip.dataset.audioSet || '') === audioSet);
+        const manualStyle = (progress && progress.audioStyle ? progress.audioStyle : 'AUTO') === 'MANUAL';
+        if(manualStyle){
+          setActiveChip(elDifficultyGroup, chip => (chip.dataset.difficulty || '') === difficulty);
+        } else if (elDifficultyGroup) {
+          elDifficultyGroup.querySelectorAll('.chip').forEach(chip => chip.classList.remove('active'));
+        }
+      }
+
+      const audioStyle = progress && progress.audioStyle ? progress.audioStyle : 'AUTO';
+      setActiveChip(elAudioStyleGroup, chip => {
+        const style = chip.dataset.audioStyle || 'AUTO';
+        if(style === 'AUTO') return audioStyle === 'AUTO';
+        const diff = chip.dataset.audioDifficulty || 'LEICHT';
+        return audioStyle === 'MANUAL' && progress && progress.difficulty === diff;
+      });
+
+      updateModeDialogCards(extractSelectionFromProgress(progress));
+      updateModeDialogAudioChips(extractSelectionFromProgress(progress));
+      updateStartButtonLabel(progress);
+    }
+
+    const DIFFICULTY_LABELS = {
+      LEICHT: 'Leicht',
+      MITTEL: 'Mittel',
+      SCHWER: 'Schwer',
+      PROFI: 'Profi',
+    };
+
+    const DIFFICULTY_DESCRIPTIONS = {
+      LEICHT: 'Buchstabe + Anlaut',
+      MITTEL: 'Nur Buchstabe',
+      SCHWER: 'Beispielwort',
+      PROFI: 'Extra schwer',
+    };
+
+    function resolveAudioDifficulty(progress){
+      const style = progress && progress.audioStyle ? progress.audioStyle : 'AUTO';
+      if(style === 'MANUAL'){
+        return progress && progress.difficulty ? progress.difficulty : 'LEICHT';
+      }
+      const poolSize = progress && progress.mode === 'LERNWEG'
+        ? (progress && progress.unlocked ? progress.unlocked : 4)
+        : (progress && progress.freeLetterCount ? progress.freeLetterCount : 4);
+      if(poolSize >= 24) return 'PROFI';
+      if(poolSize >= 18) return 'SCHWER';
+      if(poolSize >= 12) return 'MITTEL';
+      return 'LEICHT';
+    }
+
+    function describeAudioStyle(style, difficulty){
+      const label = DIFFICULTY_DESCRIPTIONS[difficulty] || DIFFICULTY_LABELS[difficulty] || difficulty;
+      return style === 'AUTO' ? `Auto: ${label}` : label;
+    }
+
+    function updateStartButtonLabel(progress){
+      if(!elBtnStart) return;
+      const mode = progress && progress.mode ? progress.mode : 'FREI';
+      const resolvedDifficulty = resolveAudioDifficulty(progress);
+      const desc = describeAudioStyle(progress && progress.audioStyle ? progress.audioStyle : 'AUTO', resolvedDifficulty);
+      if(mode === 'LERNWEG'){
+        elBtnStart.textContent = `Spiel starten – Lernweg (${desc})`;
+      } else {
+        const count = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
+        elBtnStart.textContent = `Spiel starten – ${count} Buchstaben (${desc})`;
+      }
+    }
+
+    function extractSelectionFromProgress(progress){
+      const style = progress && progress.audioStyle ? progress.audioStyle : 'AUTO';
+      const difficulty = style === 'MANUAL'
+        ? (progress && progress.difficulty ? progress.difficulty : 'LEICHT')
+        : resolveAudioDifficulty(progress);
+      return {
+        mode: progress && progress.mode ? progress.mode : 'FREI',
+        freeLetterCount: progress && progress.freeLetterCount ? progress.freeLetterCount : 4,
+        difficulty,
+        audioStyle: style,
+      };
+    }
+
+    let pendingModeSelection = null;
+
+    function updateModeDialogCards(selection){
+      if(!selection) return;
+      dialogModeCards.forEach(card => {
+        const cardMode = card.dataset.mode || 'FREI';
+        const cardCount = Number(card.dataset.count || NaN);
+        let active = false;
+        if(selection.mode === 'LERNWEG'){
+          active = cardMode === 'LERNWEG';
+        } else if(cardMode === 'FREI' && selection.mode === 'FREI'){
+          if(!Number.isNaN(cardCount)){
+            active = selection.freeLetterCount === cardCount;
+          } else {
+            active = true;
+          }
+        }
+        card.classList.toggle('active', active);
+      });
+      if(elModeDialogStart){
+        elModeDialogStart.disabled = !selection;
+      }
+    }
+
+    function updateModeDialogAudioChips(selection){
+      if(!dialogAudioGroup) return;
+      if(!selection) return;
+      const style = selection.audioStyle || 'AUTO';
+      let matched = false;
+      const chips = Array.from(dialogAudioGroup.querySelectorAll('[data-audio-style]'));
+      chips.forEach(chip => {
+        const chipStyle = (chip.dataset.audioStyle || 'AUTO').toUpperCase();
+        const chipDiff = chip.dataset.audioDifficulty || 'LEICHT';
+        const active = chipStyle === 'AUTO'
+          ? style === 'AUTO'
+          : (style === 'MANUAL' && selection.difficulty === chipDiff);
+        chip.classList.toggle('active', active);
+        if(active) matched = true;
+      });
+      if(!matched){
+        const fallback = chips.find(chip => (chip.dataset.audioStyle || 'AUTO').toUpperCase() === 'AUTO');
+        if(fallback){
+          fallback.classList.add('active');
+        }
+      }
+    }
+
+    function openModeDialog(){
+      const currentProgress = getProgress();
+      pendingModeSelection = extractSelectionFromProgress(currentProgress);
+      if(pendingModeSelection.audioStyle === 'AUTO'){
+        pendingModeSelection.difficulty = resolveAudioDifficulty(currentProgress);
+      }
+      updateModeDialogCards(pendingModeSelection);
+      updateModeDialogAudioChips(pendingModeSelection);
+      elModeDialog.classList.remove('hidden');
+    }
+
+    function closeModeDialog(){
+      elModeDialog.classList.add('hidden');
+      pendingModeSelection = null;
+    }
+
+    function saveAndApply(partial){
+      const current = getProgress();
+      const updates = { ...partial };
+      if(updates.audioStyle){
+        updates.audioStyle = updates.audioStyle.toUpperCase();
+      }
+      if(updates.difficulty){
+        updates.difficulty = updates.difficulty.toUpperCase();
+      }
+      if(updates.audioStyle === 'MANUAL' && !updates.difficulty){
+        updates.difficulty = current && current.difficulty ? current.difficulty : 'LEICHT';
+      }
+      if(updates.difficulty && (!updates.audioStyle || updates.audioStyle === 'AUTO')){
+        updates.audioStyle = 'MANUAL';
+      }
+      const saved = saveProgress(updates);
+      applyModeToUI(saved);
+      updateUIForRecordingState();
+      return saved;
+    }
+
+    function formatDifficultyLabel(difficulty){
+      switch(difficulty){
+        case 'MITTEL': return 'Mittel';
+        case 'SCHWER': return 'Schwer';
+        case 'PROFI': return 'Profi';
+        default: return 'Leicht';
+      }
+    }
+
+    function formatClipTimestamp(created){
+      const date = new Date(created || Date.now());
+      return date.toLocaleDateString(undefined, {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+
+    function renderStatusGrid(hasSet=new Set(), byDifficulty=new Map()){
       elStatusGrid.innerHTML='';
       LETTERS.forEach(ch=>{
         const t=document.createElement('div');
-        t.className='status-tile' + (hasSet.has(ch)?' has':'');
-        t.innerHTML=`${ch}<i class="status-dot"></i>`;
-        t.title = hasSet.has(ch) ? 'Aufnahme vorhanden' : 'Keine Aufnahme';
+        const hasLetter = hasSet.has(ch);
+        t.className='status-tile' + (hasLetter?' has':'');
+        const diffCounts = byDifficulty.get(ch);
+        let badges = '';
+        if(diffCounts){
+          badges = '<div class="status-diffs">' + AUDIO_DIFFICULTIES.map(diff => {
+            const count = diffCounts[diff] || 0;
+            return `<span class="status-pill${count ? ' filled' : ''}" data-diff="${diff}">${count || ''}</span>`;
+          }).join('') + '</div>';
+        }
+        t.innerHTML=`${ch}<i class="status-dot"></i>${badges}`;
+        const summary = diffCounts ? AUDIO_DIFFICULTIES
+          .filter(diff => (diffCounts[diff] || 0) > 0)
+          .map(diff => `${formatDifficultyLabel(diff)} (${diffCounts[diff]})`) : [];
+        const title = hasLetter ? (summary.length ? 'Aufnahmen: ' + summary.join(', ') : 'Aufnahme vorhanden') : 'Keine Aufnahme';
+        t.title = title;
         t.addEventListener('click', ()=> selectLetter(ch));
         elStatusGrid.appendChild(t);
       });
+    }
+
+    function highlightClipSelection(){
+      if(!elClipList) return;
+      Array.from(elClipList.querySelectorAll('.clip-item')).forEach(item => {
+        item.classList.toggle('active', item.dataset.clipId === currentClipId);
+      });
+    }
+
+    function setCurrentClip(clipId){
+      currentClipId = clipId;
+      highlightClipSelection();
+      const clip = currentLetterClips.find(c => c.id === clipId) || null;
+      if(clip){
+        elRecStatus.textContent = `${formatDifficultyLabel(clip.difficulty)} · ${formatClipTimestamp(clip.created)}`;
+      } else {
+        const count = currentLetterClips.length;
+        elRecStatus.textContent = count ? `${count} Aufnahme${count === 1 ? '' : 'n'} gespeichert` : 'Keine Aufnahme';
+      }
+      elBtnPlay.disabled = !clip;
+      elBtnDelete.disabled = !clip;
+    }
+
+    function renderClipList(clips){
+      currentLetterClips = clips.slice();
+      const difficultyOrder = new Map(AUDIO_DIFFICULTIES.map((diff, index) => [diff, index]));
+      currentLetterClips.sort((a,b) => {
+        const diffCompare = (difficultyOrder.get(a.difficulty) || 0) - (difficultyOrder.get(b.difficulty) || 0);
+        if(diffCompare !== 0) return diffCompare;
+        return (b.created || 0) - (a.created || 0);
+      });
+
+      if(elClipList){
+        elClipList.innerHTML = '';
+        if(!currentLetterClips.length){
+          const empty = document.createElement('div');
+          empty.className = 'muted';
+          empty.textContent = 'Noch keine Aufnahmen für diesen Buchstaben.';
+          elClipList.appendChild(empty);
+        } else {
+          currentLetterClips.forEach(clip => {
+            const item = document.createElement('div');
+            item.className = 'clip-item';
+            item.dataset.clipId = clip.id;
+            item.dataset.clipDifficulty = clip.difficulty;
+            item.innerHTML = `
+              <div class="clip-info">
+                <span class="clip-badge">${formatDifficultyLabel(clip.difficulty)}</span>
+                <span class="clip-meta">${formatClipTimestamp(clip.created)}</span>
+              </div>
+              <div class="clip-actions">
+                <button type="button" class="btn ghost" data-action="play">▶️</button>
+                <button type="button" class="btn ghost" data-action="delete">🗑️</button>
+              </div>`;
+            elClipList.appendChild(item);
+          });
+        }
+      }
+
+      const preferred = currentLetterClips.find(clip => clip.difficulty === currentDifficulty) || currentLetterClips[0] || null;
+      setCurrentClip(preferred ? preferred.id : null);
+      highlightClipSelection();
+    }
+
+    function setRecordDifficulty(difficulty, options = {}){
+      currentDifficulty = difficulty;
+      if(elRecordDifficultyGroup){
+        Array.from(elRecordDifficultyGroup.querySelectorAll('[data-record-difficulty]')).forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.recordDifficulty === difficulty);
+        });
+      }
+
+      if(options.preserveSelection){
+        if(options.clipId && currentLetterClips.some(clip => clip.id === options.clipId)){
+          setCurrentClip(options.clipId);
+        } else {
+          highlightClipSelection();
+        }
+        return;
+      }
+
+      if(options.clipId && currentLetterClips.some(clip => clip.id === options.clipId)){
+        setCurrentClip(options.clipId);
+        return;
+      }
+
+      const matching = currentLetterClips.find(clip => clip.difficulty === difficulty);
+      if(matching){
+        setCurrentClip(matching.id);
+      } else if(currentClipId && currentLetterClips.some(c => c.id === currentClipId)){
+        highlightClipSelection();
+      } else {
+        setCurrentClip(currentLetterClips[0] ? currentLetterClips[0].id : null);
+      }
+    }
+
+    function aggregateClipsByLetter(clips){
+      const map = new Map();
+      clips.forEach(clip => {
+        const letter = clip.letter;
+        if(!map.has(letter)){
+          map.set(letter, {});
+        }
+        const entry = map.get(letter);
+        entry[clip.difficulty] = (entry[clip.difficulty] || 0) + 1;
+      });
+      return map;
+    }
+
+    async function refreshCurrentLetterClips(){
+      const setId = await getActiveSet();
+      const setData = await loadSetData(setId);
+      const clips = (setData && setData.clips ? setData.clips : []).filter(clip => clip.letter === currentLetter);
+      renderClipList(clips);
+      setRecordDifficulty(currentDifficulty, { preserveSelection: true, clipId: currentClipId });
+      return { setId, setData };
+    }
+
+    async function persistClip(setId, letter, difficulty, blob){
+      const clip = {
+        id: generateUUID(),
+        letter,
+        difficulty: normaliseDifficultyInput(difficulty),
+        created: Date.now(),
+      };
+      let setData = await loadSetData(setId);
+      if(!setData){
+        setData = {
+          name: 'Meine Aufnahmen',
+          emoji: '🎤',
+          created: Date.now(),
+          clips: [],
+        };
+      }
+      setData.clips.push(clip);
+      await idbSet('set-' + setId, setData);
+      await idbSet('audio-' + setId + '-' + clip.id, blob);
+      return clip;
+    }
+
+    async function removeClip(setId, clipId){
+      const setData = await loadSetData(setId);
+      if(!setData) return null;
+      const idx = setData.clips.findIndex(clip => clip.id === clipId);
+      if(idx === -1) return null;
+      const [clip] = setData.clips.splice(idx, 1);
+      await idbSet('set-' + setId, setData);
+      await idbDel('audio-' + setId + '-' + clipId);
+      return clip;
+    }
+
+    async function getClipBlob(setId, clipId){
+      return idbGet('audio-' + setId + '-' + clipId);
+    }
+
+    function difficultySearchOrder(difficulty){
+      const normalised = normaliseDifficultyInput(difficulty);
+      const idx = AUDIO_DIFFICULTIES.indexOf(normalised);
+      const order = [];
+      if(idx >= 0){
+        for(let i = idx; i >= 0; i--){
+          const diff = AUDIO_DIFFICULTIES[i];
+          if(!order.includes(diff)) order.push(diff);
+        }
+      }
+      if(!order.includes('LEICHT')){
+        order.push('LEICHT');
+      }
+      return order;
+    }
+
+    async function pickClip({ setId, letter, difficulty, setData }){
+      const targetLetter = normaliseLetterInput(letter);
+      if(!targetLetter || !setId) return null;
+      const data = setData || await loadSetData(setId);
+      if(!data || !Array.isArray(data.clips)) return null;
+      const relevant = data.clips.filter(clip => clip.letter === targetLetter);
+      if(relevant.length === 0) return null;
+
+      const order = difficultySearchOrder(difficulty);
+      for(const diff of order){
+        const candidates = relevant.filter(clip => clip.difficulty === diff);
+        if(candidates.length){
+          const selected = candidates[Math.floor(Math.random() * candidates.length)];
+          return selected;
+        }
+      }
+
+      return null;
+    }
+
+    async function fetchClipForLetter({ setId, letter, difficulty, setData }){
+      const clip = await pickClip({ setId, letter, difficulty, setData });
+      if(!clip) return null;
+      const blob = await getClipBlob(setId, clip.id);
+      if(!blob) return null;
+      return { clip, blob };
+    }
+
+    async function playClipById(clipId){
+      const setId = await getActiveSet();
+      const blob = await getClipBlob(setId, clipId);
+      if(!blob){
+        alert('Keine Aufnahme gefunden.');
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const audio = new Audio(url);
+      audio.addEventListener('ended', () => URL.revokeObjectURL(url));
+      audio.addEventListener('error', () => URL.revokeObjectURL(url));
+      lastPlayed = audio;
+      await audio.play().catch(()=>{});
+    }
+
+    async function deleteClipById(clipId){
+      const setId = await getActiveSet();
+      const removed = await removeClip(setId, clipId);
+      if(!removed){
+        alert('Aufnahme nicht gefunden.');
+        return;
+      }
+      if(currentClipId === clipId){
+        currentClipId = null;
+      }
+      await refreshCurrentLetterClips();
+      await updateStatusGridFromDB();
+      await updateUIForRecordingState();
+      await renderSetsList();
+    }
+
+    async function selectNextLetter(fromLetter){
+      const letter = fromLetter || currentLetter;
+      const idx = LETTERS.indexOf(letter);
+      if(idx === -1){
+        await selectLetter(currentLetter || 'A');
+        return;
+      }
+      const nextLetter = LETTERS[(idx + 1) % LETTERS.length];
+      await selectLetter(nextLetter);
     }
 
     // ——————————————————————————————————————————
@@ -1387,7 +2479,47 @@
     // ——————————————————————————————————————————
     let mediaStream=null, recorder=null, recChunks=[];
     let currentLetter='A', timerInt=null, timerStart=0, lastPlayed=null;
+    let currentDifficulty='LEICHT';
+    let currentClipId=null;
+    let currentLetterClips=[];
 
+    if(elRecordDifficultyGroup){
+      elRecordDifficultyGroup.addEventListener('click', (event) => {
+        const btn = event.target.closest('[data-record-difficulty]');
+        if(!btn) return;
+        event.preventDefault();
+        const diff = btn.dataset.recordDifficulty || 'LEICHT';
+        setRecordDifficulty(diff);
+      });
+    }
+
+    if(elClipList){
+      elClipList.addEventListener('click', async (event) => {
+        const item = event.target.closest('.clip-item');
+        if(!item) return;
+        const clipId = item.dataset.clipId;
+        if(!clipId) return;
+        const actionBtn = event.target.closest('[data-action]');
+        if(actionBtn){
+          const action = actionBtn.dataset.action;
+          if(action === 'play'){
+            await playClipById(clipId);
+          } else if(action === 'delete'){
+            if(confirm('Aufnahme wirklich löschen?')){
+              await deleteClipById(clipId);
+            }
+          }
+          return;
+        }
+        setCurrentClip(clipId);
+        const diff = item.dataset.clipDifficulty;
+        if(diff){
+          setRecordDifficulty(diff, { preserveSelection: true, clipId });
+        }
+      });
+    }
+
+    setRecordDifficulty(currentDifficulty);
     selectLetter('A');
     updateStatusGridFromDB();
 
@@ -1406,29 +2538,20 @@
       elRecLetter.textContent = ch;
       elRecTitle.textContent = ch;
       const setId = await getActiveSet();
-      const blob = await idbGet('audio-' + setId + '-' + ch);
-      const has = !!blob;
-      elRecStatus.textContent = has ? 'Aufnahme gespeichert' : 'Keine Aufnahme';
-      elBtnPlay.disabled = !has;
-      elBtnDelete.disabled = !has;
-      // Markierung im Statusgrid aktualisieren (sanft)
+      const setData = await loadSetData(setId);
+      const clips = (setData && setData.clips ? setData.clips : []).filter(clip => clip.letter === ch);
+      renderClipList(clips);
+      setRecordDifficulty(currentDifficulty, { preserveSelection: true, clipId: currentClipId });
       updateStatusGridFromDB();
     }
 
     async function updateStatusGridFromDB(){
       const setId = await getActiveSet();
-      const keys = await idbKeys();
-      // Nur Aufnahmen des aktiven Sets berücksichtigen
-      const prefix = 'audio-' + setId + '-';
-      const hasSet = new Set(
-        keys.filter(k => k.startsWith(prefix))
-           .map(k => k.replace(prefix, ''))
-      );
-      renderStatusGrid(hasSet);
-      // Update Startbutton aktivierbar?
-      const count = hasSet.size;
-      elBtnStart.disabled = count < 3;
-      elBtnStart.title = count < 3 ? 'Mindestens 3 Aufnahmen empfehlen sich für den Start' : '';
+      const data = await loadSetData(setId);
+      const clips = data && data.clips ? data.clips : [];
+      const hasSet = new Set(clips.map(clip => clip.letter));
+      const byDifficulty = aggregateClipsByLetter(clips);
+      renderStatusGrid(hasSet, byDifficulty);
     }
 
     function fmt(t){
@@ -1464,13 +2587,16 @@
       recorder.ondataavailable = e=> e.data && recChunks.push(e.data);
       recorder.onstop = async ()=>{
         const blob = new Blob(recChunks, {type: recorder.mimeType || 'audio/webm'});
+        const recordedLetter = currentLetter;
+        const recordedDifficulty = currentDifficulty;
         const setId = await getActiveSet();
-        await idbSet('audio-' + setId + '-' + currentLetter, blob);
-        elRecStatus.textContent='Aufnahme gespeichert';
-        elBtnPlay.disabled=false; elBtnDelete.disabled=false;
-        updateStatusGridFromDB();
-        updateUIForRecordingState();
-        renderSetsList();
+        await persistClip(setId, recordedLetter, recordedDifficulty, blob);
+        await updateStatusGridFromDB();
+        await updateUIForRecordingState();
+        await renderSetsList();
+        requestAnimationFrame(() => {
+          selectNextLetter(recordedLetter).catch(err => console.error('Auto-advance failed', err));
+        });
       };
       recorder.start();
       elBtnRec.textContent = '⏹️ Stoppen';
@@ -1482,23 +2608,20 @@
     });
 
     elBtnPlay.addEventListener('click', async ()=>{
-      const setId = await getActiveSet();
-      const blob = await idbGet('audio-' + setId + '-' + currentLetter);
-      if(!blob){ alert('Keine Aufnahme gefunden.'); return; }
-      const url = URL.createObjectURL(blob);
-      const a = new Audio(url);
-      a.play();
+      if(!currentClipId){
+        alert('Bitte zuerst eine Aufnahme auswählen oder erstellen.');
+        return;
+      }
+      await playClipById(currentClipId);
     });
 
     elBtnDelete.addEventListener('click', async ()=>{
-      if(confirm('Aufnahme für "'+currentLetter+'" löschen?')){
-        const setId = await getActiveSet();
-        await idbDel('audio-' + setId + '-' + currentLetter);
-        elRecStatus.textContent='Keine Aufnahme';
-        elBtnPlay.disabled=true; elBtnDelete.disabled=true;
-        updateStatusGridFromDB();
-        updateUIForRecordingState();
-        renderSetsList();
+      if(!currentClipId){
+        alert('Bitte zuerst eine Aufnahme auswählen.');
+        return;
+      }
+      if(confirm('Ausgewählte Aufnahme löschen?')){
+        await deleteClipById(currentClipId);
       }
     });
 
@@ -1530,31 +2653,45 @@
         let totalAudio = 0;
 
         for(const set of sets){
+          const setFolder = zip.folder(set.id);
+          const clipEntries = [];
+
+          if(Array.isArray(set.clips)){
+            for(const clip of set.clips){
+              const blob = await getClipBlob(set.id, clip.id);
+              if(!blob){
+                console.warn('Clip ohne Audiodatei, wird übersprungen:', set.id, clip.id);
+                continue;
+              }
+              const extension = blob.type.includes('webm') ? 'webm'
+                : blob.type.includes('ogg') ? 'ogg'
+                : blob.type.includes('mp3') ? 'mp3'
+                : blob.type.includes('m4a') ? 'm4a'
+                : blob.type.includes('wav') ? 'wav'
+                : blob.type.includes('mp4') ? 'mp4'
+                : 'audio';
+              const fileName = `${clip.letter}-${clip.id}.${extension}`;
+              if(setFolder){
+                setFolder.file(fileName, blob);
+              }
+              clipEntries.push({
+                id: clip.id,
+                letter: clip.letter,
+                difficulty: clip.difficulty,
+                created: clip.created,
+                file: fileName,
+              });
+              totalAudio++;
+            }
+          }
+
           setsMetadata.push({
             id: set.id,
             name: set.name,
             emoji: set.emoji,
-            created: set.created
+            created: set.created,
+            clips: clipEntries,
           });
-
-          // Alle Aufnahmen des Sets exportieren
-          const keys = await idbKeys();
-          const prefix = 'audio-' + set.id + '-';
-          const audioKeys = keys.filter(k => k.startsWith(prefix));
-
-          const setFolder = zip.folder(set.id);
-
-          for(const key of audioKeys){
-            const blob = await idbGet(key);
-            if(blob){
-              const letter = key.replace(prefix, '');
-              const extension = blob.type.includes('webm') ? 'webm' :
-                              blob.type.includes('ogg') ? 'ogg' :
-                              blob.type.includes('mp4') ? 'mp4' : 'audio';
-              setFolder.file(`${letter}.${extension}`, blob);
-              totalAudio++;
-            }
-          }
         }
 
         // sets.json hinzufügen
@@ -1600,35 +2737,97 @@
         const setsJsonFile = contents.files['sets.json'];
 
         if(setsJsonFile){
-          // Neues Format: Sets mit Metadaten
+          // Neues Format: Sets mit Metadaten & Clip-Informationen
           const setsJsonText = await setsJsonFile.async('text');
           const setsMetadata = JSON.parse(setsJsonText);
 
           for(const setMeta of setsMetadata){
-            // Set erstellen
+            if(!setMeta || !setMeta.id){
+              errorCount++;
+              continue;
+            }
+
+            const clipList = [];
+            const setPrefix = `${setMeta.id}/`;
+
+            if(Array.isArray(setMeta.clips) && setMeta.clips.length){
+              for(const clipMeta of setMeta.clips){
+                const clipId = clipMeta && clipMeta.id ? clipMeta.id : generateUUID();
+                const letter = normaliseLetterInput(clipMeta && clipMeta.letter ? clipMeta.letter : null) || 'A';
+                const difficulty = normaliseDifficultyInput(clipMeta && clipMeta.difficulty ? clipMeta.difficulty : 'LEICHT');
+                let fileName = clipMeta && clipMeta.file ? clipMeta.file : '';
+
+                let zipEntry = null;
+                if(fileName){
+                  const normalizedFile = fileName.replace(/^\/+/, '');
+                  zipEntry = contents.files[setPrefix + normalizedFile];
+                  if(!zipEntry){
+                    // Fallback: vielleicht wurde Datei ohne Unterordner exportiert
+                    zipEntry = contents.files[normalizedFile];
+                  }
+                }
+                if(!zipEntry){
+                  // Fallback: Suche nach Datei, die die Clip-ID enthält
+                  zipEntry = Object.entries(contents.files).find(([name]) => {
+                    return !name.endsWith('/') && name.startsWith(setPrefix) && name.includes(clipId);
+                  });
+                  if(zipEntry){
+                    fileName = zipEntry[0].replace(setPrefix, '');
+                    zipEntry = zipEntry[1];
+                  }
+                }
+
+                if(!zipEntry || zipEntry.dir){
+                  console.warn('Audio-Datei für Clip nicht gefunden:', setMeta.id, clipId);
+                  errorCount++;
+                  continue;
+                }
+
+                const blob = await zipEntry.async('blob');
+                if(!blob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
+                  errorCount++;
+                  continue;
+                }
+
+                await idbSet(`audio-${setMeta.id}-${clipId}`, blob);
+                clipList.push({
+                  id: clipId,
+                  letter,
+                  difficulty,
+                  created: typeof clipMeta?.created === 'number' ? clipMeta.created : Date.now(),
+                });
+                importedAudio++;
+              }
+            } else {
+              // Fallback: Keine Clip-Metadaten vorhanden → alles als LEICHT importieren
+              for(const [filename, zipEntry] of Object.entries(contents.files)){
+                if(zipEntry.dir || !filename.startsWith(setPrefix)) continue;
+                const rawName = filename.replace(setPrefix, '');
+                if(!rawName) continue;
+                const letter = normaliseLetterInput(rawName.split('.')[0]) || 'A';
+                const blob = await zipEntry.async('blob');
+                if(!blob.type.startsWith('audio/') && !rawName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
+                  errorCount++;
+                  continue;
+                }
+                const clipId = generateUUID();
+                await idbSet(`audio-${setMeta.id}-${clipId}`, blob);
+                clipList.push({
+                  id: clipId,
+                  letter,
+                  difficulty: 'LEICHT',
+                  created: Date.now(),
+                });
+                importedAudio++;
+              }
+            }
+
             await idbSet('set-' + setMeta.id, {
               name: setMeta.name,
               emoji: setMeta.emoji,
-              created: setMeta.created
+              created: setMeta.created || Date.now(),
+              clips: clipList,
             });
-
-            // Aufnahmen des Sets importieren
-            const setPrefix = setMeta.id + '/';
-            for(const [filename, zipEntry] of Object.entries(contents.files)){
-              if(zipEntry.dir || !filename.startsWith(setPrefix)) continue;
-
-              const letter = filename.replace(setPrefix, '').split('.')[0].toUpperCase();
-              if(!/^[A-Z]$/.test(letter)) continue;
-
-              const blob = await zipEntry.async('blob');
-              if(!blob.type.startsWith('audio/') && !filename.match(/\.(webm|ogg|mp3|mp4|m4a|wav)$/i)){
-                errorCount++;
-                continue;
-              }
-
-              await idbSet('audio-' + setMeta.id + '-' + letter, blob);
-              importedAudio++;
-            }
 
             importedSets++;
           }
@@ -1655,7 +2854,16 @@
               continue;
             }
 
-            await idbSet('audio-' + currentSetId + '-' + letter, blob);
+            const clipId = generateUUID();
+            await idbSet('audio-' + currentSetId + '-' + clipId, blob);
+            const setData = await loadSetData(currentSetId) || { name: 'Meine Aufnahmen', emoji: '🎤', created: Date.now(), clips: [] };
+            setData.clips.push({
+              id: clipId,
+              letter,
+              difficulty: 'LEICHT',
+              created: Date.now(),
+            });
+            await idbSet('set-' + currentSetId, setData);
             importedAudio++;
           }
 
@@ -1687,7 +2895,6 @@
     // ——————————————————————————————————————————
     let game = null;
 
-    elBtnStart.addEventListener('click', startGame);
     elBtnTestAudio.addEventListener('click', ()=> { if(lastPlayed) { lastPlayed.currentTime=0; lastPlayed.play(); }});
     document.getElementById('again').addEventListener('click', ()=> { closeModal(); startGame(); });
     document.getElementById('closeModal').addEventListener('click', closeModal);
@@ -1695,25 +2902,61 @@
     function closeModal(){ elModal.classList.add('hidden'); }
 
     async function startGame(){
-      // stelle sicher, dass es genug Buchstaben gibt
+      const progress = getProgress();
+      const mode = progress && progress.mode ? progress.mode : 'FREI';
+      const unlockedCount = progress && progress.unlocked ? progress.unlocked : 4;
+      const resolvedDifficulty = resolveAudioDifficulty(progress);
+
       const setId = await getActiveSet();
-      const keys = await idbKeys();
-      const prefix = 'audio-' + setId + '-';
-      const set = new Set(
-        keys.filter(k => k.startsWith(prefix))
-           .map(k => k.replace(prefix, ''))
-      );
-      if(set.size===0){ alert('Bitte nimm zuerst Buchstaben auf (mindestens 1).'); return; }
+      const setData = await loadSetData(setId);
+      const clips = setData && setData.clips ? setData.clips : [];
+      const recordedSet = new Set(clips.map(clip => clip.letter));
+
+      if(recordedSet.size === 0){
+        alert('Bitte nimm zuerst Buchstaben auf (mindestens 1).');
+        return;
+      }
+
+      const recorded = Array.from(recordedSet).sort();
+      let pool = recorded.slice();
+
+      if(mode === 'LERNWEG'){
+        const unlockedLetters = LETTERS.slice(0, unlockedCount);
+        pool = unlockedLetters.filter(letter => recordedSet.has(letter));
+        if(pool.length === 0){
+          alert('Für den Lernweg brauchst du Aufnahmen der freigeschalteten Buchstaben. Bitte nimm zuerst diese Buchstaben auf.');
+          return;
+        }
+      } else {
+        const desiredCount = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
+        const targetLetters = LETTERS.slice(0, desiredCount);
+        pool = targetLetters.filter(letter => recordedSet.has(letter));
+        if(pool.length === 0){
+          alert('Für die gewählte Buchstabenmenge fehlen Aufnahmen. Bitte passe die Auswahl an oder nimm die Buchstaben auf.');
+          return;
+        }
+      }
+
       const rounds = parseInt(elRounds.value,10);
       game = {
         setId,
-        recorded: Array.from(set),
+        recorded: pool.slice(),
+        pool: pool.slice(),
         rounds,
         round: 0,
         ok: 0,
         bad: 0,
         target: null,
-        busy: false
+        busy: false,
+        last: null,
+        recent: [],
+        progress,
+        mode,
+        difficulty: progress && progress.difficulty ? progress.difficulty : 'LEICHT',
+        audioSet: progress && progress.audioSet ? progress.audioSet : 'ANLAUT',
+        errorHistory: [],
+        audioStyle: progress && progress.audioStyle ? progress.audioStyle : 'AUTO',
+        audioDifficulty: resolvedDifficulty,
       };
       elRoundMax.textContent = rounds;
       elOk.textContent=0; elBad.textContent=0;
@@ -1737,17 +2980,50 @@
       game.round++;
       if(game.round > game.rounds){ return finishGame(); }
       elRoundNow.textContent = game.round;
-      // neuen Zielbuchstaben ziehen
-      const pick = game.recorded[Math.floor(Math.random()*game.recorded.length)];
+
+      let pool = Array.isArray(game.pool) && game.pool.length ? game.pool : game.recorded;
+      if(!pool || pool.length === 0){
+        pool = game.recorded;
+      }
+
+      let pick = null;
+      try {
+        pick = pickNext({
+          pool,
+          last: game.last,
+          wrongCounts: game.progress ? game.progress.wrongCounts : {},
+          recent: game.recent || [],
+          recentErrors: game.errorHistory || [],
+        });
+      } catch(err){
+        console.warn('PickNext fehlgeschlagen, fallback auf erstes Element', err);
+        pick = pool[0];
+      }
+
+      if(!pick){
+        return finishGame();
+      }
+
       game.target = pick;
-      // Audio abspielen
-      const blob = await idbGet('audio-' + game.setId + '-' + pick);
-      if(!blob){
-        // falls unerwartet weg, sofort nächste Runde
+      game.last = pick;
+      game.recent = [pick, ...(game.recent || [])].slice(0, 3);
+      const desiredDifficulty = game.audioStyle === 'MANUAL' ? game.difficulty : game.audioDifficulty;
+      const clipData = await fetchClipForLetter({ setId: game.setId, letter: pick, difficulty: desiredDifficulty });
+      if(!clipData){
+        // Aufnahme fehlt unerwartet → Buchstabe aus Pool entfernen und weiter
+        console.warn('Keine passende Aufnahme gefunden für', pick, 'in Schwierigkeit', desiredDifficulty);
+        if(Array.isArray(game.pool)){
+          game.pool = game.pool.filter(letter => letter !== pick);
+        }
+        if(!game.pool.length){
+          return finishGame();
+        }
         return nextRound();
       }
-      const url = URL.createObjectURL(blob);
+      const url = URL.createObjectURL(clipData.blob);
       lastPlayed = new Audio(url);
+      lastPlayed.addEventListener('ended', () => URL.revokeObjectURL(url));
+      lastPlayed.addEventListener('error', () => URL.revokeObjectURL(url));
       elBtnTestAudio.disabled=false;
       await lastPlayed.play().catch(()=>{}); // Autoplay-Beschränkung? Der Klick auf "Spiel starten" reicht i.d.R. als Interaktion
       // Eingaben erlauben
@@ -1772,10 +3048,19 @@
 
         // Audio abspielen
         const setId = await getActiveSet();
-        const blob = await idbGet('audio-' + setId + '-' + letter);
-        if(!blob) return;
-        const url = URL.createObjectURL(blob);
+        if(currentLetter === letter && currentClipId){
+          await playClipById(currentClipId);
+          return;
+        }
+        const clipData = await fetchClipForLetter({ setId, letter, difficulty: currentDifficulty });
+        if(!clipData){
+          alert('Keine Aufnahme gefunden.');
+          return;
+        }
+        const url = URL.createObjectURL(clipData.blob);
         const audio = new Audio(url);
+        audio.addEventListener('ended', () => URL.revokeObjectURL(url));
+        audio.addEventListener('error', () => URL.revokeObjectURL(url));
         await audio.play().catch(()=>{});
         return;
       }
@@ -1793,14 +3078,22 @@
       // Klick-Sound
       playClickSound();
 
+      const wrongCountsBefore = game.progress && game.progress.wrongCounts ? game.progress.wrongCounts : {};
+      const wasErrorPick = (wrongCountsBefore[game.target] || 0) > 0;
       const correct = letter === game.target;
       if(correct){
         game.ok++;
+        game.progress = markCorrect(game.target);
         // Buchstaben-Statistik für Belohnungssystem tracken
         await incrementLetterStat(game.target);
       } else {
         game.bad++;
+        game.progress = markWrong([game.target]);
       }
+      if(game.audioStyle === 'AUTO'){
+        game.audioDifficulty = resolveAudioDifficulty(game.progress);
+      }
+      game.errorHistory = [wasErrorPick, ...(game.errorHistory || [])].slice(0, 3);
       elOk.textContent = game.ok; elBad.textContent = game.bad;
       const progress = Math.min(100, Math.round(((game.round) / game.rounds)*100));
       elBar.style.width = progress + '%';
@@ -1817,6 +3110,26 @@
 
       // nächste Runde
       await nextRound();
+    }
+
+    function showUnlockBanner(message){
+      if(!elUnlockBanner) return;
+      if(unlockBannerTimer){
+        clearTimeout(unlockBannerTimer);
+        unlockBannerTimer = null;
+      }
+      elUnlockBannerText.textContent = message;
+      elUnlockBanner.classList.remove('hidden');
+      requestAnimationFrame(()=>{
+        elUnlockBanner.classList.add('visible');
+      });
+      unlockBannerTimer = setTimeout(()=>{
+        elUnlockBanner.classList.remove('visible');
+        unlockBannerTimer = setTimeout(()=>{
+          elUnlockBanner.classList.add('hidden');
+          unlockBannerTimer = null;
+        }, 320);
+      }, 2800);
     }
 
     function show(el, autoHide = true){
@@ -1852,6 +3165,29 @@
       const ok = game.ok;
       const pct = Math.round((ok/total)*100);
       const msg = `${ok} von ${total} richtig (${pct} %)`;
+      const progressBefore = game && game.progress ? game.progress : null;
+      if(progressBefore && progressBefore.mode === 'LERNWEG'){
+        const beforeUnlocked = progressBefore.unlocked || 0;
+        const beforeAudioSet = progressBefore.audioSet;
+        const advanced = advanceAfterRun({
+          result: { mistakes: game.bad },
+          state: progressBefore,
+        });
+        const saved = saveProgress(advanced);
+        const unlockedIncreased = saved.unlocked > beforeUnlocked;
+        const audioSetChanged = saved.audioSet !== beforeAudioSet;
+        if(unlockedIncreased || audioSetChanged){
+          const parts = [];
+          if(unlockedIncreased){
+            parts.push(`${saved.unlocked} Buchstaben aktiv.`);
+          }
+          if(audioSetChanged){
+            parts.push(`Neues Audio-Set: ${saved.audioSet}.`);
+          }
+          showUnlockBanner(parts.join(' '));
+        }
+        game.progress = saved;
+      }
       // Pokalfarben anpassen (einfach über Füllung)
       const cup = elModal.querySelector('#cup');
       const star = elModal.querySelector('#star');
@@ -1880,6 +3216,21 @@
         }
         if(packsToOpen > 0){
           fullMsg += `\n\n🎁 ${packsToOpen} Sticker-Pack${packsToOpen > 1 ? 's' : ''} verfügbar!`;
+        }
+
+        const savedProgress = game && game.progress ? game.progress : progressBefore;
+        if(savedProgress && savedProgress.wrongCounts){
+          const trouble = Object.entries(savedProgress.wrongCounts)
+            .filter(([, count]) => count > 0)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 3);
+          if(trouble.length){
+            const tipLetters = trouble.map(([letter, count]) => `${letter} (${count}x)`);
+            const tipSentence = trouble.length === 1
+              ? `${tipLetters[0]} fällt noch schwer.`
+              : `${tipLetters.join(', ')} fallen noch schwer.`;
+            fullMsg += `\n\n👨‍👩‍👧 Eltern-Tipp: ${tipSentence} Hört euch die Aufnahme gemeinsam an oder wiederholt den Buchstaben spielerisch.`;
+          }
         }
 
         elResultText.textContent = fullMsg;
@@ -1921,6 +3272,10 @@
       await updateStatusGridFromDB();
       await populateSetSelector();
       await populateDefaultSetSelector();
+      applyModeToUI(getProgress());
+      updateStartButtonLabel(getProgress());
+      await updateLetterButtons();
+      await updateUIForRecordingState();
     })();
 
 
