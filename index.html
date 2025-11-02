@@ -405,7 +405,6 @@
           </div>
           <div class="controls" style="margin:10px 0">
             <button id="btnRec" class="btn">🎙️ Aufnehmen</button>
-            <button id="btnStop" class="btn secondary" disabled>⏹️ Stop</button>
             <button id="btnPlay" class="btn secondary" disabled>▶️ Testen</button>
             <button id="btnDelete" class="btn ghost" disabled>🗑️ Löschen</button>
             <span class="timer" id="timer">00:00</span>
@@ -584,7 +583,6 @@
     const elRecTitle = document.getElementById('recTitle');
     const elRecStatus = document.getElementById('recStatus');
     const elBtnRec = document.getElementById('btnRec');
-    const elBtnStop = document.getElementById('btnStop');
     const elBtnPlay = document.getElementById('btnPlay');
     const elBtnDelete = document.getElementById('btnDelete');
     const elTimer = document.getElementById('timer');
@@ -1394,6 +1392,16 @@
     updateStatusGridFromDB();
 
     async function selectLetter(ch){
+      // Laufende Aufnahme stoppen, falls eine aktiv ist
+      if(recorder && recorder.state === 'recording') {
+        recorder.stop();
+        elBtnRec.textContent = '🎙️ Aufnehmen';
+        elBtnRec.classList.remove('danger');
+        clearInterval(timerInt);
+        elTimer.classList.remove('blink');
+        elTimer.textContent = '00:00';
+      }
+
       currentLetter = ch;
       elRecLetter.textContent = ch;
       elRecTitle.textContent = ch;
@@ -1431,6 +1439,18 @@
     }
 
     elBtnRec.addEventListener('click', async ()=>{
+      // Wenn gerade aufgenommen wird: Stoppen
+      if(recorder && recorder.state === 'recording') {
+        recorder.stop();
+        elBtnRec.textContent = '🎙️ Aufnehmen';
+        elBtnRec.classList.remove('danger');
+        clearInterval(timerInt);
+        elTimer.classList.remove('blink');
+        elTimer.textContent = '00:00';
+        return;
+      }
+
+      // Sonst: Aufnahme starten
       try{
         if(!mediaStream) mediaStream = await navigator.mediaDevices.getUserMedia({audio:true});
       }catch(e){
@@ -1453,16 +1473,12 @@
         renderSetsList();
       };
       recorder.start();
-      elBtnRec.disabled=true; elBtnStop.disabled=false; elBtnPlay.disabled=true; elBtnDelete.disabled=true;
+      elBtnRec.textContent = '⏹️ Stoppen';
+      elBtnRec.classList.add('danger');
+      elBtnPlay.disabled=true; elBtnDelete.disabled=true;
       timerStart = performance.now();
       elTimer.classList.add('blink');
       timerInt = setInterval(()=> elTimer.textContent = fmt(performance.now()-timerStart), 200);
-    });
-
-    elBtnStop.addEventListener('click', ()=>{
-      if(recorder && recorder.state==='recording') recorder.stop();
-      elBtnRec.disabled=false; elBtnStop.disabled=true;
-      clearInterval(timerInt); elTimer.classList.remove('blink'); elTimer.textContent='00:00';
     });
 
     elBtnPlay.addEventListener('click', async ()=>{
