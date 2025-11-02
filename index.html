@@ -257,6 +257,20 @@
     .set-card.active .set-btn{background:rgba(255,255,255,.25); color:#fff}
     .set-card.active .set-btn:hover{background:rgba(255,255,255,.4)}
 
+    /* Sticker-Album */
+    .sticker-slot{
+      aspect-ratio:1; border-radius:12px; background:linear-gradient(145deg,#faf5ff,#f3e8ff);
+      display:grid; place-items:center; font-size:48px; cursor:pointer;
+      box-shadow:0 2px 8px rgba(124,58,237,.1), inset 0 0 0 2px #e9d5ff;
+      transition:all .2s; position:relative;
+    }
+    .sticker-slot:hover{transform:translateY(-2px); box-shadow:0 4px 12px rgba(124,58,237,.2)}
+    .sticker-slot.locked{opacity:.3; background:#f0f0f0; cursor:default}
+    .sticker-slot.locked:hover{transform:none}
+    .sticker-slot.collected{animation:popIn .3s ease}
+    @keyframes popIn{ 0%{transform:scale(.8)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
+    .album-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(80px,1fr)); gap:12px}
+
     /* Install Button */
     .install-btn{
       display:none; margin-left:auto; border:0; padding:8px 14px; border-radius:999px;
@@ -314,6 +328,21 @@
       </div>
 
       <div id="letters" class="grid-letters" aria-label="Buchstaben-Auswahl"></div>
+    </section>
+
+    <!-- MEIN ALBUM -->
+    <section id="album" class="card hidden">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
+        <h2 style="margin:0">🎁 Mein Sticker-Album</h2>
+        <div style="font-weight:800; font-size:18px">⭐ <span id="starCount">0</span> Sterne</div>
+      </div>
+
+      <div id="albumTabs" style="display:flex; gap:8px; margin-bottom:16px; overflow-x:auto"></div>
+      <div id="albumContent"></div>
+
+      <div style="margin-top:20px; text-align:center">
+        <button id="btnOpenPack" class="btn" disabled>🎁 Pack öffnen (10 ⭐)</button>
+      </div>
     </section>
 
     <!-- EINSTELLUNGEN -->
@@ -560,6 +589,7 @@
         b.classList.toggle('active', isActive);
       });
       document.getElementById('spiel').classList.toggle('hidden', tabName !== 'spiel');
+      document.getElementById('album').classList.toggle('hidden', tabName !== 'album');
       document.getElementById('einstellungen').classList.toggle('hidden', tabName !== 'einstellungen');
 
       // Beim Wechsel zu Einstellungen: UI aktualisieren
@@ -567,6 +597,11 @@
         renderSetsList();
         updateStatusGridFromDB();
         updateUIForRecordingState();
+      }
+
+      // Beim Wechsel zu Album: Album rendern
+      if (tabName === 'album') {
+        renderAlbum();
       }
     }
 
@@ -1121,6 +1156,96 @@
       await updateUIForRecordingState();
       if(currentLetter) await selectLetter(currentLetter);
     }
+
+    // ——————————————————————————————————————————
+    // UI – Sticker-Album
+    // ——————————————————————————————————————————
+    let currentAlbumTheme = 'animals';
+
+    async function renderAlbum(){
+      const stars = await getStars();
+      const collected = await getCollectedStickers();
+      const collectedSet = new Set(collected);
+
+      // Sterne anzeigen
+      document.getElementById('starCount').textContent = stars;
+
+      // Pack-Button aktivieren/deaktivieren
+      const btnOpenPack = document.getElementById('btnOpenPack');
+      btnOpenPack.disabled = stars < 10;
+
+      // Themen-Tabs rendern
+      const albumTabs = document.getElementById('albumTabs');
+      albumTabs.innerHTML = '';
+      for(const [key, theme] of Object.entries(STICKER_CATALOG)){
+        const btn = document.createElement('button');
+        btn.className = 'btn secondary';
+        if(key === currentAlbumTheme) btn.classList.add('active');
+        btn.textContent = `${theme.emoji} ${theme.name}`;
+        btn.onclick = () => { currentAlbumTheme = key; renderAlbum(); };
+        albumTabs.appendChild(btn);
+      }
+
+      // Sticker-Grid rendern
+      const theme = STICKER_CATALOG[currentAlbumTheme];
+      const albumContent = document.getElementById('albumContent');
+      albumContent.innerHTML = `<div class="album-grid"></div>`;
+      const grid = albumContent.querySelector('.album-grid');
+
+      for(const sticker of theme.stickers){
+        const slot = document.createElement('div');
+        slot.className = 'sticker-slot';
+        const hasSticker = collectedSet.has(sticker.id);
+        if(hasSticker){
+          slot.classList.add('collected');
+          slot.textContent = sticker.emoji;
+          slot.title = sticker.name;
+        } else {
+          slot.classList.add('locked');
+          slot.textContent = '❓';
+          slot.title = '??? - Noch nicht gesammelt';
+        }
+        grid.appendChild(slot);
+      }
+
+      // Fortschritt anzeigen
+      const themeCollected = theme.stickers.filter(s => collectedSet.has(s.id)).length;
+      const progress = document.createElement('p');
+      progress.className = 'muted';
+      progress.style.marginTop = '16px';
+      progress.textContent = `${themeCollected} von ${theme.stickers.length} Stickern gesammelt`;
+      albumContent.appendChild(progress);
+    }
+
+    // Pack öffnen
+    document.getElementById('btnOpenPack').addEventListener('click', async () => {
+      const stars = await getStars();
+      if(stars < 10) return;
+
+      // 10 Sterne abziehen
+      await setStars(stars - 10);
+
+      // 3 zufällige Sticker ziehen
+      const pack = openStickerPack();
+      const newStickers = [];
+
+      for(const stickerId of pack){
+        const isNew = await addSticker(stickerId);
+        if(isNew){
+          newStickers.push(getStickerById(stickerId));
+        }
+      }
+
+      // Simple Alert (TODO: schöne Animation)
+      if(newStickers.length > 0){
+        const msg = newStickers.map(s => `${s.emoji} ${s.name}`).join('\n');
+        alert(`🎁 Pack geöffnet!\n\nNeue Sticker:\n${msg}`);
+      } else {
+        alert('🎁 Pack geöffnet!\n\nLeider nur Duplikate. Versuche es erneut!');
+      }
+
+      await renderAlbum();
+    });
 
     // ——————————————————————————————————————————
     // UI – Buchstabenraster
