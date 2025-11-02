@@ -107,11 +107,11 @@ Custom Install-Button erscheint noch nicht auf Android Chrome/Brave. App ist abe
 - Langfristige Bindung schaffen
 
 ### Aufgaben:
-- [ ] Sticker-Sammelsystem: Pro richtig erkanntem Buchstaben Sticker
-- [ ] Album-Ansicht zum Durchblättern
-- [ ] Verschiedene Sticker-Sets (Tiere, Fahrzeuge, etc.)
-- [ ] "Glitzer-Effekt" beim Erhalt neuer Sticker
-- [ ] Fortschrittsbalken im Album
+- [X] Sticker-Sammelsystem: Pro richtig erkanntem Buchstaben Sticker
+- [X] Album-Ansicht zum Durchblättern
+- [X] Verschiedene Sticker-Sets (Tiere, Fahrzeuge, etc.)
+- [X] "Glitzer-Effekt" beim Erhalt neuer Sticker
+- [x] Fortschrittsbalken im Album
 
 ---
 
