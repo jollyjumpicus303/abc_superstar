@@ -371,8 +371,12 @@
 
         <div id="setsList" style="display:flex; gap:10px; flex-wrap:wrap; margin:16px 0"></div>
 
-        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px">
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center">
           <button id="btnCreateSet" class="btn secondary">➕ Neues Set erstellen</button>
+          <div style="margin-left:auto; display:flex; gap:8px; align-items:center">
+            <label style="font-weight:600; color:#6b7896">Standard-Set:</label>
+            <select id="defaultSetSelector" class="btn secondary" style="min-width:200px; text-align:left; font-size:14px"></select>
+          </div>
         </div>
       </div>
 
@@ -681,6 +685,16 @@
       await setActiveSet(e.target.value);
       await updateLetterButtons();
       await updateRecordingUI();
+      await populateDefaultSetSelector();
+    });
+
+    // Standard-Set-Selector in Einstellungen für Erwachsene
+    document.getElementById('defaultSetSelector').addEventListener('change', async (e) => {
+      await setActiveSet(e.target.value);
+      await renderSetsList();
+      await updateLetterButtons();
+      await updateRecordingUI();
+      await populateSetSelector();
     });
 
     // Beim ersten Besuch: Prüfen ob Aufnahmen vorhanden, sonst zu Einstellungen
@@ -1116,6 +1130,7 @@
           // Buchstaben-Grid im Spiel-Tab aktualisieren
           await updateLetterButtons();
           await populateSetSelector();
+          await populateDefaultSetSelector();
         });
 
         elSetsList.appendChild(card);
@@ -1135,6 +1150,7 @@
       await renderSetsList();
       await updateRecordingUI();
       await populateSetSelector();
+      await populateDefaultSetSelector();
     });
 
     // Set-Aktionen (Bearbeiten/Löschen)
@@ -1169,6 +1185,7 @@
           await renderSetsList();
           await updateRecordingUI();
           await populateSetSelector();
+          await populateDefaultSetSelector();
         }
       }
 
@@ -1185,6 +1202,7 @@
         await updateSet(setId, name || setData.name, emoji || setData.emoji);
         await renderSetsList();
         await populateSetSelector();
+        await populateDefaultSetSelector();
       }
     });
 
@@ -1200,6 +1218,22 @@
       const sets = await getAllSets();
       const activeSetId = await getActiveSet();
       const selector = document.getElementById('setSelector');
+
+      selector.innerHTML = '';
+      for(const set of sets) {
+        const option = document.createElement('option');
+        option.value = set.id;
+        option.textContent = `${set.emoji} ${set.name}`;
+        option.selected = set.id === activeSetId;
+        selector.appendChild(option);
+      }
+    }
+
+    // Hilfsfunktion: Standard-Set-Selector in Einstellungen befüllen
+    async function populateDefaultSetSelector(){
+      const sets = await getAllSets();
+      const activeSetId = await getActiveSet();
+      const selector = document.getElementById('defaultSetSelector');
 
       selector.innerHTML = '';
       for(const set of sets) {
@@ -1866,6 +1900,7 @@
       await renderSetsList();
       await updateStatusGridFromDB();
       await populateSetSelector();
+      await populateDefaultSetSelector();
     })();
 
 
