@@ -606,8 +606,17 @@
           <span class="bad">Falsch: <b id="badCount">0</b></span>
         </div>
         <div class="progress"><i id="bar"></i></div>
-        <div style="margin-top:10px">
+        <div class="in-game-controls" style="margin-top:10px; display:flex; gap:12px; align-items:center;">
           <button id="btnTestAudio" class="btn secondary" title="Aktuellen Buchstaben nochmals anhören" disabled>🔊 Nochmal anhören</button>
+          <div style="margin-left:auto">
+            <label style="font-weight:600; font-size:13px; color:var(--muted)">Audio:</label>
+            <select id="inGameDifficulty" class="btn secondary" style="padding: 8px 12px; font-size:14px;">
+              <option value="LEICHT">Leicht</option>
+              <option value="MITTEL">Mittel</option>
+              <option value="SCHWER">Schwer</option>
+              <option value="PROFI">Affig</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -686,7 +695,7 @@
             <button type="button" class="chip active" data-record-difficulty="LEICHT">Leicht</button>
             <button type="button" class="chip" data-record-difficulty="MITTEL">Mittel</button>
             <button type="button" class="chip" data-record-difficulty="SCHWER">Schwer</button>
-            <button type="button" class="chip" data-record-difficulty="PROFI">Profi</button>
+            <button type="button" class="chip" data-record-difficulty="PROFI">Affig</button>
           </div>
           <div class="controls" style="margin:10px 0">
             <button id="btnRec" class="btn">🎙️ Aufnehmen</button>
@@ -795,61 +804,34 @@
       <h3 id="modeDialogTitle">Wie möchtest du spielen?</h3>
       <p class="muted" style="margin:0 0 12px">Tippe eine Karte, dann geht es los!</p>
       <div class="mode-dialog-cards" role="group" aria-label="Moduswahl">
-        <button type="button" class="mode-dialog-card" data-mode-option data-mode="FREI" data-difficulty="LEICHT" data-count="4">
-          <strong>🐣 Anfänger</strong>
-          <span>4 Buchstaben · leicht</span>
-        </button>
         <button type="button" class="mode-dialog-card" data-mode-option data-mode="LERNWEG">
           <strong>🦋 Lernweg</strong>
           <span>Geführter Pfad mit Belohnungen</span>
         </button>
-        <button type="button" class="mode-dialog-card" data-mode="FREI" data-mode-option data-difficulty="PROFI" data-count="26">
-          <strong>🦸 Meister</strong>
-          <span>Alle Buchstaben · Profi</span>
+        <button type="button" class="mode-dialog-card" data-mode-option data-mode="FREI">
+          <strong>🎨 Individuelles Spiel</strong>
+          <span>Stelle dein eigenes Spiel zusammen</span>
         </button>
-      </div>
-      <div class="chip-group" id="dialogAudioGroup" role="group" aria-label="Audio-Stil">
-        <button type="button" class="chip" data-audio-style="AUTO">Auto (wir wählen für dich)</button>
-        <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="LEICHT">Buchstabe + Anlaut</button>
-        <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="MITTEL">Nur Buchstabe</button>
-        <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="SCHWER">Beispielwort</button>
-        <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="PROFI">Super-Schwer</button>
       </div>
       <div class="mode-dialog-actions">
         <button id="modeDialogCancel" class="btn secondary" type="button">Zurück</button>
-        <button id="modeDialogCustom" class="btn ghost" type="button">Individuelles Spiel</button>
         <button id="modeDialogStart" class="btn" type="button" disabled>Los geht's!</button>
       </div>
       <div id="individualPanel" class="individual-panel hidden">
         <p class="muted" style="margin-top:0">Stelle dein Spiel selbst zusammen.</p>
-        <span class="panel-label">Buchstaben</span>
+        <span class="panel-label">Buchstaben-Anzahl</span>
         <div class="chip-group" id="freeCountGroup" role="group" aria-label="Anzahl Buchstaben">
           <button type="button" class="chip" data-free-count="4">4 Buchstaben</button>
           <button type="button" class="chip" data-free-count="8">8 Buchstaben</button>
           <button type="button" class="chip" data-free-count="12">12 Buchstaben</button>
           <button type="button" class="chip" data-free-count="26">Alle 26</button>
         </div>
-        <span class="panel-label">Audio-Set</span>
-        <div class="chip-group" id="audioSetGroup" role="group" aria-label="Audio-Set">
-          <button type="button" class="chip" data-audio-set="ANLAUT">Mit Anlaut</button>
-          <button type="button" class="chip" data-audio-set="OHNE_ANLAUT">Ohne Anlaut</button>
-        </div>
-        <span class="panel-label">Audio-Stil</span>
-        <div class="chip-group" id="audioStyleGroup" role="group" aria-label="Audio-Stil">
-          <button type="button" class="chip" data-audio-style="AUTO">Auto (empfohlen)</button>
-          <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="LEICHT">Buchstabe + Anlaut</button>
-          <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="MITTEL">Nur Buchstabe</button>
-          <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="SCHWER">Beispielwort</button>
-          <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="PROFI">Super-Schwer</button>
-        </div>
-        <div id="difficultyWrapper" class="hidden">
-          <span class="panel-label">Schwierigkeit</span>
-          <div class="chip-group hidden" id="difficultyGroup" role="group" aria-label="Schwierigkeit auswählen">
-            <button type="button" class="chip" data-difficulty="LEICHT">Leicht</button>
-            <button type="button" class="chip" data-difficulty="MITTEL">Mittel</button>
-            <button type="button" class="chip" data-difficulty="SCHWER">Schwer</button>
-            <button type="button" class="chip" data-difficulty="PROFI">Profi</button>
-          </div>
+        <span class="panel-label">Audio-Schwierigkeit</span>
+        <div class="chip-group" id="difficultyGroup" role="group" aria-label="Schwierigkeit auswählen">
+            <button type="button" class="chip" data-difficulty="LEICHT">😊 Leicht</button>
+            <button type="button" class="chip" data-difficulty="MITTEL">😐 Mittel</button>
+            <button type="button" class="chip" data-difficulty="SCHWER">😬 Schwer</button>
+            <button type="button" class="chip" data-difficulty="AFFIG">🤪 Affig</button>
         </div>
       </div>
     </div>
@@ -980,18 +962,13 @@
     const elRoundNow = document.getElementById('roundNow');
     const elUnlockBanner = document.getElementById('unlockBanner');
     const elUnlockBannerText = document.getElementById('unlockBannerText');
-    const modeCards = Array.from(document.querySelectorAll('[data-mode-card]'));
     const dialogModeCards = Array.from(document.querySelectorAll('[data-mode-option]'));
     const elModeDialog = document.getElementById('modeDialog');
     const elModeDialogStart = document.getElementById('modeDialogStart');
     const elModeDialogCancel = document.getElementById('modeDialogCancel');
-    const elModeDialogCustom = document.getElementById('modeDialogCustom');
-    const dialogAudioGroup = document.getElementById('dialogAudioGroup');
     const elModeControls = document.getElementById('modeControls');
     const elFreeCountGroup = document.getElementById('freeCountGroup');
-    const elAudioSetGroup = document.getElementById('audioSetGroup');
     const elDifficultyGroup = document.getElementById('difficultyGroup');
-    const elAudioStyleGroup = document.getElementById('audioStyleGroup');
     const elDifficultyWrapper = document.getElementById('difficultyWrapper');
     const elIndividualPanel = document.getElementById('individualPanel');
     const elRoundMax = document.getElementById('roundMax');
@@ -1008,10 +985,12 @@
     const elBtnStart = document.getElementById('btnStart');
     const elBtnChangeMode = document.getElementById('btnChangeMode');
     const elBtnParentModeDialog = document.getElementById('btnParentModeDialog');
+    elBtnParentModeDialog.addEventListener('click', openModeDialog);
     const elModeHint = document.getElementById('modeHint');
     const elBtnTestAudio = document.getElementById('btnTestAudio');
     const elRounds = document.getElementById('rounds');
     const elRoundsOut = document.getElementById('roundsOut');
+    elBtnChangeMode.addEventListener('click', openModeDialog);
 
     // Eltern-Sperre
     const elParentalGate = document.getElementById('parentalGate');
@@ -1182,26 +1161,6 @@
       });
     }
 
-    modeCards.forEach(card => {
-      card.addEventListener('click', () => {
-        const mode = card.dataset.mode || 'FREI';
-        const updates = { mode };
-        if(mode === 'FREI'){
-          if(card.dataset.count){
-            updates.freeLetterCount = Number(card.dataset.count);
-          }
-          if(card.dataset.difficulty){
-            updates.difficulty = card.dataset.difficulty;
-            updates.audioStyle = 'MANUAL';
-          }
-        }
-        if(mode === 'LERNWEG'){
-          updates.audioStyle = 'AUTO';
-        }
-        saveAndApply(updates);
-      });
-    });
-
     dialogModeCards.forEach(card => {
       card.addEventListener('click', () => {
         if (!pendingModeSelection) {
@@ -1209,106 +1168,30 @@
         }
         const mode = card.dataset.mode || 'FREI';
         pendingModeSelection.mode = mode;
-        if(mode === 'FREI'){
-          if(card.dataset.count){
-            pendingModeSelection.freeLetterCount = Number(card.dataset.count);
-          }
-          if(card.dataset.difficulty){
-            pendingModeSelection.difficulty = card.dataset.difficulty;
-            pendingModeSelection.audioStyle = 'MANUAL';
-          }
-        }
-        if(mode === 'LERNWEG'){
-          pendingModeSelection.audioStyle = 'AUTO';
-          const current = getProgress();
-          const synthetic = {
-            ...current,
-            mode: 'LERNWEG',
-            audioStyle: 'AUTO',
-          };
-          pendingModeSelection.difficulty = resolveAudioDifficulty(synthetic);
-        }
+
+        // Automatically open the individual panel for custom games
+        toggleIndividualPanel(mode === 'FREI');
+
         updateModeDialogCards(pendingModeSelection);
-        updateModeDialogAudioChips(pendingModeSelection);
+        elModeDialogStart.disabled = false;
       });
     });
-
-    if(dialogAudioGroup){
-      dialogAudioGroup.addEventListener('click', (e) => {
-        const chip = e.target.closest('[data-audio-style]');
-        if(!chip) return;
-        if (!pendingModeSelection) {
-          pendingModeSelection = extractSelectionFromProgress(getProgress());
-        }
-        const style = (chip.dataset.audioStyle || 'AUTO').toUpperCase();
-        pendingModeSelection.audioStyle = style;
-        if(style === 'MANUAL'){
-          pendingModeSelection.difficulty = chip.dataset.audioDifficulty || pendingModeSelection.difficulty || 'LEICHT';
-        } else {
-          const current = getProgress();
-          const synthetic = {
-            ...current,
-            mode: pendingModeSelection.mode,
-            freeLetterCount: pendingModeSelection.freeLetterCount,
-            audioStyle: 'AUTO',
-          };
-          pendingModeSelection.difficulty = resolveAudioDifficulty(synthetic);
-        }
-        updateModeDialogAudioChips(pendingModeSelection);
-        updateModeDialogCards(pendingModeSelection);
-      });
-    }
-
-    if(elBtnStart){
-      elBtnStart.addEventListener('click', () => {
-        if (elBtnStart.disabled) return;
-        openModeDialog();
-      });
-    }
-
-    if(elBtnChangeMode){
-      elBtnChangeMode.addEventListener('click', () => {
-        openModeDialog();
-      });
-    }
-
-    if(elBtnParentModeDialog){
-      elBtnParentModeDialog.addEventListener('click', () => {
-        openModeDialog();
-      });
-    }
-
-    if(elModeDialogCancel){
-      elModeDialogCancel.addEventListener('click', () => {
-        closeModeDialog();
-      });
-    }
-
-    if(elModeDialogCustom){
-      elModeDialogCustom.addEventListener('click', () => {
-        toggleIndividualPanel();
-      });
-    }
 
     if(elModeDialogStart){
       elModeDialogStart.addEventListener('click', () => {
         if(!pendingModeSelection) return;
-        const updates = { mode: pendingModeSelection.mode };
+
+        const updates = { 
+          mode: pendingModeSelection.mode, 
+          difficulty: pendingModeSelection.difficulty || 'LEICHT',
+        };
+
         if(pendingModeSelection.mode === 'FREI'){
           updates.freeLetterCount = pendingModeSelection.freeLetterCount || 4;
-          updates.audioSet = pendingModeSelection.audioSet || 'ANLAUT';
-          if(pendingModeSelection.audioStyle === 'AUTO'){
-            updates.audioStyle = 'AUTO';
-          } else {
-            updates.audioStyle = 'MANUAL';
-            updates.difficulty = pendingModeSelection.difficulty || 'LEICHT';
-          }
         } else {
-          updates.audioStyle = pendingModeSelection.audioStyle || 'AUTO';
-          if(updates.audioStyle === 'MANUAL'){
-            updates.difficulty = pendingModeSelection.difficulty || 'LEICHT';
-          }
+          // Lernweg uses its own progression for letter count
         }
+        
         saveAndApply(updates);
         closeModeDialog();
         startGame();
@@ -1318,45 +1201,31 @@
     if(elFreeCountGroup){
       elFreeCountGroup.addEventListener('click', (e) => {
         const chip = e.target.closest('[data-free-count]');
-        if(!chip) return;
+        if(!chip || !pendingModeSelection) return;
         const count = Number(chip.dataset.freeCount || 0);
         if(!count) return;
-        saveAndApply({ mode: 'FREI', freeLetterCount: count });
-      });
-    }
-
-    if(elAudioSetGroup){
-      elAudioSetGroup.addEventListener('click', (e) => {
-        const chip = e.target.closest('[data-audio-set]');
-        if(!chip) return;
-        const value = chip.dataset.audioSet;
-        if(!value) return;
-        saveAndApply({ mode: 'FREI', audioSet: value });
-      });
-    }
-
-    if(elAudioStyleGroup){
-      elAudioStyleGroup.addEventListener('click', (e) => {
-        const chip = e.target.closest('[data-audio-style]');
-        if(!chip) return;
-        const style = (chip.dataset.audioStyle || 'AUTO').toUpperCase();
-        if(style === 'AUTO'){
-          saveAndApply({ audioStyle: 'AUTO' });
-        } else {
-          const diff = chip.dataset.audioDifficulty || 'LEICHT';
-          saveAndApply({ audioStyle: 'MANUAL', difficulty: diff });
-        }
+        pendingModeSelection.freeLetterCount = count;
+        setActiveChip(elFreeCountGroup, c => c === chip);
       });
     }
 
     if(elDifficultyGroup){
       elDifficultyGroup.addEventListener('click', (e) => {
         const chip = e.target.closest('[data-difficulty]');
-        if(!chip) return;
+        if(!chip || !pendingModeSelection) return;
         const value = chip.dataset.difficulty;
         if(!value) return;
-        saveAndApply({ mode: 'FREI', difficulty: value, audioStyle: 'MANUAL' });
+        pendingModeSelection.difficulty = value;
+        setActiveChip(elDifficultyGroup, c => c === chip);
       });
+    }
+    elModeDialogCancel.addEventListener('click', closeModeDialog);
+    
+    const elInGameDifficulty = document.getElementById('inGameDifficulty');
+    if(elInGameDifficulty){
+        elInGameDifficulty.addEventListener('change', (e)=>{
+            saveAndApply({ difficulty: e.target.value });
+        });
     }
 
     const elModeWarningAction = document.getElementById('modeWarningAction');
@@ -1380,7 +1249,6 @@
       const clips = setData && setData.clips ? setData.clips : [];
       const recordedLetters = clips.map(clip => clip.letter);
       const recordedSet = new Set(recordedLetters);
-      const byDifficulty = aggregateClipsByLetter(clips);
       const recordedCount = recordedSet.size;
       const hasRecordings = recordedCount > 0;
 
@@ -1388,16 +1256,13 @@
       elEmptyState.classList.toggle('hidden', hasRecordings);
 
       const progress = getProgress();
-      const mode = progress && progress.mode ? progress.mode : 'FREI';
-      const desiredFreeCount = progress && typeof progress.freeLetterCount === 'number' ? progress.freeLetterCount : 4;
-      const unlockedForPath = progress && typeof progress.unlocked === 'number' ? progress.unlocked : 4;
+      const mode = progress?.mode || 'FREI';
+      const desiredFreeCount = progress?.freeLetterCount || 4;
+      const unlockedForPath = progress?.unlocked || 4;
       updateStartButtonLabel(progress);
       updateLernwegProgress(progress);
 
       const baseWarnings = [];
-      const manualWarnings = [];
-      const audioStyle = progress && progress.audioStyle ? progress.audioStyle : 'AUTO';
-      const manualDifficulty = progress && progress.difficulty ? progress.difficulty : 'LEICHT';
       if(hasRecordings){
         if(mode === 'FREI'){
           const targetLetters = LETTERS.slice(0, desiredFreeCount);
@@ -1407,47 +1272,21 @@
               ? `Für alle 26 Buchstaben fehlen noch ${missingBase.length}.`
               : `Es fehlen Aufnahmen für: ${missingBase.join(', ')}`);
           }
-          if(audioStyle === 'MANUAL'){
-            const missingDiff = targetLetters.filter(letter => {
-              if(!recordedSet.has(letter)) return false; // bereits in Basiswarnung enthalten
-              const diffCounts = byDifficulty.get(letter);
-              return !diffCounts || !(diffCounts[manualDifficulty] > 0);
-            });
-            if(missingDiff.length){
-              const label = formatDifficultyLabel(manualDifficulty);
-              manualWarnings.push(`Für ${label} fehlen Aufnahmen für: ${missingDiff.join(', ')}`);
-            }
-          }
         } else if(mode === 'LERNWEG'){
           const requiredLetters = LETTERS.slice(0, unlockedForPath);
           const missingBase = requiredLetters.filter(letter => !recordedSet.has(letter));
           if(missingBase.length){
             baseWarnings.push(`Für den Lernweg fehlen Aufnahmen für: ${missingBase.join(', ')}`);
           }
-          if(audioStyle === 'MANUAL'){
-            const missingDiff = requiredLetters.filter(letter => {
-              if(!recordedSet.has(letter)) return false;
-              const diffCounts = byDifficulty.get(letter);
-              return !diffCounts || !(diffCounts[manualDifficulty] > 0);
-            });
-            if(missingDiff.length){
-              const label = formatDifficultyLabel(manualDifficulty);
-              manualWarnings.push(`Im Lernweg fehlen ${label}-Aufnahmen für: ${missingDiff.join(', ')}`);
-            }
-          }
         }
       }
 
-      const warningMessage = [...baseWarnings, ...manualWarnings].join(' ');
+      const warningMessage = [...baseWarnings].join(' ');
       const canStart = hasRecordings && baseWarnings.length === 0;
       elBtnStart.disabled = !canStart;
       elBtnStart.style.opacity = canStart ? '1' : '0.5';
       elBtnStart.style.cursor = canStart ? 'pointer' : 'not-allowed';
-      if(canStart){
-        elBtnStart.title = manualWarnings.length ? manualWarnings.join(' ') : '';
-      } else {
-        elBtnStart.title = hasRecordings ? 'Bitte nimm die fehlenden Buchstaben auf, bevor du startest.' : 'Bitte nimm zuerst mindestens eine Aufnahme auf.';
-      }
+      elBtnStart.title = canStart ? '' : (hasRecordings ? 'Bitte nimm die fehlenden Buchstaben auf, bevor du startest.' : 'Bitte nimm zuerst mindestens eine Aufnahme auf.');
 
       if(elModeHint){
         if(warningMessage){
@@ -1530,18 +1369,7 @@
       await populateSetSelector();
     });
 
-    // Beim ersten Besuch: Prüfen ob Aufnahmen vorhanden, sonst zu Einstellungen
-    (async function checkFirstVisit() {
-      await updateUIForRecordingState();
-      const setId = await getActiveSet();
-      const setData = await loadSetData(setId);
-      const hasRecordings = !!(setData && setData.clips && setData.clips.length);
 
-      // Wenn keine Aufnahmen: Automatisch zu Einstellungen wechseln
-      if (!hasRecordings) {
-        switchToTab('einstellungen');
-      }
-    })();
 
     // ——————————————————————————————————————————
     // IndexedDB (Aufnahmen & Sets)
@@ -1636,8 +1464,7 @@
       });
     }
 
-    // Neues Set erstellen
-    const AUDIO_DIFFICULTIES = ['LEICHT', 'MITTEL', 'SCHWER', 'PROFI'];
+    const AUDIO_DIFFICULTIES = ['LEICHT', 'MITTEL', 'SCHWER', 'AFFIG'];
 
     function normaliseLetterInput(value){
       if(typeof value !== 'string') return null;
@@ -2291,33 +2118,7 @@
 
     function applyModeToUI(progress){
       const mode = (progress && progress.mode) || 'FREI';
-      let matchedCard = false;
-      modeCards.forEach(card => {
-        let active = false;
-        const cardMode = card.dataset.mode;
-        if(cardMode === 'LERNWEG'){
-          active = mode === 'LERNWEG';
-        } else if(cardMode === 'FREI' && mode === 'FREI'){
-          const cardCount = Number(card.dataset.count || NaN);
-          if(!Number.isNaN(cardCount)){
-            active = progress.freeLetterCount === cardCount;
-          } else {
-            active = true;
-          }
-        }
-        card.classList.toggle('active', active);
-        if(active) matchedCard = true;
-      });
 
-      if(!matchedCard){
-        if(mode === 'FREI'){
-          const fallback = modeCards.find(card => card.dataset.mode === 'FREI' && card.dataset.difficulty === 'LEICHT');
-          if(fallback) fallback.classList.add('active');
-        } else {
-          const fallback = modeCards.find(card => card.dataset.mode === 'LERNWEG');
-          if(fallback) fallback.classList.add('active');
-        }
-      }
 
       if(elModeControls){
         elModeControls.classList.toggle('hidden', mode !== 'FREI');
@@ -2325,39 +2126,13 @@
 
       if(mode === 'FREI'){
         const desiredCount = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
-        const audioSet = progress && progress.audioSet ? progress.audioSet : 'ANLAUT';
-        const difficulty = progress && progress.difficulty ? progress.difficulty : 'LEICHT';
+        const diff = progress && progress.difficulty ? progress.difficulty : 'LEICHT';
 
-        setActiveChip(elFreeCountGroup, chip => Number(chip.dataset.freeCount || 0) === desiredCount);
-        setActiveChip(elAudioSetGroup, chip => (chip.dataset.audioSet || '') === audioSet);
-        const manualStyle = (progress && progress.audioStyle ? progress.audioStyle : 'AUTO') === 'MANUAL';
-        if(elDifficultyWrapper){
-          elDifficultyWrapper.classList.toggle('hidden', !manualStyle);
-        }
-        if(elDifficultyGroup){
-          elDifficultyGroup.classList.toggle('hidden', !manualStyle);
-        }
-        if(manualStyle){
-          setActiveChip(elDifficultyGroup, chip => (chip.dataset.difficulty || '') === difficulty);
-        } else if (elDifficultyGroup) {
-          elDifficultyGroup.querySelectorAll('.chip').forEach(chip => chip.classList.remove('active'));
-        }
-      }
-
-      const audioStyle = progress && progress.audioStyle ? progress.audioStyle : 'AUTO';
-      setActiveChip(elAudioStyleGroup, chip => {
-        const style = chip.dataset.audioStyle || 'AUTO';
-        if(style === 'AUTO') return audioStyle === 'AUTO';
-        const diff = chip.dataset.audioDifficulty || 'LEICHT';
-        return audioStyle === 'MANUAL' && progress && progress.difficulty === diff;
-      });
-
-      if(elDifficultyWrapper && audioStyle !== 'MANUAL'){
-        elDifficultyWrapper.classList.add('hidden');
+        setActiveChip(elFreeCountGroup, chip => Number(chip.dataset.freeLetterCount || 0) === desiredCount);
+        setActiveChip(elDifficultyGroup, chip => (chip.dataset.difficulty || '') === diff);
       }
 
       updateModeDialogCards(extractSelectionFromProgress(progress));
-      updateModeDialogAudioChips(extractSelectionFromProgress(progress));
       updateStartButtonLabel(progress);
     }
 
@@ -2369,33 +2144,15 @@
     };
 
     const DIFFICULTY_DESCRIPTIONS = {
-      LEICHT: 'Buchstabe + Anlaut',
-      MITTEL: 'Nur Buchstabe',
-      SCHWER: 'Beispielwort',
-      PROFI: 'Extra schwer',
+      LEICHT: 'Leicht (Buchstabe + Anlaut)',
+      MITTEL: 'Mittel (Nur Buchstabe)',
+      SCHWER: 'Schwer (Beispielwort)',
+      AFFIG: 'Affig (Extra Schwer)',
     };
 
-    const LERNWEG_STEPS = [4, 8, 12, 16, 20, 26];
-    const TOTAL_LERNWEG_PHASES = LERNWEG_STEPS.length * 2;
 
-    function resolveAudioDifficulty(progress){
-      const style = progress && progress.audioStyle ? progress.audioStyle : 'AUTO';
-      if(style === 'MANUAL'){
-        return progress && progress.difficulty ? progress.difficulty : 'LEICHT';
-      }
-      const poolSize = progress && progress.mode === 'LERNWEG'
-        ? (progress && progress.unlocked ? progress.unlocked : 4)
-        : (progress && progress.freeLetterCount ? progress.freeLetterCount : 4);
-      if(poolSize >= 24) return 'PROFI';
-      if(poolSize >= 18) return 'SCHWER';
-      if(poolSize >= 12) return 'MITTEL';
-      return 'LEICHT';
-    }
 
-    function describeAudioStyle(style, difficulty){
-      const label = DIFFICULTY_DESCRIPTIONS[difficulty] || DIFFICULTY_LABELS[difficulty] || difficulty;
-      return style === 'AUTO' ? `Auto: ${label}` : label;
-    }
+
 
     function deriveLernwegMeta(progress){
       const unlockedRaw = progress && Number.isFinite(progress.unlocked) ? progress.unlocked : 4;
@@ -2404,21 +2161,17 @@
         : LERNWEG_STEPS.find(step => step > unlockedRaw) || 4;
       const stepIndex = Math.max(0, LERNWEG_STEPS.indexOf(unlocked));
       const step = stepIndex + 1;
-      const setIndex = progress && progress.audioSet === 'OHNE_ANLAUT' ? 1 : 0;
-      const completedStages = setIndex * LERNWEG_STEPS.length + step;
-      const percent = Math.min(100, Math.round((completedStages / TOTAL_LERNWEG_PHASES) * 100));
+      const completedStages = step; // Simplified, as audio sets are removed
+      const percent = Math.min(100, Math.round((completedStages / LERNWEG_STEPS.length) * 100));
       const flawless = progress && Number.isFinite(progress.flawlessStreak) ? Math.max(0, progress.flawlessStreak) : 0;
       const roundsRemaining = Math.max(0, 2 - flawless);
-      const hasSecondSet = setIndex === 1;
-      const atFinalStage = hasSecondSet && step >= LERNWEG_STEPS.length;
+      const atFinalStage = step >= LERNWEG_STEPS.length;
       const nextStep = stepIndex < LERNWEG_STEPS.length - 1 ? LERNWEG_STEPS[stepIndex + 1] : LERNWEG_STEPS[stepIndex];
 
       return {
         unlocked,
         step,
         stepTotal: LERNWEG_STEPS.length,
-        setIndex,
-        setTotal: 2,
         percent,
         roundsRemaining,
         atFinalStage,
@@ -2440,7 +2193,7 @@
       const meta = deriveLernwegMeta(progress);
       elLernwegTrack.classList.remove('hidden');
 
-      elLernwegDetail.textContent = `Set ${meta.setIndex + 1} von ${meta.setTotal} · Stufe ${meta.step} von ${meta.stepTotal}`;
+      elLernwegDetail.textContent = `Stufe ${meta.step} von ${meta.stepTotal}`;
       elLernwegFill.style.width = `${meta.percent}%`;
       const progressBar = elLernwegTrack.querySelector('.lernweg-bar');
       if(progressBar){
@@ -2453,17 +2206,9 @@
       }else{
         if(meta.roundsRemaining > 0){
           const suffix = meta.roundsRemaining === 1 ? 'fehlerfreie Runde' : 'fehlerfreie Runden';
-          if(meta.setIndex === 0 && meta.step >= meta.stepTotal){
-            elLernwegNext.textContent = `Noch ${meta.roundsRemaining} ${suffix} bis zum nächsten Audio-Set.`;
-          } else {
-            elLernwegNext.textContent = `Noch ${meta.roundsRemaining} ${suffix} bis Stufe ${meta.step + 1}.`;
-          }
+          elLernwegNext.textContent = `Noch ${meta.roundsRemaining} ${suffix} bis Stufe ${meta.step + 1}.`;
         } else {
-          if(meta.setIndex === 0 && meta.step >= meta.stepTotal){
-            elLernwegNext.textContent = 'Super! Starte eine weitere Runde ohne Fehler, um das nächste Audio-Set freizuschalten.';
-          } else {
-            elLernwegNext.textContent = 'Fast geschafft! Eine perfekte Runde katapultiert dich auf die nächste Stufe.';
-          }
+          elLernwegNext.textContent = 'Fast geschafft! Eine perfekte Runde katapultiert dich auf die nächste Stufe.';
         }
       }
     }
@@ -2471,8 +2216,8 @@
     function updateStartButtonLabel(progress){
       if(!elBtnStart) return;
       const mode = progress && progress.mode ? progress.mode : 'FREI';
-      const resolvedDifficulty = resolveAudioDifficulty(progress);
-      const desc = describeAudioStyle(progress && progress.audioStyle ? progress.audioStyle : 'AUTO', resolvedDifficulty);
+      const difficulty = progress && progress.difficulty ? progress.difficulty : 'LEICHT';
+      const desc = formatDifficultyLabel(difficulty);
       if(mode === 'LERNWEG'){
         elBtnStart.textContent = `Spiel starten – Lernweg (${desc})`;
       } else {
@@ -2482,59 +2227,35 @@
     }
 
     function extractSelectionFromProgress(progress){
-      const style = progress && progress.audioStyle ? progress.audioStyle : 'AUTO';
-      const difficulty = style === 'MANUAL'
-        ? (progress && progress.difficulty ? progress.difficulty : 'LEICHT')
-        : resolveAudioDifficulty(progress);
+      const difficulty = progress && progress.difficulty ? progress.difficulty : 'LEICHT';
       return {
         mode: progress && progress.mode ? progress.mode : 'FREI',
         freeLetterCount: progress && progress.freeLetterCount ? progress.freeLetterCount : 4,
         difficulty,
-        audioStyle: style,
-        audioSet: progress && progress.audioSet ? progress.audioSet : 'ANLAUT',
       };
     }
 
     function toggleIndividualPanel(forceOpen){
-      if(!elIndividualPanel || !elModeDialogCustom) return;
+      if(!elIndividualPanel) return;
       const shouldOpen = typeof forceOpen === 'boolean'
         ? forceOpen
         : elIndividualPanel.classList.contains('hidden');
 
       if(shouldOpen){
         elIndividualPanel.classList.remove('hidden');
-        elModeDialogCustom.textContent = 'Fertig';
         pendingModeSelection = extractSelectionFromProgress(getProgress());
         pendingModeSelection.mode = 'FREI';
         const desiredCount = pendingModeSelection.freeLetterCount || 4;
-        const audioSet = pendingModeSelection.audioSet || 'ANLAUT';
-        const manualStyle = pendingModeSelection.audioStyle === 'MANUAL';
         const diff = pendingModeSelection.difficulty || 'LEICHT';
         setActiveChip(elFreeCountGroup, chip => Number(chip.dataset.freeCount || 0) === desiredCount);
-        setActiveChip(elAudioSetGroup, chip => (chip.dataset.audioSet || '') === audioSet);
-        setActiveChip(elAudioStyleGroup, chip => {
-          const style = (chip.dataset.audioStyle || 'AUTO').toUpperCase();
-          if(style === 'AUTO') return !manualStyle;
-          const chipDiff = chip.dataset.audioDifficulty || 'LEICHT';
-          return manualStyle && chipDiff === diff;
-        });
-        if(elDifficultyWrapper){
-          elDifficultyWrapper.classList.toggle('hidden', !manualStyle);
-        }
-        if(elDifficultyGroup){
-          elDifficultyGroup.classList.toggle('hidden', !manualStyle);
-          if(manualStyle){
-            setActiveChip(elDifficultyGroup, chip => (chip.dataset.difficulty || '') === diff);
-          }
-        }
+        setActiveChip(elDifficultyGroup, chip => (chip.dataset.difficulty || '') === diff);
+
         updateModeDialogCards(pendingModeSelection);
-        updateModeDialogAudioChips(pendingModeSelection);
         if(elModeDialogStart){
           elModeDialogStart.disabled = false;
         }
       } else {
         elIndividualPanel.classList.add('hidden');
-        elModeDialogCustom.textContent = 'Individuelles Spiel';
       }
     }
 
@@ -2562,38 +2283,14 @@
       }
     }
 
-    function updateModeDialogAudioChips(selection){
-      if(!dialogAudioGroup) return;
-      if(!selection) return;
-      const style = selection.audioStyle || 'AUTO';
-      let matched = false;
-      const chips = Array.from(dialogAudioGroup.querySelectorAll('[data-audio-style]'));
-      chips.forEach(chip => {
-        const chipStyle = (chip.dataset.audioStyle || 'AUTO').toUpperCase();
-        const chipDiff = chip.dataset.audioDifficulty || 'LEICHT';
-        const active = chipStyle === 'AUTO'
-          ? style === 'AUTO'
-          : (style === 'MANUAL' && selection.difficulty === chipDiff);
-        chip.classList.toggle('active', active);
-        if(active) matched = true;
-      });
-      if(!matched){
-        const fallback = chips.find(chip => (chip.dataset.audioStyle || 'AUTO').toUpperCase() === 'AUTO');
-        if(fallback){
-          fallback.classList.add('active');
-        }
-      }
-    }
+
 
     function openModeDialog(){
       const currentProgress = getProgress();
       pendingModeSelection = extractSelectionFromProgress(currentProgress);
-      if(pendingModeSelection.audioStyle === 'AUTO'){
-        pendingModeSelection.difficulty = resolveAudioDifficulty(currentProgress);
-      }
+
       toggleIndividualPanel(false);
       updateModeDialogCards(pendingModeSelection);
-      updateModeDialogAudioChips(pendingModeSelection);
       elModeDialog.classList.remove('hidden');
     }
 
@@ -2606,17 +2303,8 @@
     function saveAndApply(partial){
       const current = getProgress();
       const updates = { ...partial };
-      if(updates.audioStyle){
-        updates.audioStyle = updates.audioStyle.toUpperCase();
-      }
       if(updates.difficulty){
         updates.difficulty = updates.difficulty.toUpperCase();
-      }
-      if(updates.audioStyle === 'MANUAL' && !updates.difficulty){
-        updates.difficulty = current && current.difficulty ? current.difficulty : 'LEICHT';
-      }
-      if(updates.difficulty && (!updates.audioStyle || updates.audioStyle === 'AUTO')){
-        updates.audioStyle = 'MANUAL';
       }
       const saved = saveProgress(updates);
       applyModeToUI(saved);
@@ -2631,7 +2319,7 @@
       switch(difficulty){
         case 'MITTEL': return 'Mittel';
         case 'SCHWER': return 'Schwer';
-        case 'PROFI': return 'Profi';
+        case 'AFFIG': return 'Affig';
         default: return 'Leicht';
       }
     }
@@ -3339,7 +3027,7 @@
       const progress = getProgress();
       const mode = progress && progress.mode ? progress.mode : 'FREI';
       const unlockedCount = progress && progress.unlocked ? progress.unlocked : 4;
-      const resolvedDifficulty = resolveAudioDifficulty(progress);
+      const difficulty = progress && progress.difficulty ? progress.difficulty : 'LEICHT';
 
       const setId = await getActiveSet();
       const setData = await loadSetData(setId);
@@ -3386,11 +3074,8 @@
         recent: [],
         progress,
         mode,
-        difficulty: progress && progress.difficulty ? progress.difficulty : 'LEICHT',
-        audioSet: progress && progress.audioSet ? progress.audioSet : 'ANLAUT',
+        difficulty,
         errorHistory: [],
-        audioStyle: progress && progress.audioStyle ? progress.audioStyle : 'AUTO',
-        audioDifficulty: resolvedDifficulty,
       };
       elRoundMax.textContent = rounds;
       elOk.textContent=0; elBad.textContent=0;
@@ -3441,7 +3126,7 @@
       game.target = pick;
       game.last = pick;
       game.recent = [pick, ...(game.recent || [])].slice(0, 3);
-      const desiredDifficulty = game.audioStyle === 'MANUAL' ? game.difficulty : game.audioDifficulty;
+      const desiredDifficulty = game.difficulty;
       const clipData = await fetchClipForLetter({ setId: game.setId, letter: pick, difficulty: desiredDifficulty });
       if(!clipData){
         // Aufnahme fehlt unerwartet → Buchstabe aus Pool entfernen und weiter
@@ -3524,9 +3209,7 @@
         game.bad++;
         game.progress = markWrong(game.target, letter);
       }
-      if(game.audioStyle === 'AUTO'){
-        game.audioDifficulty = resolveAudioDifficulty(game.progress);
-      }
+
       game.errorHistory = [wasErrorPick, ...(game.errorHistory || [])].slice(0, 3);
       elOk.textContent = game.ok; elBad.textContent = game.bad;
       const progress = Math.min(100, Math.round(((game.round) / game.rounds)*100));
@@ -3602,21 +3285,16 @@
       const progressBefore = game && game.progress ? game.progress : null;
       if(progressBefore && progressBefore.mode === 'LERNWEG'){
         const beforeUnlocked = progressBefore.unlocked || 0;
-        const beforeAudioSet = progressBefore.audioSet;
         const advanced = advanceAfterRun({
           result: { mistakes: game.bad },
           state: progressBefore,
         });
         const saved = saveProgress(advanced);
         const unlockedIncreased = saved.unlocked > beforeUnlocked;
-        const audioSetChanged = saved.audioSet !== beforeAudioSet;
-        if(unlockedIncreased || audioSetChanged){
+        if(unlockedIncreased){
           const parts = [];
           if(unlockedIncreased){
             parts.push(`${saved.unlocked} Buchstaben aktiv.`);
-          }
-          if(audioSetChanged){
-            parts.push(`Neues Audio-Set: ${saved.audioSet}.`);
           }
           showUnlockBanner(parts.join(' '));
         }
@@ -3690,7 +3368,6 @@
       switchToTab('spiel');
 
       const progress = getProgress();
-      const resolvedDifficulty = resolveAudioDifficulty(progress);
       const setId = await getActiveSet();
 
       const rounds = Math.min(15, letters.length * 2);
@@ -3710,10 +3387,7 @@
         progress,
         mode: 'FREI',
         difficulty: progress.difficulty,
-        audioSet: progress.audioSet,
         errorHistory: [],
-        audioStyle: progress.audioStyle,
-        audioDifficulty: resolvedDifficulty,
       };
 
       elRounds.value = rounds;
@@ -3755,6 +3429,16 @@
       updateStartButtonLabel(getProgress());
       await updateLetterButtons();
       await updateUIForRecordingState();
+
+      // Beim ersten Besuch: Prüfen ob Aufnahmen vorhanden, sonst zu Einstellungen
+      const setId = await getActiveSet();
+      const setData = await loadSetData(setId);
+      const hasRecordings = !!(setData && setData.clips && setData.clips.length);
+
+      // Wenn keine Aufnahmen: Automatisch zu Einstellungen wechseln
+      if (!hasRecordings) {
+        switchToTab('einstellungen');
+      }
     })();
 
 
