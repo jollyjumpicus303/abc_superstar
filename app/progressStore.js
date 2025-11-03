@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'abc_abenteuer_progress';
-const CURRENT_VERSION = 1;
+const CURRENT_VERSION = 3;
 
 const DEFAULT_STATE = Object.freeze({
   version: CURRENT_VERSION,
@@ -10,6 +10,9 @@ const DEFAULT_STATE = Object.freeze({
   audioSet: 'ANLAUT',
   difficulty: 'LEICHT',
   correctStreaks: {},
+  freeLetterCount: 4,
+  audioStyle: 'AUTO',
+  attemptLog: [],
 });
 
 let memoryFallback = cloneState(DEFAULT_STATE);
@@ -42,12 +45,50 @@ function migrate(raw) {
     migrated.version = CURRENT_VERSION;
   }
 
+  if (version < 2) {
+    if (typeof migrated.freeLetterCount !== 'number') {
+      migrated.freeLetterCount = DEFAULT_STATE.freeLetterCount;
+    }
+  }
+
+  if (version < 3) {
+    if (typeof migrated.audioStyle !== 'string') {
+      migrated.audioStyle = DEFAULT_STATE.audioStyle;
+    }
+    if (typeof migrated.difficulty !== 'string') {
+      migrated.difficulty = DEFAULT_STATE.difficulty;
+    }
+  }
+
   if (!migrated.wrongCounts || typeof migrated.wrongCounts !== 'object') {
     migrated.wrongCounts = {};
   }
 
   if (!migrated.correctStreaks || typeof migrated.correctStreaks !== 'object') {
     migrated.correctStreaks = {};
+  }
+
+  if (typeof migrated.freeLetterCount !== 'number' || migrated.freeLetterCount <= 0) {
+    migrated.freeLetterCount = DEFAULT_STATE.freeLetterCount;
+  }
+
+  if (typeof migrated.audioStyle !== 'string' || !migrated.audioStyle.trim()) {
+    migrated.audioStyle = DEFAULT_STATE.audioStyle;
+  } else {
+    migrated.audioStyle = migrated.audioStyle.trim().toUpperCase();
+    if (!['AUTO', 'MANUAL'].includes(migrated.audioStyle)) {
+      migrated.audioStyle = DEFAULT_STATE.audioStyle;
+    }
+  }
+
+  if (typeof migrated.difficulty !== 'string' || !migrated.difficulty.trim()) {
+    migrated.difficulty = DEFAULT_STATE.difficulty;
+  } else {
+    migrated.difficulty = migrated.difficulty.trim().toUpperCase();
+  }
+
+  if (!Array.isArray(migrated.attemptLog)) {
+    migrated.attemptLog = [];
   }
 
   migrated.version = CURRENT_VERSION;
@@ -123,41 +164,54 @@ function normaliseLetter(letter) {
   return trimmed.toUpperCase();
 }
 
-function markCorrect(letter) {
-  const normalised = normaliseLetter(letter);
-  if (!normalised) {
+function logAttempt(state, target, chosen, isCorrect) {
+  state.attemptLog.push({
+    target: normaliseLetter(target),
+    chosen: normaliseLetter(chosen),
+    correct: isCorrect,
+    timestamp: Date.now(),
+  });
+  // Keep the log from growing too large
+  if (state.attemptLog.length > 500) {
+    state.attemptLog = state.attemptLog.slice(state.attemptLog.length - 500);
+  }
+}
+
+function markCorrect(targetLetter, chosenLetter) {
+  const normalisedTarget = normaliseLetter(targetLetter);
+  if (!normalisedTarget) {
     return getProgress();
   }
 
   const state = readState();
-  const streak = (state.correctStreaks[normalised] || 0) + 1;
-  state.correctStreaks[normalised] = streak;
+  logAttempt(state, targetLetter, chosenLetter, true);
 
-  const currentWrong = state.wrongCounts[normalised] || 0;
+  const streak = (state.correctStreaks[normalisedTarget] || 0) + 1;
+  state.correctStreaks[normalisedTarget] = streak;
+
+  const currentWrong = state.wrongCounts[normalisedTarget] || 0;
   if (currentWrong > 0 && streak >= 2) {
-    state.wrongCounts[normalised] = currentWrong - 1;
-    state.correctStreaks[normalised] = 0; // Reset streak after decay
+    state.wrongCounts[normalisedTarget] = currentWrong - 1;
+    state.correctStreaks[normalisedTarget] = 0; // Reset streak after decay
   }
 
   return writeState(state);
 }
 
-function markWrong(letters) {
-  if (!letters) {
+function markWrong(targetLetter, chosenLetter) {
+  const normalisedTarget = normaliseLetter(targetLetter);
+  const normalisedChosen = normaliseLetter(chosenLetter);
+
+  if (!normalisedTarget || !normalisedChosen) {
     return getProgress();
   }
 
-  const list = Array.isArray(letters) ? letters : [letters];
   const state = readState();
+  logAttempt(state, targetLetter, chosenLetter, false);
 
-  for (const letter of list) {
-    const normalised = normaliseLetter(letter);
-    if (!normalised) continue;
-
-    state.correctStreaks[normalised] = 0;
-    const current = state.wrongCounts[normalised] || 0;
-    state.wrongCounts[normalised] = Math.min(current + 1, 3);
-  }
+  state.correctStreaks[normalisedTarget] = 0;
+  const current = state.wrongCounts[normalisedTarget] || 0;
+  state.wrongCounts[normalisedTarget] = Math.min(current + 1, 3);
 
   return writeState(state);
 }
@@ -183,4 +237,3 @@ if (typeof window !== 'undefined') {
     markWrong,
   };
 }
-

@@ -67,6 +67,7 @@ function pickNext(options) {
     last = null,
     wrongCounts = {},
     recent = [],
+    recentErrors = [],
     rng = Math.random,
   } = options;
 
@@ -78,10 +79,14 @@ function pickNext(options) {
   const lastLetter = normaliseLetter(last);
   const recentLetters = normaliseList(recent);
   const counts = wrongCounts && typeof wrongCounts === 'object' ? wrongCounts : {};
+  const errorHistory = Array.isArray(recentErrors)
+    ? recentErrors.filter((flag, idx) => idx < 3).map(Boolean)
+    : [];
 
   const wrongLetters = candidates.filter((letter) => (counts[letter] || 0) > 0);
   const lastErrorIndex = recentLetters.findIndex((letter) => (counts[letter] || 0) > 0);
   const forceWrongPick = wrongLetters.length > 0 && (lastErrorIndex === -1 || lastErrorIndex >= 2);
+  const avoidErrorQuota = !forceWrongPick && errorHistory.some((flag, idx) => idx < 2 && flag === true);
 
   const avoidFull = new Set();
   if (lastLetter) avoidFull.add(lastLetter);
@@ -92,6 +97,13 @@ function pickNext(options) {
   let source = forceWrongPick ? wrongLetters.slice() : candidates.slice();
   if (!source.length) {
     source = candidates.slice();
+  }
+
+  if (avoidErrorQuota) {
+    const nonError = source.filter((letter) => (counts[letter] || 0) === 0);
+    if (nonError.length) {
+      source = nonError;
+    }
   }
 
   let filtered = source.filter((letter) => !avoidFull.has(letter));

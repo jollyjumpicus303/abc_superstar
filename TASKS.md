@@ -204,15 +204,74 @@ Schwierigkeits-Tag erweitern.
       Buchstaben (semi-automatisches Batch-Recording).  
 **Details:** siehe `SPECS/AUDIO_SETS.md`
 
+## 7. Eltern-Statistik & Lern-Coach ✅
+
+**Priorität:** Mittel | **Aufwand:** Hoch
+
+### Ziele:
+- Eltern einen klaren Einblick in den Lernfortschritt geben.
+- Nicht nur Daten liefern, sondern direkt umsetzbare Hilfestellungen und positive Verstärkung bieten.
+- Die App zu einem interaktiven "Lern-Coach" für Eltern machen.
+
+### Aufgaben:
+- [x] **Erweitertes Tracking:** Jeden Versuch loggen (gesuchter Buchstabe, gewählter Buchstabe, Zeitstempel).
+- [x] **Eltern-Bereich erstellen:**
+    - [x] Einen neuen Tab "Für Eltern" hinzufügen.
+    - [x] Zugang mit einer "Eltern-Sperre" (Parental Gate) schützen (z.B. Rechenaufgabe, Geste), anstatt eines festen Passworts.
+- [x] **Statistiken visualisieren:**
+    - [x] **"Nächste Herausforderung":** Eine Liste der Buchstaben anzeigen, die am häufigsten falsch waren.
+    - [x] **"Super-Buchstaben":** Erfolge feiern, indem gemeisterte Buchstaben hervorgehoben werden.
+    - [x] **Typische Verwechslungen:** Aufzeigen, welche Buchstaben oft miteinander verwechselt werden (z.B. "B wird oft mit P verwechselt").
+- [x] **Aktion statt nur Daten:**
+    - [x] Neben den "Problembuchstaben" einen Button "Übungsrunde starten" anbieten, der ein gezieltes Spiel startet.
+- [ ] **(Optional) Lernkurve & Export:**
+    - [ ] Verlaufskurve über Zeit anzeigen (z.B. % richtig pro Tag/Woche).
+    - [ ] Export der Statistik als einfache CSV-Datei.
+
 ---
 
-## 7. Zweites Spiel: Buchstaben-Suche ⬜
+## 8.0 UX-Verbesserungen (Kind & Eltern) ⬜
+
+**Priorität:** Hoch | **Aufwand:** Mittel
+
+### Ziele:
+- Den Einstieg in die App so einfach und direkt wie möglich gestalten.
+- Die Komplexität für Kinder reduzieren und die Klarheit für Eltern erhöhen.
+- Die App soll sofort nach dem ersten Öffnen spielbar sein (mittelfristig).
+
+### Teil-Aufgaben:
+
+#### 8.1 Modus-Auswahl vereinfachen ⬜
+**Beschreibung:** Die Modus-Auswahl (Anfänger, Lernweg, Meister) wird zu prominenten, direkten Karten auf dem Spiel-Tab, anstatt sie in einem Dialog zu verstecken. Komplexe Optionen werden für den normalen Spielfluss verborgen.
+**Aufgaben:**
+- [ ] Die drei Hauptmodi als große, klickbare Karten direkt im "Spiel"-Tab anzeigen.
+- [ ] Den "Spiel starten"-Button durch eine direkte Auswahl der Modus-Karten ersetzen.
+- [ ] Die Auswahl von Audio-Stilen und anderen Details in einen "Individuelles Spiel"-Bereich verschieben, der weniger prominent ist.
+
+#### 8.2 Aufnahme-Prozess für Eltern optimieren ⬜
+**Beschreibung:** Die Bezeichnungen für Aufnahme-Typen werden verständlicher und der Prozess wird klarer strukturiert, um Eltern die Aufnahme zu erleichtern.
+**Aufgaben:**
+- [ ] Die internen Schwierigkeitsgrade und UI-Texte anpassen:
+    - `LEICHT` → `MIT_ANLAUT` (UI: "Mit Anlaut", z.B. "A wie Apfel")
+    - `MITTEL` → `NUR_BUCHSTABE` (UI: "Nur Buchstabe", z.B. "A")
+    - `SCHWER` → `PERSOENLICH` (UI: "Persönlich", z.B. ein Insider-Wort oder lustiger Ton)
+- [ ] Die Aufnahme-UI überarbeiten, um diese drei Typen klar darzustellen und den Nutzen zu erklären.
+- [ ] (Optional) Einen geführten Aufnahme-Modus erstellen, der Eltern durch die Aufnahme der wichtigsten Typen leitet.
+
+#### 8.3 Standard-Audioset bereitstellen (Zurückgestellt) ⬜
+**Beschreibung:** Um sofortigen Spielspaß zu ermöglichen, soll die App mit einem professionellen Standard-Set an Aufnahmen ausgeliefert werden. Das eigene Aufnehmen wird zu einer optionalen, kreativen Zusatzfunktion.
+**Status:** Auf Wunsch zurückgestellt.
+
+---
+
+## 9. Zweites Spiel: Buchstaben-Suche ⬜
 
 **Priorität:** Niedrig | **Aufwand:** Mittel
 
 ### Ziele:
 - Abwechslung durch zweites Spielprinzip
 - Großbuchstaben & Kleinbuchstaben üben
+- Sollte im Lernweg erweitert werden
 
 ### Aufgaben:
 - [ ] Neues Spiel: Audio abspielen, richtigen Buchstaben aus 4-6 finden
@@ -222,7 +281,7 @@ Schwierigkeits-Tag erweitern.
 
 ---
 
-## 8. Zweites Spiel: Laut-Anfangszuordnung ⬜
+## 10. Zweites Spiel: Laut-Anfangszuordnung ⬜
 
 **Priorität:** Niedrig | **Aufwand:** Hoch
 
@@ -238,7 +297,7 @@ Schwierigkeits-Tag erweitern.
 
 ---
 
-## 8.1. Aufnahme-Assistent ⬜
+## 11 Aufnahme-Assistent ⬜
 
 **Priorität:** Mittel | **Aufwand:** Hoch
 
@@ -255,7 +314,7 @@ Schwierigkeits-Tag erweitern.
 
 ---
 
-## 9. Barrierefreiheit ⬜
+## 12. Barrierefreiheit ⬜
 
 **Priorität:** Niedrig | **Aufwand:** Niedrig
 
@@ -272,24 +331,7 @@ Schwierigkeits-Tag erweitern.
 
 ---
 
-## 10. Eltern-Statistik ⬜
-
-**Priorität:** Niedrig | **Aufwand:** Mittel
-
-### Ziele:
-- Eltern Einblick in Lernfortschritt geben
-- Schwachstellen identifizieren
-
-### Aufgaben:
-- [ ] Tracking: Welche Buchstaben richtig/falsch erkannt
-- [ ] Verlaufskurve über Zeit
-- [ ] Übersicht "Leichte Buchstaben" vs "Schwierige Buchstaben"
-- [ ] Export der Statistik als PDF/CSV
-- [ ] Passwortschutz für Statistik-Bereich
-
----
-
-## 11. PNG-Icons für PWA erstellen ⬜
+## 13. PNG-Icons für PWA erstellen ⬜
 
 **Priorität:** Niedrig | **Aufwand:** Niedrig
 

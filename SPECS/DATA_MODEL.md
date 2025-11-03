@@ -12,7 +12,9 @@ Einheitliches Datenmodell für Modus, Fortschritt, Fehler & Audio‑Set.
   "flawlessStreak": 0,
   "wrongCounts": {},
   "audioSet": "ANLAUT",
-  "difficulty": "LEICHT"
+  "difficulty": "LEICHT",
+  "freeLetterCount": 4,
+  "audioStyle": "AUTO"
 }
 ```
 
@@ -26,6 +28,7 @@ Einheitliches Datenmodell für Modus, Fortschritt, Fehler & Audio‑Set.
 - `getProgress()`, `saveProgress()`, `resetProgress()`
 - `markCorrect(letter)` → Fehlergewicht abbauen (Decay nach 2 korrekten Treffern)
 - `markWrong(letter[])` → Fehlergewicht erhöhen
+- Freier Modus: persistiert `freeLetterCount`, `audioSet`, `audioStyle` (`AUTO` oder `MANUAL`) und ggf. `difficulty` bei manueller Auswahl.
 - Migrationslogik über `version`
 
 ## Codex‑Prompt
