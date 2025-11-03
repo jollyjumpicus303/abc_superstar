@@ -141,6 +141,41 @@
     }
     .status-tile.has{box-shadow: 0 2px 8px rgba(34,197,94,.15), inset 0 0 0 3px #86efac}
     .status-tile.has .status-dot{background:var(--ok); box-shadow:0 0 8px rgba(34,197,94,.4)}
+    .lernweg-track{
+      margin:16px 0 20px;
+      padding:16px;
+      border-radius:18px;
+      background:linear-gradient(135deg,#f5f3ff,#ede9ff);
+      border:2px solid #e9d5ff;
+      box-shadow:0 8px 20px rgba(124,58,237,.12);
+    }
+    .lernweg-track .lernweg-head{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      font-weight:700;
+      color:#4c1d95;
+      margin-bottom:10px;
+    }
+    .lernweg-track .detail{font-size:13px; color:#6b7896; font-weight:600;}
+    .lernweg-bar{
+      position:relative;
+      height:12px;
+      border-radius:999px;
+      background:#e0defb;
+      overflow:hidden;
+    }
+    .lernweg-bar span{
+      position:absolute;
+      top:0; left:0;
+      height:100%;
+      width:0%;
+      border-radius:999px;
+      background:linear-gradient(90deg,#7c3aed,#fb923c);
+      box-shadow:0 6px 14px rgba(124,58,237,.3);
+      transition:width .35s ease;
+    }
+    .lernweg-foot{margin-top:10px; font-size:13px;}
     .recorder{
       position:sticky; top:86px; align-self:start; background:linear-gradient(145deg,#faf5ff,var(--surface));
       border-radius:var(--radius); box-shadow:var(--shadow); padding:18px;
@@ -212,6 +247,16 @@
     .mode-dialog-card:active{transform:scale(.98);}
     .mode-dialog-card.active{outline:3px solid var(--brand); box-shadow:0 16px 36px rgba(124,58,237,.3);}
     .mode-dialog-actions{display:flex; gap:12px; justify-content:center; margin-top:18px; flex-wrap:wrap;}
+    .individual-panel{
+      margin-top:16px;
+      padding:16px;
+      background:linear-gradient(165deg,#ffffff,#f7f2ff);
+      border-radius:18px;
+      box-shadow:0 8px 20px rgba(124,58,237,.12);
+      border:1px solid #e9d5ff;
+    }
+    .individual-panel .panel-label{display:block; font-weight:700; color:#4c1d95; margin:14px 0 6px; font-size:13px; text-transform:uppercase; letter-spacing:.02em;}
+    .individual-panel .chip-group{margin-bottom:6px;}
     .recorder h3{margin:0 0 10px; color:var(--ink)}
     .rec-letter{
       font-size:64px; font-weight:900; display:inline-flex; align-items:center; justify-content:center;
@@ -448,6 +493,54 @@
       margin-left:auto;
     }
     .settings-btn:hover{background:rgba(255,255,255,.32); transform:rotate(30deg)}
+    /* Statistik-Bereich */
+    .challenge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 12px;
+    }
+    .challenge-card {
+      background: #fff9f9;
+      border: 2px solid var(--bad);
+      border-radius: var(--radius);
+      padding: 16px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);
+    }
+    .challenge-letter {
+      font-size: 48px;
+      font-weight: 900;
+      color: var(--bad);
+    }
+    .challenge-count {
+      font-weight: 700;
+      color: #b91c1c;
+    }
+    .challenge-confusion {
+      font-size: 14px;
+      color: var(--muted);
+      margin-top: 8px;
+      min-height: 20px;
+    }
+    .super-letter-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .super-letter-tile {
+      background: #f0fff4;
+      border: 2px solid var(--ok);
+      color: #166534;
+      font-weight: 800;
+      font-size: 24px;
+      border-radius: 16px;
+      width: 54px;
+      height: 54px;
+      display: grid;
+      place-items: center;
+    }
   </style>
 </head>
 <body>
@@ -462,6 +555,7 @@
     <nav class="tabs">
       <button class="active" data-tab="spiel">Spiel</button>
       <button data-tab="album">🎁 Mein Album</button>
+      <button data-tab="eltern">👨‍👩‍👧 Für Eltern</button>
     </nav>
 
     <!-- SPIEL -->
@@ -475,6 +569,17 @@
         </div>
 
         <p class="muted">Wähle das Set, die Rundenzahl und starte. Das Spiel nutzt nur Buchstaben, für die <b>bereits Aufnahmen</b> vorhanden sind.</p>
+
+        <div id="lernwegTrack" class="lernweg-track hidden" role="group" aria-label="Lernweg-Fortschritt">
+          <div class="lernweg-head">
+            <span>Lernweg-Fortschritt</span>
+            <span id="lernwegDetail" class="detail"></span>
+          </div>
+          <div class="lernweg-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <span id="lernwegFill"></span>
+          </div>
+          <div id="lernwegNext" class="lernweg-foot muted"></div>
+        </div>
 
         <div style="margin:16px 0">
           <label style="font-weight:800; display:block; margin-bottom:8px">🎤 Welche Aufnahmen?</label>
@@ -522,6 +627,12 @@
       <div style="margin-top:20px; text-align:center">
         <button id="btnOpenPack" class="btn" disabled>🎁 Pack öffnen (10 ⭐)</button>
       </div>
+    </section>
+
+    <!-- ELTERN-BEREICH -->
+    <section id="eltern" class="card hidden">
+      <h2>Statistiken & Fortschritt</h2>
+      <p class="muted">Hier sehen Sie bald eine Auswertung des Lernfortschritts.</p>
     </section>
 
     <!-- EINSTELLUNGEN -->
@@ -706,8 +817,53 @@
       </div>
       <div class="mode-dialog-actions">
         <button id="modeDialogCancel" class="btn secondary" type="button">Zurück</button>
-        <button id="modeDialogMore" class="btn ghost" type="button">Mehr Optionen (Eltern)</button>
+        <button id="modeDialogCustom" class="btn ghost" type="button">Individuelles Spiel</button>
         <button id="modeDialogStart" class="btn" type="button" disabled>Los geht's!</button>
+      </div>
+      <div id="individualPanel" class="individual-panel hidden">
+        <p class="muted" style="margin-top:0">Stelle dein Spiel selbst zusammen.</p>
+        <span class="panel-label">Buchstaben</span>
+        <div class="chip-group" id="freeCountGroup" role="group" aria-label="Anzahl Buchstaben">
+          <button type="button" class="chip" data-free-count="4">4 Buchstaben</button>
+          <button type="button" class="chip" data-free-count="8">8 Buchstaben</button>
+          <button type="button" class="chip" data-free-count="12">12 Buchstaben</button>
+          <button type="button" class="chip" data-free-count="26">Alle 26</button>
+        </div>
+        <span class="panel-label">Audio-Set</span>
+        <div class="chip-group" id="audioSetGroup" role="group" aria-label="Audio-Set">
+          <button type="button" class="chip" data-audio-set="ANLAUT">Mit Anlaut</button>
+          <button type="button" class="chip" data-audio-set="OHNE_ANLAUT">Ohne Anlaut</button>
+        </div>
+        <span class="panel-label">Audio-Stil</span>
+        <div class="chip-group" id="audioStyleGroup" role="group" aria-label="Audio-Stil">
+          <button type="button" class="chip" data-audio-style="AUTO">Auto (empfohlen)</button>
+          <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="LEICHT">Buchstabe + Anlaut</button>
+          <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="MITTEL">Nur Buchstabe</button>
+          <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="SCHWER">Beispielwort</button>
+          <button type="button" class="chip" data-audio-style="MANUAL" data-audio-difficulty="PROFI">Super-Schwer</button>
+        </div>
+        <div id="difficultyWrapper" class="hidden">
+          <span class="panel-label">Schwierigkeit</span>
+          <div class="chip-group hidden" id="difficultyGroup" role="group" aria-label="Schwierigkeit auswählen">
+            <button type="button" class="chip" data-difficulty="LEICHT">Leicht</button>
+            <button type="button" class="chip" data-difficulty="MITTEL">Mittel</button>
+            <button type="button" class="chip" data-difficulty="SCHWER">Schwer</button>
+            <button type="button" class="chip" data-difficulty="PROFI">Profi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="parentalGate" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="dialog">
+      <h3>Bitte bestätigen</h3>
+      <p class="muted">Um fortzufahren, beantworten Sie bitte diese Frage:</p>
+      <p id="gateQuestion" style="font-size: 20px; font-weight: bold; margin: 16px 0;"></p>
+      <input type="number" id="gateAnswer" style="padding: 12px; font-size: 18px; text-align: center; border-radius: 12px; border: 2px solid #ddd; width: 100px;">
+      <div class="controls" style="justify-content:center; margin-top:20px">
+          <button id="gateCancel" class="btn secondary">Abbrechen</button>
+          <button id="gateSubmit" class="btn">Bestätigen</button>
       </div>
     </div>
   </div>
@@ -816,6 +972,10 @@
     const elBtnDelete = document.getElementById('btnDelete');
     const elRecordDifficultyGroup = document.getElementById('recordDifficultyGroup');
     const elClipList = document.getElementById('clipList');
+    const elLernwegTrack = document.getElementById('lernwegTrack');
+    const elLernwegDetail = document.getElementById('lernwegDetail');
+    const elLernwegFill = document.getElementById('lernwegFill');
+    const elLernwegNext = document.getElementById('lernwegNext');
     const elTimer = document.getElementById('timer');
     const elRoundNow = document.getElementById('roundNow');
     const elUnlockBanner = document.getElementById('unlockBanner');
@@ -825,13 +985,15 @@
     const elModeDialog = document.getElementById('modeDialog');
     const elModeDialogStart = document.getElementById('modeDialogStart');
     const elModeDialogCancel = document.getElementById('modeDialogCancel');
-    const elModeDialogMore = document.getElementById('modeDialogMore');
+    const elModeDialogCustom = document.getElementById('modeDialogCustom');
     const dialogAudioGroup = document.getElementById('dialogAudioGroup');
     const elModeControls = document.getElementById('modeControls');
     const elFreeCountGroup = document.getElementById('freeCountGroup');
     const elAudioSetGroup = document.getElementById('audioSetGroup');
     const elDifficultyGroup = document.getElementById('difficultyGroup');
     const elAudioStyleGroup = document.getElementById('audioStyleGroup');
+    const elDifficultyWrapper = document.getElementById('difficultyWrapper');
+    const elIndividualPanel = document.getElementById('individualPanel');
     const elRoundMax = document.getElementById('roundMax');
     const elOk = document.getElementById('okCount');
     const elBad = document.getElementById('badCount');
@@ -851,8 +1013,44 @@
     const elRounds = document.getElementById('rounds');
     const elRoundsOut = document.getElementById('roundsOut');
 
-    // Tabs
+    // Eltern-Sperre
+    const elParentalGate = document.getElementById('parentalGate');
+    const elGateQuestion = document.getElementById('gateQuestion');
+    const elGateAnswer = document.getElementById('gateAnswer');
+    const elGateCancel = document.getElementById('gateCancel');
+    const elGateSubmit = document.getElementById('gateSubmit');
+    let gateNum1, gateNum2;
+    let isParentalGatePassed = false; // Simple session flag
+
+    // Tabs & Parental Gate
     const tabsContainer = document.querySelector('.tabs');
+
+    function openParentalGate() {
+      gateNum1 = Math.floor(Math.random() * 5) + 5;
+      gateNum2 = Math.floor(Math.random() * 5) + 1;
+      elGateQuestion.textContent = `Was ist ${gateNum1} + ${gateNum2}?`;
+      elGateAnswer.value = '';
+      elParentalGate.classList.remove('hidden');
+      elGateAnswer.focus();
+    }
+
+    function closeParentalGate() {
+      elParentalGate.classList.add('hidden');
+    }
+
+    elGateCancel.addEventListener('click', closeParentalGate);
+    elGateSubmit.addEventListener('click', () => {
+      const answer = parseInt(elGateAnswer.value, 10);
+      if (answer === gateNum1 + gateNum2) {
+        isParentalGatePassed = true;
+        closeParentalGate();
+        switchToTab('eltern');
+      } else {
+        alert('Leider falsch. Bitte versuche es nochmal.');
+        openParentalGate();
+      }
+    });
+
     function switchToTab(tabName) {
       tabsContainer.querySelectorAll('button').forEach(b => {
         const isActive = b.dataset.tab === tabName;
@@ -861,25 +1059,128 @@
       document.getElementById('spiel').classList.toggle('hidden', tabName !== 'spiel');
       document.getElementById('album').classList.toggle('hidden', tabName !== 'album');
       document.getElementById('einstellungen').classList.toggle('hidden', tabName !== 'einstellungen');
+      document.getElementById('eltern').classList.toggle('hidden', tabName !== 'eltern');
 
-      // Beim Wechsel zu Einstellungen: UI aktualisieren
       if (tabName === 'einstellungen') {
         renderSetsList();
         updateStatusGridFromDB();
         updateUIForRecordingState();
       }
 
-      // Beim Wechsel zu Album: Album rendern
       if (tabName === 'album') {
         renderAlbum();
+      }
+
+      if (tabName === 'eltern') {
+        renderStatistics();
       }
     }
 
     tabsContainer.addEventListener('click', (e) => {
       const targetButton = e.target.closest('button');
       if (!targetButton) return;
-      switchToTab(targetButton.dataset.tab);
+      const tabName = targetButton.dataset.tab;
+
+      if (tabName === 'eltern' && !isParentalGatePassed) {
+        openParentalGate();
+        return;
+      }
+
+      switchToTab(tabName);
     });
+
+    function renderStatistics() {
+      const elternSection = document.getElementById('eltern');
+      const progress = getProgress();
+      const log = progress.attemptLog || [];
+
+      if (log.length < 10) { // Require a minimum amount of data
+        elternSection.innerHTML = `
+          <h2>Statistiken & Fortschritt</h2>
+          <p class="muted">Es sind noch nicht genügend Daten vorhanden. Spielen Sie noch ein paar Runden, um eine aussagekräftige Auswertung zu sehen.</p>
+        `;
+        return;
+      }
+
+      // Data processing
+      const wrongAttempts = {}; // { B: 5, D: 3 }
+      const confusions = {}; // { B: { P: 4, D: 1 } }
+      const correctCounts = {}; // { A: 10, C: 12 }
+
+      for (const attempt of log) {
+        if (attempt.correct) {
+          correctCounts[attempt.target] = (correctCounts[attempt.target] || 0) + 1;
+        } else {
+          if (!attempt.target || !attempt.chosen) continue; // Skip incomplete log entries
+          wrongAttempts[attempt.target] = (wrongAttempts[attempt.target] || 0) + 1;
+          if (!confusions[attempt.target]) {
+            confusions[attempt.target] = {};
+          }
+          confusions[attempt.target][attempt.chosen] = (confusions[attempt.target][attempt.chosen] || 0) + 1;
+        }
+      }
+
+      const sortedWrong = Object.entries(wrongAttempts).sort((a, b) => b[1] - a[1]);
+      
+      const superBuchstaben = Object.entries(correctCounts)
+        .filter(([letter, count]) => count >= 5 && !wrongAttempts[letter])
+        .map(([letter]) => letter)
+        .sort();
+
+      // HTML Rendering
+      let html = '<h2>Statistiken & Fortschritt</h2>';
+
+      // 1. Nächste Herausforderung
+      html += '<h3>Nächste Herausforderungen</h3>';
+      const topWrong = sortedWrong.slice(0, 3);
+
+      if (topWrong.length > 0) {
+        html += '<p class="muted">Dies sind die Buchstaben, die aktuell am häufigsten verwechselt werden.</p>';
+        html += '<div class="challenge-grid">';
+        for (const [letter, count] of topWrong) {
+          let confusionText = '';
+          if (confusions[letter]) {
+            const sortedConfusions = Object.entries(confusions[letter]).sort((a, b) => b[1] - a[1]);
+            if (sortedConfusions.length > 0) {
+              confusionText = `(wird oft mit <b>${sortedConfusions[0][0]}</b> verwechselt)`;
+            }
+          }
+          html += `
+            <div class="challenge-card">
+              <div class="challenge-letter">${letter}</div>
+              <div class="challenge-count">${count} mal falsch</div>
+              <div class="challenge-confusion">${confusionText}</div>
+            </div>
+          `;
+        }
+        html += '</div>';
+        const practiceLetters = topWrong.map(([l]) => l).join(',');
+        html += `<div style="margin-top: 16px;"><button class="btn practice-btn" data-letters="${practiceLetters}">Diese ${topWrong.length} Buchstaben üben</button></div>`;
+      } else {
+        html += '<p class="muted">🎉 Super! Aktuell gibt es keine besonderen Herausforderungen.</p>';
+      }
+
+      // 2. Super-Buchstaben
+      html += '<h3 style="margin-top: 24px;">Super-Buchstaben</h3>';
+      if (superBuchstaben.length > 0) {
+        html += `<p class="muted">Diese ${superBuchstaben.length} Buchstaben werden schon sehr gut erkannt.</p>`;
+        html += '<div class="super-letter-grid">';
+        html += superBuchstaben.map(l => `<div class="super-letter-tile">${l}</div>`).join('');
+        html += '</div>';
+      } else {
+        html += '<p class="muted">Noch keine Super-Buchstaben. Aber das wird schon!</p>';
+      }
+      
+      elternSection.innerHTML = html;
+
+      // Add event listeners for the new buttons
+      elternSection.querySelectorAll('.practice-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const letters = e.currentTarget.dataset.letters.split(',');
+          startPracticeGame(letters);
+        });
+      });
+    }
 
     modeCards.forEach(card => {
       card.addEventListener('click', () => {
@@ -983,11 +1284,9 @@
       });
     }
 
-    if(elModeDialogMore){
-      elModeDialogMore.addEventListener('click', () => {
-        closeModeDialog();
-        switchToTab('einstellungen');
-        elBtnParentModeDialog?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if(elModeDialogCustom){
+      elModeDialogCustom.addEventListener('click', () => {
+        toggleIndividualPanel();
       });
     }
 
@@ -997,6 +1296,7 @@
         const updates = { mode: pendingModeSelection.mode };
         if(pendingModeSelection.mode === 'FREI'){
           updates.freeLetterCount = pendingModeSelection.freeLetterCount || 4;
+          updates.audioSet = pendingModeSelection.audioSet || 'ANLAUT';
           if(pendingModeSelection.audioStyle === 'AUTO'){
             updates.audioStyle = 'AUTO';
           } else {
@@ -1092,6 +1392,7 @@
       const desiredFreeCount = progress && typeof progress.freeLetterCount === 'number' ? progress.freeLetterCount : 4;
       const unlockedForPath = progress && typeof progress.unlocked === 'number' ? progress.unlocked : 4;
       updateStartButtonLabel(progress);
+      updateLernwegProgress(progress);
 
       const baseWarnings = [];
       const manualWarnings = [];
@@ -2030,6 +2331,12 @@
         setActiveChip(elFreeCountGroup, chip => Number(chip.dataset.freeCount || 0) === desiredCount);
         setActiveChip(elAudioSetGroup, chip => (chip.dataset.audioSet || '') === audioSet);
         const manualStyle = (progress && progress.audioStyle ? progress.audioStyle : 'AUTO') === 'MANUAL';
+        if(elDifficultyWrapper){
+          elDifficultyWrapper.classList.toggle('hidden', !manualStyle);
+        }
+        if(elDifficultyGroup){
+          elDifficultyGroup.classList.toggle('hidden', !manualStyle);
+        }
         if(manualStyle){
           setActiveChip(elDifficultyGroup, chip => (chip.dataset.difficulty || '') === difficulty);
         } else if (elDifficultyGroup) {
@@ -2044,6 +2351,10 @@
         const diff = chip.dataset.audioDifficulty || 'LEICHT';
         return audioStyle === 'MANUAL' && progress && progress.difficulty === diff;
       });
+
+      if(elDifficultyWrapper && audioStyle !== 'MANUAL'){
+        elDifficultyWrapper.classList.add('hidden');
+      }
 
       updateModeDialogCards(extractSelectionFromProgress(progress));
       updateModeDialogAudioChips(extractSelectionFromProgress(progress));
@@ -2064,6 +2375,9 @@
       PROFI: 'Extra schwer',
     };
 
+    const LERNWEG_STEPS = [4, 8, 12, 16, 20, 26];
+    const TOTAL_LERNWEG_PHASES = LERNWEG_STEPS.length * 2;
+
     function resolveAudioDifficulty(progress){
       const style = progress && progress.audioStyle ? progress.audioStyle : 'AUTO';
       if(style === 'MANUAL'){
@@ -2081,6 +2395,77 @@
     function describeAudioStyle(style, difficulty){
       const label = DIFFICULTY_DESCRIPTIONS[difficulty] || DIFFICULTY_LABELS[difficulty] || difficulty;
       return style === 'AUTO' ? `Auto: ${label}` : label;
+    }
+
+    function deriveLernwegMeta(progress){
+      const unlockedRaw = progress && Number.isFinite(progress.unlocked) ? progress.unlocked : 4;
+      const unlocked = LERNWEG_STEPS.includes(unlockedRaw)
+        ? unlockedRaw
+        : LERNWEG_STEPS.find(step => step > unlockedRaw) || 4;
+      const stepIndex = Math.max(0, LERNWEG_STEPS.indexOf(unlocked));
+      const step = stepIndex + 1;
+      const setIndex = progress && progress.audioSet === 'OHNE_ANLAUT' ? 1 : 0;
+      const completedStages = setIndex * LERNWEG_STEPS.length + step;
+      const percent = Math.min(100, Math.round((completedStages / TOTAL_LERNWEG_PHASES) * 100));
+      const flawless = progress && Number.isFinite(progress.flawlessStreak) ? Math.max(0, progress.flawlessStreak) : 0;
+      const roundsRemaining = Math.max(0, 2 - flawless);
+      const hasSecondSet = setIndex === 1;
+      const atFinalStage = hasSecondSet && step >= LERNWEG_STEPS.length;
+      const nextStep = stepIndex < LERNWEG_STEPS.length - 1 ? LERNWEG_STEPS[stepIndex + 1] : LERNWEG_STEPS[stepIndex];
+
+      return {
+        unlocked,
+        step,
+        stepTotal: LERNWEG_STEPS.length,
+        setIndex,
+        setTotal: 2,
+        percent,
+        roundsRemaining,
+        atFinalStage,
+        nextStep,
+        flawless,
+      };
+    }
+
+    function updateLernwegProgress(progress){
+      if(!elLernwegTrack || !elLernwegDetail || !elLernwegFill || !elLernwegNext){
+        return;
+      }
+
+      if(!progress || progress.mode !== 'LERNWEG'){
+        elLernwegTrack.classList.add('hidden');
+        return;
+      }
+
+      const meta = deriveLernwegMeta(progress);
+      elLernwegTrack.classList.remove('hidden');
+
+      elLernwegDetail.textContent = `Set ${meta.setIndex + 1} von ${meta.setTotal} · Stufe ${meta.step} von ${meta.stepTotal}`;
+      elLernwegFill.style.width = `${meta.percent}%`;
+      const progressBar = elLernwegTrack.querySelector('.lernweg-bar');
+      if(progressBar){
+        progressBar.setAttribute('aria-valuenow', String(meta.percent));
+        progressBar.setAttribute('aria-valuetext', `Fortschritt ${meta.percent} Prozent`);
+      }
+
+      if(meta.atFinalStage){
+        elLernwegNext.textContent = 'Du hast den gesamten Lernweg gemeistert! 🎉';
+      }else{
+        if(meta.roundsRemaining > 0){
+          const suffix = meta.roundsRemaining === 1 ? 'fehlerfreie Runde' : 'fehlerfreie Runden';
+          if(meta.setIndex === 0 && meta.step >= meta.stepTotal){
+            elLernwegNext.textContent = `Noch ${meta.roundsRemaining} ${suffix} bis zum nächsten Audio-Set.`;
+          } else {
+            elLernwegNext.textContent = `Noch ${meta.roundsRemaining} ${suffix} bis Stufe ${meta.step + 1}.`;
+          }
+        } else {
+          if(meta.setIndex === 0 && meta.step >= meta.stepTotal){
+            elLernwegNext.textContent = 'Super! Starte eine weitere Runde ohne Fehler, um das nächste Audio-Set freizuschalten.';
+          } else {
+            elLernwegNext.textContent = 'Fast geschafft! Eine perfekte Runde katapultiert dich auf die nächste Stufe.';
+          }
+        }
+      }
     }
 
     function updateStartButtonLabel(progress){
@@ -2106,7 +2491,51 @@
         freeLetterCount: progress && progress.freeLetterCount ? progress.freeLetterCount : 4,
         difficulty,
         audioStyle: style,
+        audioSet: progress && progress.audioSet ? progress.audioSet : 'ANLAUT',
       };
+    }
+
+    function toggleIndividualPanel(forceOpen){
+      if(!elIndividualPanel || !elModeDialogCustom) return;
+      const shouldOpen = typeof forceOpen === 'boolean'
+        ? forceOpen
+        : elIndividualPanel.classList.contains('hidden');
+
+      if(shouldOpen){
+        elIndividualPanel.classList.remove('hidden');
+        elModeDialogCustom.textContent = 'Fertig';
+        pendingModeSelection = extractSelectionFromProgress(getProgress());
+        pendingModeSelection.mode = 'FREI';
+        const desiredCount = pendingModeSelection.freeLetterCount || 4;
+        const audioSet = pendingModeSelection.audioSet || 'ANLAUT';
+        const manualStyle = pendingModeSelection.audioStyle === 'MANUAL';
+        const diff = pendingModeSelection.difficulty || 'LEICHT';
+        setActiveChip(elFreeCountGroup, chip => Number(chip.dataset.freeCount || 0) === desiredCount);
+        setActiveChip(elAudioSetGroup, chip => (chip.dataset.audioSet || '') === audioSet);
+        setActiveChip(elAudioStyleGroup, chip => {
+          const style = (chip.dataset.audioStyle || 'AUTO').toUpperCase();
+          if(style === 'AUTO') return !manualStyle;
+          const chipDiff = chip.dataset.audioDifficulty || 'LEICHT';
+          return manualStyle && chipDiff === diff;
+        });
+        if(elDifficultyWrapper){
+          elDifficultyWrapper.classList.toggle('hidden', !manualStyle);
+        }
+        if(elDifficultyGroup){
+          elDifficultyGroup.classList.toggle('hidden', !manualStyle);
+          if(manualStyle){
+            setActiveChip(elDifficultyGroup, chip => (chip.dataset.difficulty || '') === diff);
+          }
+        }
+        updateModeDialogCards(pendingModeSelection);
+        updateModeDialogAudioChips(pendingModeSelection);
+        if(elModeDialogStart){
+          elModeDialogStart.disabled = false;
+        }
+      } else {
+        elIndividualPanel.classList.add('hidden');
+        elModeDialogCustom.textContent = 'Individuelles Spiel';
+      }
     }
 
     let pendingModeSelection = null;
@@ -2162,6 +2591,7 @@
       if(pendingModeSelection.audioStyle === 'AUTO'){
         pendingModeSelection.difficulty = resolveAudioDifficulty(currentProgress);
       }
+      toggleIndividualPanel(false);
       updateModeDialogCards(pendingModeSelection);
       updateModeDialogAudioChips(pendingModeSelection);
       elModeDialog.classList.remove('hidden');
@@ -2169,6 +2599,7 @@
 
     function closeModeDialog(){
       elModeDialog.classList.add('hidden');
+      toggleIndividualPanel(false);
       pendingModeSelection = null;
     }
 
@@ -2190,6 +2621,9 @@
       const saved = saveProgress(updates);
       applyModeToUI(saved);
       updateUIForRecordingState();
+      if(pendingModeSelection){
+        pendingModeSelection = extractSelectionFromProgress(saved);
+      }
       return saved;
     }
 
@@ -3083,12 +3517,12 @@
       const correct = letter === game.target;
       if(correct){
         game.ok++;
-        game.progress = markCorrect(game.target);
+        game.progress = markCorrect(game.target, letter);
         // Buchstaben-Statistik für Belohnungssystem tracken
         await incrementLetterStat(game.target);
       } else {
         game.bad++;
-        game.progress = markWrong([game.target]);
+        game.progress = markWrong(game.target, letter);
       }
       if(game.audioStyle === 'AUTO'){
         game.audioDifficulty = resolveAudioDifficulty(game.progress);
@@ -3247,6 +3681,51 @@
 
       // Zurück in Preview-Modus: Buttons basierend auf Aufnahmen aktivieren
       updateLetterButtons();
+    }
+
+    async function startPracticeGame(letters) {
+      if (!letters || letters.length === 0) return;
+
+      // Switch to the game tab
+      switchToTab('spiel');
+
+      const progress = getProgress();
+      const resolvedDifficulty = resolveAudioDifficulty(progress);
+      const setId = await getActiveSet();
+
+      const rounds = Math.min(15, letters.length * 2);
+
+      game = {
+        setId,
+        recorded: letters.slice(),
+        pool: letters.slice(),
+        rounds,
+        round: 0,
+        ok: 0,
+        bad: 0,
+        target: null,
+        busy: false,
+        last: null,
+        recent: [],
+        progress,
+        mode: 'FREI',
+        difficulty: progress.difficulty,
+        audioSet: progress.audioSet,
+        errorHistory: [],
+        audioStyle: progress.audioStyle,
+        audioDifficulty: resolvedDifficulty,
+      };
+
+      elRounds.value = rounds;
+      elRoundsOut.textContent = rounds;
+      elRoundMax.textContent = rounds;
+      elOk.textContent = 0;
+      elBad.textContent = 0;
+      elBar.style.width = '0%';
+      document.getElementById('setup').classList.add('hidden');
+      elHud.classList.remove('hidden');
+
+      await nextRound();
     }
 
     // ——————————————————————————————————————————

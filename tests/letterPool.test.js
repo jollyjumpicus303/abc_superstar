@@ -69,6 +69,31 @@ test('pickNext respects recent avoidance when alternatives exist', async () => {
   assert.notEqual(result, 'B');
 });
 
+test('pickNext avoids consecutive error picks when under quota', async () => {
+  const { pickNext } = await loadModule();
+  const result = pickNext({
+    pool: ['A', 'B', 'C'],
+    wrongCounts: { B: 2, C: 1 },
+    recent: ['C', 'A'],
+    recentErrors: [true, false],
+    rng: createRng([0.1]),
+  });
+  assert.equal(result, 'A');
+});
+
+test('pickNext forces wrong letter after two safe rounds', async () => {
+  const { pickNext } = await loadModule();
+  const result = pickNext({
+    pool: ['A', 'B', 'D'],
+    last: 'A',
+    recent: ['A', 'D'],
+    recentErrors: [false, false],
+    wrongCounts: { B: 1 },
+    rng: createRng([0.2]),
+  });
+  assert.equal(result, 'B');
+});
+
 test('pickNext falls back to wrong letter even if recently used', async () => {
   const { pickNext } = await loadModule();
   const result = pickNext({
