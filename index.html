@@ -864,18 +864,7 @@
       import { pickNext } from './app/letterPool.js';
       import { advanceAfterRun } from './app/progression.js';
   
-      function aggregateClipsByLetter(clips){
-      const byLetter = new Map();
-      for(const clip of clips){
-        if(!byLetter.has(clip.letter)){
-          byLetter.set(clip.letter, {});
-        }
-        const letterMap = byLetter.get(clip.letter);
-        letterMap[clip.difficulty] = (letterMap[clip.difficulty] || 0) + 1;
-      }
-      return byLetter;
-    }
-
+  
     // Persisted Lernfortschritt wird sofort initialisiert
       getProgress();
     // ——————————————————————————————————————————
@@ -2151,7 +2140,7 @@
       LEICHT: 'Leicht',
       MITTEL: 'Mittel',
       SCHWER: 'Schwer',
-      PROFI: 'Profi',
+      AFFIG: 'Affig',
     };
 
     const DIFFICULTY_DESCRIPTIONS = {
@@ -2573,28 +2562,11 @@
       return order;
     }
 
-    async function pickClip({ setId, letter, difficulty, setData }){
-      const targetLetter = normaliseLetterInput(letter);
-      if(!targetLetter || !setId) return null;
-      const data = setData || await loadSetData(setId);
-      if(!data || !Array.isArray(data.clips)) return null;
-      const relevant = data.clips.filter(clip => clip.letter === targetLetter);
-      if(relevant.length === 0) return null;
 
-      const order = difficultySearchOrder(difficulty);
-      for(const diff of order){
-        const candidates = relevant.filter(clip => clip.difficulty === diff);
-        if(candidates.length){
-          const selected = candidates[Math.floor(Math.random() * candidates.length)];
-          return selected;
-        }
-      }
-
-      return null;
-    }
 
     async function fetchClipForLetter({ setId, letter, difficulty, setData }){
-      const clip = await pickClip({ setId, letter, difficulty, setData });
+      const clips = setData.clips.filter(c => c.letter === letter);
+      const clip = pickClip(clips, difficulty);
       if(!clip) return null;
       const blob = await getClipBlob(setId, clip.id);
       if(!blob) return null;
