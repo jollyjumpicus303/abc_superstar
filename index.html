@@ -855,11 +855,7 @@
   </footer>
 
       <script type="module">
-      import {
-        addAudioClip,
-        pickAudioClip
-      } from './app/audio.js';
-      import {
+            import {
         getProgress,
         saveProgress,
         markCorrect,
@@ -868,7 +864,19 @@
       import { pickNext } from './app/letterPool.js';
       import { advanceAfterRun } from './app/progression.js';
   
-      // Persisted Lernfortschritt wird sofort initialisiert
+      function aggregateClipsByLetter(clips){
+      const byLetter = new Map();
+      for(const clip of clips){
+        if(!byLetter.has(clip.letter)){
+          byLetter.set(clip.letter, {});
+        }
+        const letterMap = byLetter.get(clip.letter);
+        letterMap[clip.difficulty] = (letterMap[clip.difficulty] || 0) + 1;
+      }
+      return byLetter;
+    }
+
+    // Persisted Lernfortschritt wird sofort initialisiert
       getProgress();
     // ——————————————————————————————————————————
     // ABC-Abenteuer – Logik
@@ -2477,12 +2485,61 @@
     }
 
     async function persistClip(setId, letter, difficulty, blob) {
-      return addAudioClip(setId, letter, difficulty, blob);
+      const clipId = generateUUID();
+      const clipKey = `audio-${setId}-${clipId}`;
+      await idbSet(clipKey, blob);
+
+      const setKey = `set-${setId}`;
+      const setData = await idbGet(setKey) || {
+        name: 'Meine Aufnahmen',
+        emoji: '🎤',
+        created: Date.now(),
+        clips: [],
+      };
+
+      setData.clips.push({
+        id: clipId,
+        letter,
+        difficulty,
+        created: Date.now(),
+      });
+
+      await idbSet(setKey, setData);
+    }
+
+    function pickClip(clips, difficulty) {
+      if (!clips || clips.length === 0) {
+        return null;
+      }
+
+      const difficulties = ['AFFIG', 'SCHWER', 'MITTEL', 'LEICHT'];
+      const requestedDifficultyIndex = difficulties.indexOf(difficulty);
+
+      for (let i = requestedDifficultyIndex; i < difficulties.length; i++) {
+        const currentDifficulty = difficulties[i];
+        const matchingClips = clips.filter(c => c.difficulty === currentDifficulty);
+        if (matchingClips.length > 0) {
+          return matchingClips[Math.floor(Math.random() * matchingClips.length)];
+        }
+      }
+      return null;
     }
 
     async function getAudio(letter, difficulty = 'LEICHT') {
       const setId = await getActiveSet();
-      return pickAudioClip(setId, letter, difficulty);
+      const setData = await loadSetData(setId);
+      if (!setData || !setData.clips) return null;
+
+      const letterClips = setData.clips.filter(c => c.letter === letter);
+      const clip = pickClip(letterClips, difficulty);
+
+      if (clip) {
+        const clipKey = `audio-${setId}-${clip.id}`;
+        const blob = await idbGet(clipKey);
+        return { clip, blob };
+      }
+
+      return null;
     }
 
     async function removeClip(setId, clipId){
@@ -2703,6 +2760,7 @@
         const recordedDifficulty = currentDifficulty;
         const setId = await getActiveSet();
         await persistClip(setId, recordedLetter, recordedDifficulty, blob);
+        await selectLetter(recordedLetter); // <--- FIX: Force-refresh the current letter's UI
         await updateStatusGridFromDB();
         await updateUIForRecordingState();
         await renderSetsList();
