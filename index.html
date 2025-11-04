@@ -2504,13 +2504,23 @@
       const difficulties = ['AFFIG', 'SCHWER', 'MITTEL', 'LEICHT'];
       const requestedDifficultyIndex = difficulties.indexOf(difficulty);
 
-      for (let i = requestedDifficultyIndex; i < difficulties.length; i++) {
-        const currentDifficulty = difficulties[i];
-        const matchingClips = clips.filter(c => c.difficulty === currentDifficulty);
-        if (matchingClips.length > 0) {
-          return matchingClips[Math.floor(Math.random() * matchingClips.length)];
+      // Fallback-Suche von der angeforderten Stufe abwärts
+      if (requestedDifficultyIndex !== -1) {
+        for (let i = requestedDifficultyIndex; i < difficulties.length; i++) {
+          const currentDifficulty = difficulties[i];
+          const matchingClips = clips.filter(c => c.difficulty === currentDifficulty);
+          if (matchingClips.length > 0) {
+            return matchingClips[Math.floor(Math.random() * matchingClips.length)];
+          }
         }
       }
+
+      // Wenn nichts gefunden wurde, versuche irgendeinen Clip für diesen Buchstaben
+      // (z.B. wenn nur "SCHWER" existiert, aber "LEICHT" angefordert wurde)
+      if (clips.length > 0) {
+        return clips[Math.floor(Math.random() * clips.length)];
+      }
+
       return null;
     }
 
