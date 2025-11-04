@@ -1,10 +1,13 @@
-const CACHE_NAME = 'abc-abenteuer-cache-v8';
+const CACHE_NAME = 'abc-abenteuer-cache-v9'; // increment version
 const FILES_TO_CACHE = [
-  './',
-  './index.html',
-  './manifest.json',
-  './icon.svg',
-  './sw.js'
+  '/',
+  '/index.html',
+  '/manifest.json',
+  '/icon.svg',
+  '/sw.js',
+  '/app/letterPool.js',
+  '/app/progression.js',
+  '/app/progressStore.js'
 ];
 
 // 1. Installieren: Cache öffnen und App-Shell-Dateien hinzufügen
