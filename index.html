@@ -554,6 +554,7 @@
   <main>
     <nav class="tabs">
       <button class="active" data-tab="spiel">Spiel</button>
+      <button data-tab="ueben">Üben</button>
       <button data-tab="album">🎁 Mein Album</button>
       <button data-tab="eltern">👨‍👩‍👧 Für Eltern</button>
     </nav>
@@ -614,7 +615,7 @@
               <option value="LEICHT">Leicht</option>
               <option value="MITTEL">Mittel</option>
               <option value="SCHWER">Schwer</option>
-              <option value="PROFI">Affig</option>
+              <option value="AFFIG">Affig</option>
             </select>
           </div>
         </div>
@@ -636,6 +637,22 @@
       <div style="margin-top:20px; text-align:center">
         <button id="btnOpenPack" class="btn" disabled>🎁 Pack öffnen (10 ⭐)</button>
       </div>
+    </section>
+
+    <!-- ÜBEN -->
+    <section id="ueben" class="card hidden">
+      <h2>Übungsmodus</h2>
+      <p class="muted">Wähle eine Schwierigkeit und klicke auf einen Buchstaben, um die Aufnahme anzuhören.</p>
+      <div class="controls" style="margin:10px 0 14px">
+        <label style="font-weight:600; font-size:13px; color:var(--muted)">Schwierigkeit:</label>
+        <select id="practiceDifficulty" class="btn secondary" style="padding: 8px 12px; font-size:14px;">
+          <option value="LEICHT">Leicht</option>
+          <option value="MITTEL">Mittel</option>
+          <option value="SCHWER">Schwer</option>
+          <option value="AFFIG">Affig</option>
+        </select>
+      </div>
+      <div id="practiceLetters" class="grid-letters" aria-label="Buchstaben-Auswahl"></div>
     </section>
 
     <!-- ELTERN-BEREICH -->
@@ -695,7 +712,7 @@
             <button type="button" class="chip active" data-record-difficulty="LEICHT">Leicht</button>
             <button type="button" class="chip" data-record-difficulty="MITTEL">Mittel</button>
             <button type="button" class="chip" data-record-difficulty="SCHWER">Schwer</button>
-            <button type="button" class="chip" data-record-difficulty="PROFI">Affig</button>
+            <button type="button" class="chip" data-record-difficulty="AFFIG">Affig</button>
           </div>
           <div class="controls" style="margin:10px 0">
             <button id="btnRec" class="btn">🎙️ Aufnehmen</button>
@@ -1036,6 +1053,7 @@
         b.classList.toggle('active', isActive);
       });
       document.getElementById('spiel').classList.toggle('hidden', tabName !== 'spiel');
+      document.getElementById('ueben').classList.toggle('hidden', tabName !== 'ueben');
       document.getElementById('album').classList.toggle('hidden', tabName !== 'album');
       document.getElementById('einstellungen').classList.toggle('hidden', tabName !== 'einstellungen');
       document.getElementById('eltern').classList.toggle('hidden', tabName !== 'eltern');
@@ -1052,6 +1070,10 @@
 
       if (tabName === 'eltern') {
         renderStatistics();
+      }
+
+      if (tabName === 'ueben') {
+        renderPracticeGrid();
       }
     }
 
@@ -2056,6 +2078,60 @@
       await renderAlbum();
     });
 
+    async function onPracticeLetterClick(e) {
+      const letter = e.currentTarget.getAttribute('data-letter');
+      const btn = e.currentTarget;
+
+      // Buchstaben-Animation beim Klick
+      btn.classList.add('letter-bounce');
+      setTimeout(()=> btn.classList.remove('letter-bounce'), 500);
+
+      // Klick-Sound
+      playClickSound();
+
+      // Audio abspielen
+      const difficulty = document.getElementById('practiceDifficulty').value;
+      const setId = await getActiveSet();
+      const setData = await loadSetData(setId);
+      const clipData = await fetchClipForLetter({ setId, letter, difficulty, setData });
+      if(!clipData){
+        alert('Keine Aufnahme für diese Schwierigkeit gefunden.');
+        return;
+      }
+      const url = URL.createObjectURL(clipData.blob);
+      const audio = new Audio(url);
+      audio.addEventListener('ended', () => URL.revokeObjectURL(url));
+      audio.addEventListener('error', () => URL.revokeObjectURL(url));
+      await audio.play().catch(()=>{});
+    }
+
+    async function updatePracticeLetterButtons() {
+        const setId = await getActiveSet();
+        const setData = await loadSetData(setId);
+        if (!setData || !setData.clips) return;
+        const hasSet = new Set(setData.clips.map(clip => clip.letter));
+        document.querySelectorAll('#practiceLetters .btn-letter').forEach(btn => {
+            const letter = btn.getAttribute('data-letter');
+            btn.disabled = !hasSet.has(letter);
+        });
+    }
+
+    function renderPracticeGrid() {
+        const elPracticeLetters = document.getElementById('practiceLetters');
+        if (!elPracticeLetters) return;
+        elPracticeLetters.innerHTML = '';
+        LETTERS.forEach(ch => {
+            const b = document.createElement('button');
+            b.className = 'btn-letter';
+            b.textContent = ch;
+            b.setAttribute('data-letter', ch);
+            b.setAttribute('aria-label', 'Buchstabe ' + ch);
+            b.addEventListener('click', onPracticeLetterClick);
+            elPracticeLetters.appendChild(b);
+        });
+        updatePracticeLetterButtons();
+    }
+
     // ——————————————————————————————————————————
     // UI – Buchstabenraster
     // ——————————————————————————————————————————
@@ -2150,9 +2226,7 @@
       AFFIG: 'Affig (Extra Schwer)',
     };
 
-
-
-
+    const LERNWEG_STEPS = [4, 8, 12, 16, 20, 24, 26]; // Defined LERNWEG_STEPS
 
     function deriveLernwegMeta(progress){
       const unlockedRaw = progress && Number.isFinite(progress.unlocked) ? progress.unlocked : 4;
@@ -3048,7 +3122,6 @@
     let game = null;
 
     elBtnTestAudio.addEventListener('click', ()=> { if(lastPlayed) { lastPlayed.currentTime=0; lastPlayed.play(); }});
-    document.getElementById('again').addEventListener('click', ()=> { closeModal(); startGame(); });
     document.getElementById('closeModal').addEventListener('click', closeModal);
 
     function closeModal(){ elModal.classList.add('hidden'); }
@@ -3157,7 +3230,8 @@
       game.last = pick;
       game.recent = [pick, ...(game.recent || [])].slice(0, 3);
       const desiredDifficulty = game.difficulty;
-      const clipData = await fetchClipForLetter({ setId: game.setId, letter: pick, difficulty: desiredDifficulty });
+      const setData = await loadSetData(game.setId);
+      const clipData = await fetchClipForLetter({ setId: game.setId, letter: pick, difficulty: desiredDifficulty, setData });
       if(!clipData){
         // Aufnahme fehlt unerwartet → Buchstabe aus Pool entfernen und weiter
         console.warn('Keine passende Aufnahme gefunden für', pick, 'in Schwierigkeit', desiredDifficulty);
@@ -3197,11 +3271,12 @@
 
         // Audio abspielen
         const setId = await getActiveSet();
-        if(currentLetter === letter && currentClipId){
+        if(currentLetter === letter && currentClipId){ // currentLetter, currentClipId are for recorder
           await playClipById(currentClipId);
           return;
         }
-        const clipData = await fetchClipForLetter({ setId, letter, difficulty: currentDifficulty });
+        const setData = await loadSetData(setId);
+        const clipData = await fetchClipForLetter({ setId, letter, difficulty: currentDifficulty, setData });
         if(!clipData){
           alert('Keine Aufnahme gefunden.');
           return;
@@ -3385,6 +3460,8 @@
       document.getElementById('setup').classList.remove('hidden');
       elHud.classList.add('hidden');
       elModal.classList.remove('hidden');
+      // Re-attach event listener for 'again' button to ensure it's active after game finish
+      document.getElementById('again').addEventListener('click', ()=> { closeModal(); startGame(); });
       game=null;
 
       // Zurück in Preview-Modus: Buttons basierend auf Aufnahmen aktivieren
@@ -3475,7 +3552,7 @@
     // PWA Service Worker Registrierung
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
+        navigator.serviceWorker.register('/sw.js') // Changed to absolute path
           .then(reg => console.log('Service Worker registriert:', reg))
           .catch(err => console.log('Service Worker Registrierung fehlgeschlagen:', err));
       });
