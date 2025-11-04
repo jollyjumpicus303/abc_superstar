@@ -854,19 +854,22 @@
     <p>Made for kids 💜 · Alle Daten bleiben auf diesem Gerät. | <span class="muted">Bei iOS/Safari evtl. „Mikrofon erlauben“ bestätigen.</span></p>
   </footer>
 
-  <script type="module">
-    import {
-      getProgress,
-      saveProgress,
-      markCorrect,
-      markWrong
-    } from './app/progressStore.js';
-    import { pickNext } from './app/letterPool.js';
-    import { advanceAfterRun } from './app/progression.js';
-
-    // Persisted Lernfortschritt wird sofort initialisiert
-    getProgress();
-
+      <script type="module">
+      import {
+        addAudioClip,
+        pickAudioClip
+      } from './app/audio.js';
+      import {
+        getProgress,
+        saveProgress,
+        markCorrect,
+        markWrong
+      } from './app/progressStore.js';
+      import { pickNext } from './app/letterPool.js';
+      import { advanceAfterRun } from './app/progression.js';
+  
+      // Persisted Lernfortschritt wird sofort initialisiert
+      getProgress();
     // ——————————————————————————————————————————
     // ABC-Abenteuer – Logik
     // ——————————————————————————————————————————
@@ -2473,26 +2476,13 @@
       return { setId, setData };
     }
 
-    async function persistClip(setId, letter, difficulty, blob){
-      const clip = {
-        id: generateUUID(),
-        letter,
-        difficulty: normaliseDifficultyInput(difficulty),
-        created: Date.now(),
-      };
-      let setData = await loadSetData(setId);
-      if(!setData){
-        setData = {
-          name: 'Meine Aufnahmen',
-          emoji: '🎤',
-          created: Date.now(),
-          clips: [],
-        };
-      }
-      setData.clips.push(clip);
-      await idbSet('set-' + setId, setData);
-      await idbSet('audio-' + setId + '-' + clip.id, blob);
-      return clip;
+    async function persistClip(setId, letter, difficulty, blob) {
+      return addAudioClip(setId, letter, difficulty, blob);
+    }
+
+    async function getAudio(letter, difficulty = 'LEICHT') {
+      const setId = await getActiveSet();
+      return pickAudioClip(setId, letter, difficulty);
     }
 
     async function removeClip(setId, clipId){
