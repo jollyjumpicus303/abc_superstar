@@ -1,6 +1,6 @@
 const CACHE_NAME = 'abc-abenteuer-cache-v10'; // increment version
 const FILES_TO_CACHE = [
-  '/',
+  './',
   './index.html',
   './manifest.json',
   './icon.svg',
