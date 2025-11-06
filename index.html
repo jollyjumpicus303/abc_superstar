@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="de">
 <head>
+  <base href="https://nik-lampe.github.io/Buchstabenspiel/">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ABC‑Abenteuer – Hör & Finde (Prototyp)</title>
@@ -1246,7 +1247,11 @@
     const elInGameDifficulty = document.getElementById('inGameDifficulty');
     if(elInGameDifficulty){
         elInGameDifficulty.addEventListener('change', (e)=>{
-            saveAndApply({ difficulty: e.target.value });
+            const newDifficulty = e.target.value;
+            saveAndApply({ difficulty: newDifficulty });
+            if (game) {
+                game.difficulty = newDifficulty;
+            }
         });
     }
 
@@ -3520,6 +3525,8 @@
         e.preventDefault(); btn.click();
       }
     });
+
+    elBtnStart.addEventListener('click', startGame);
 
     // Inhalte initial
     (async function init(){
