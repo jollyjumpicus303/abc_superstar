@@ -1,7 +1,6 @@
 <!doctype html>
 <html lang="de">
 <head>
-  
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>ABC‑Abenteuer – Hör & Finde (Prototyp)</title>
@@ -1165,10 +1164,10 @@
       // 2. Super-Buchstaben
       html += '<h3 style="margin-top: 24px;">Super-Buchstaben</h3>';
       if (superBuchstaben.length > 0) {
-        html += `<p class="muted">Diese ${superBuchstaben.length} Buchstaben werden schon sehr gut erkannt.</p>';
-        // html += "<div " + "class" + "='super-letter-grid'>";
+        html += `<p class="muted">Diese ${superBuchstaben.length} Buchstaben werden schon sehr gut erkannt.</p>`;
+        html += '<div class="super-letter-grid">';
         html += superBuchstaben.map(l => `<div class="super-letter-tile">${l}</div>`).join('');
-        // html += '</div>';
+        html += '</div>';
       } else {
         html += '<p class="muted">Noch keine Super-Buchstaben. Aber das wird schon!</p>';
       }
@@ -1247,11 +1246,7 @@
     const elInGameDifficulty = document.getElementById('inGameDifficulty');
     if(elInGameDifficulty){
         elInGameDifficulty.addEventListener('change', (e)=>{
-            const newDifficulty = e.target.value;
-            saveAndApply({ difficulty: newDifficulty });
-            if (game) {
-                game.difficulty = newDifficulty;
-            }
+            saveAndApply({ difficulty: e.target.value });
         });
     }
 
@@ -1997,6 +1992,7 @@
     // UI – Sticker-Album
     // ——————————————————————————————————————————
     let currentAlbumTheme = 'animals';
+
     async function renderAlbum(){
       const stars = await getStars();
       const collected = await getCollectedStickers();
@@ -3524,8 +3520,6 @@
         e.preventDefault(); btn.click();
       }
     });
-
-    elBtnStart.addEventListener('click', startGame);
 
     // Inhalte initial
     (async function init(){
