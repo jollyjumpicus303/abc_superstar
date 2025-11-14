@@ -609,7 +609,7 @@
         <div class="progress"><i id="bar"></i></div>
         <div class="in-game-controls" style="margin-top:10px; display:flex; gap:12px; align-items:center;">
           <button id="btnTestAudio" class="btn secondary" title="Aktuellen Buchstaben nochmals anhören" disabled>🔊 Nochmal anhören</button>
-          <div style="margin-left:auto">
+          <div style="margin-left:auto; display:flex; gap:12px; align-items:center;">
             <label style="font-weight:600; font-size:13px; color:var(--muted)">Audio:</label>
             <select id="inGameDifficulty" class="btn secondary" style="padding: 8px 12px; font-size:14px;">
               <option value="LEICHT">Leicht</option>
@@ -617,6 +617,7 @@
               <option value="SCHWER">Schwer</option>
               <option value="AFFIG">Affig</option>
             </select>
+            <button id="btnEndGame" class="btn danger" title="Spiel beenden">❌</button>
           </div>
         </div>
       </div>
@@ -1005,9 +1006,12 @@
     elBtnParentModeDialog.addEventListener('click', openModeDialog);
     const elModeHint = document.getElementById('modeHint');
     const elBtnTestAudio = document.getElementById('btnTestAudio');
+    const elBtnEndGame = document.getElementById('btnEndGame');
     const elRounds = document.getElementById('rounds');
     const elRoundsOut = document.getElementById('roundsOut');
     elBtnChangeMode.addEventListener('click', openModeDialog);
+    elBtnStart.addEventListener('click', startGame);
+    elBtnEndGame.addEventListener('click', confirmEndGame);
 
     // Eltern-Sperre
     const elParentalGate = document.getElementById('parentalGate');
@@ -1218,6 +1222,17 @@
         closeModeDialog();
         startGame();
       });
+    }
+
+    function saveAndApply(updates){
+      const progress = getProgress();
+      const newProgress = { ...progress, ...updates };
+      saveProgress(newProgress);
+      // After saving, re-apply settings to the UI
+      updateStartButtonLabel(newProgress);
+      updateLernwegProgress(newProgress);
+      updateModeDialogCards(newProgress);
+      updateUIForRecordingState();
     }
 
     if(elFreeCountGroup){
@@ -3125,6 +3140,30 @@
     document.getElementById('closeModal').addEventListener('click', closeModal);
 
     function closeModal(){ elModal.classList.add('hidden'); }
+
+    function confirmEndGame() {
+      if (confirm('Möchtest du wirklich aufhören?')) {
+        endGame();
+      }
+    }
+
+    function endGame() {
+      // Hide game view
+      elHud.classList.add('hidden');
+      elLetters.classList.add('hidden');
+
+      // Show setup view
+      document.getElementById('setup').classList.remove('hidden');
+
+      // Reset game state
+      game = null;
+      currentLetter = null;
+      currentAudio = null;
+      elLetters.innerHTML = '';
+
+      // Update UI
+      updateUIForRecordingState();
+    }
 
     async function startGame(){
       const progress = getProgress();

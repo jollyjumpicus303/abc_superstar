@@ -230,37 +230,27 @@ Schwierigkeits-Tag erweitern.
 
 ---
 
-## 8.0 UX-Verbesserungen (Kind & Eltern) ⬜
+## 8. UX-Refactoring: Modi & Audio-Steuerung 🔄
 
 **Priorität:** Hoch | **Aufwand:** Mittel
 
 ### Ziele:
 - Den Einstieg in die App so einfach und direkt wie möglich gestalten.
 - Die Komplexität für Kinder reduzieren und die Klarheit für Eltern erhöhen.
-- Die App soll sofort nach dem ersten Öffnen spielbar sein (mittelfristig).
+- Redundanz und Verwirrung bei den Audio-Einstellungen beseitigen.
 
-### Teil-Aufgaben:
-
-#### 8.1 Modus-Auswahl vereinfachen ⬜
-**Beschreibung:** Die Modus-Auswahl (Anfänger, Lernweg, Meister) wird zu prominenten, direkten Karten auf dem Spiel-Tab, anstatt sie in einem Dialog zu verstecken. Komplexe Optionen werden für den normalen Spielfluss verborgen.
-**Aufgaben:**
-- [ ] Die drei Hauptmodi als große, klickbare Karten direkt im "Spiel"-Tab anzeigen.
-- [ ] Den "Spiel starten"-Button durch eine direkte Auswahl der Modus-Karten ersetzen.
-- [ ] Die Auswahl von Audio-Stilen und anderen Details in einen "Individuelles Spiel"-Bereich verschieben, der weniger prominent ist.
-
-#### 8.2 Aufnahme-Prozess für Eltern optimieren ⬜
-**Beschreibung:** Die Bezeichnungen für Aufnahme-Typen werden verständlicher und der Prozess wird klarer strukturiert, um Eltern die Aufnahme zu erleichtern.
-**Aufgaben:**
-- [ ] Die internen Schwierigkeitsgrade und UI-Texte anpassen:
-    - `LEICHT` → `MIT_ANLAUT` (UI: "Mit Anlaut", z.B. "A wie Apfel")
-    - `MITTEL` → `NUR_BUCHSTABE` (UI: "Nur Buchstabe", z.B. "A")
-    - `SCHWER` → `PERSOENLICH` (UI: "Persönlich", z.B. ein Insider-Wort oder lustiger Ton)
-- [ ] Die Aufnahme-UI überarbeiten, um diese drei Typen klar darzustellen und den Nutzen zu erklären.
-- [ ] (Optional) Einen geführten Aufnahme-Modus erstellen, der Eltern durch die Aufnahme der wichtigsten Typen leitet.
-
-#### 8.3 Standard-Audioset bereitstellen (Zurückgestellt) ⬜
-**Beschreibung:** Um sofortigen Spielspaß zu ermöglichen, soll die App mit einem professionellen Standard-Set an Aufnahmen ausgeliefert werden. Das eigene Aufnehmen wird zu einer optionalen, kreativen Zusatzfunktion.
-**Status:** Auf Wunsch zurückgestellt.
+### Aufgaben:
+- [ ] **Modi auf 2 reduzieren:** Die Modus-Auswahl wird auf "Lernweg" und "Individuelles Spiel" vereinfacht.
+- [ ] **Audio-Steuerung im Spiel:** Während einer laufenden Runde kann die Audio-Art jederzeit über ein Dropdown angepasst werden.
+- [ ] **Schwierigkeits-Dropdown als einzige Audio-Quelle:** Ein einziges Dropdown steuert die Audio-Art und ersetzt die alte Logik:
+    - `Leicht`: Spielt "Buchstabe + Anlaut".
+    - `Mittel`: Spielt "Nur Buchstabe".
+    - `Schwer`: Spielt das "Beispielwort".
+    - `Affig`: Spielt die "Extra-Schwer" / "Profi" Aufnahmen.
+- [ ] **"Profi" umbenennen:** Die Stufe "Profi" wird durchgängig in "Affig" umbenannt.
+- [ ] **Redundanz entfernen:** Die separate Auswahl "Mit/Ohne Anlaut" (`audioSet`) wird komplett entfernt.
+- [ ] **UI anpassen:** Das Modus-Dialogfeld und die Spieleinstellungen entsprechend umbauen.
+- [ ] **"Individuelles Spiel" erweitern:** Die Konfiguration für das individuelle Spiel wird übersichtlich an einem Ort zusammengefasst (Buchstabenanzahl etc.).
 
 ---
 
