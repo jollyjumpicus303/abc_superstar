@@ -181,6 +181,7 @@ const elModal = document.getElementById('modal');
 const elResultTitle = document.getElementById('resultTitle');
 const elResultText = document.getElementById('resultText');
 const elTrophyAnimation = document.getElementById('trophyAnimation');
+const elInstallBtn = document.getElementById('installBtn');
 const elBtnStart = document.getElementById('btnStart');
 const elBtnChangeMode = document.getElementById('btnChangeMode');
 const elModeHint = document.getElementById('modeHint');
@@ -196,6 +197,7 @@ const metaThemeColor = document.querySelector('meta[name="theme-color"]');
 const themeOptionButtons = elThemeMenu ? Array.from(elThemeMenu.querySelectorAll('[data-theme-option]')) : [];
 let trophyAnimation = null;
 let trophyLoader = null;
+let installPromptEvent = null;
 
 const THEME_STORAGE_KEY = 'abc-abenteuer-theme';
 const THEME_OPTIONS = {
@@ -207,6 +209,8 @@ let isThemeMenuOpen = false;
 let activeTheme = document.documentElement.getAttribute('data-theme') || DEFAULT_THEME;
 
 initThemeSelector();
+registerServiceWorker();
+initPWAInstall();
 
 function ensureTrophyAnimation(path){
   if(trophyAnimation && trophyAnimation.__path === path){
@@ -256,6 +260,52 @@ function playTrophyAnimation(path){
     if(!animation) return;
     animation.stop();
     animation.goToAndPlay(0, true);
+  });
+}
+
+function registerServiceWorker(){
+  if(!('serviceWorker' in navigator)) return;
+  const register = () => {
+    navigator.serviceWorker.register('sw.js').catch(err => {
+      console.warn('Service Worker Registrierung fehlgeschlagen', err);
+    });
+  };
+  if(document.readyState === 'complete'){
+    register();
+  } else {
+    window.addEventListener('load', register, { once: true });
+  }
+}
+
+function initPWAInstall(){
+  if(!elInstallBtn) return;
+
+  window.addEventListener('beforeinstallprompt', (event) => {
+    event.preventDefault();
+    installPromptEvent = event;
+    elInstallBtn.classList.add('show');
+  });
+
+  elInstallBtn.addEventListener('click', async () => {
+    if(!installPromptEvent) return;
+    elInstallBtn.disabled = true;
+    try{
+      installPromptEvent.prompt();
+      const result = await installPromptEvent.userChoice;
+      if(result && result.outcome === 'accepted'){
+        elInstallBtn.classList.remove('show');
+      }
+    }catch(err){
+      console.warn('PWA-Installation fehlgeschlagen', err);
+    }finally{
+      installPromptEvent = null;
+      elInstallBtn.disabled = false;
+    }
+  });
+
+  window.addEventListener('appinstalled', () => {
+    installPromptEvent = null;
+    elInstallBtn.classList.remove('show');
   });
 }
 
