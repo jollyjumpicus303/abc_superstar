@@ -429,7 +429,15 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
 .dialog{background:#fff; border-radius:24px; box-shadow:var(--shadow);
   width:min(560px,92vw); padding:20px; text-align:center}
 .dialog h3{margin:.4rem 0}
-.trophy{display:block; margin:6px auto 12px; width:160px; height:auto}
+.trophy-animation{
+  width:min(240px, 70vw);
+  height:min(240px, 70vw);
+  margin:6px auto 12px;
+}
+.trophy-animation svg{
+  width:100% !important;
+  height:100% !important;
+}
 .result-line{font-weight:900; font-size:18px}
 
 /* Reduced motion */
@@ -564,11 +572,31 @@ footer{max-width:1100px; margin:-52px auto 32px; padding:0 16px; color:#6b7280; 
 
 /* Settings Button (Zahnrad) */
 .settings-btn{
-  border:0; padding:10px; border-radius:50%; width:42px; height:42px;
-  background:var(--header-pill-bg); color:var(--header-pill-color); font-size:20px;
-  cursor:pointer; transition:all .2s ease; display:grid; place-items:center;
+  border:0;
+  padding:10px;
+  border-radius:999px;
+  width:42px;
+  height:42px;
+  background:var(--header-pill-bg);
+  color:var(--header-pill-color);
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  transition:background .2s ease, box-shadow .2s ease;
 }
-.settings-btn:hover{background:var(--header-pill-bg-hover); transform:rotate(30deg)}
+.settings-btn__icon{
+  width:18px;
+  height:18px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform .3s ease;
+}
+.settings-btn__icon svg{width:100%; height:100%; display:block;}
+.settings-btn:hover{background:var(--header-pill-bg-hover); box-shadow:0 6px 16px rgba(15,23,42,.15);}
+.settings-btn:hover .settings-btn__icon{transform:rotate(30deg);}
+.settings-btn:focus-visible{outline:0; box-shadow:0 0 0 3px rgba(255,255,255,.4);}
 /* Statistik-Bereich */
 .challenge-grid {
   display: grid;
@@ -704,6 +732,15 @@ html[data-theme='nebula'] .chip{
 }
 html[data-theme='nebula'] .chip:hover{box-shadow:0 14px 28px rgba(0,0,0,.5);}
 html[data-theme='nebula'] .chip.active{background:#335c9e; color:#fff;}
+html[data-theme='nebula'] .mode-card{
+  background:linear-gradient(160deg,#1f1f3d,#16162b);
+  box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.05);
+  color:#f7f5ff;
+}
+html[data-theme='nebula'] .mode-card:hover{box-shadow:0 20px 34px rgba(0,0,0,.65);}
+html[data-theme='nebula'] .mode-card strong{color:#fff;}
+html[data-theme='nebula'] .mode-card span{color:#cfd4ff;}
+html[data-theme='nebula'] .mode-card.active{outline:3px solid rgba(107,184,255,.65); box-shadow:0 20px 40px rgba(0,0,0,.7);}
 html[data-theme='nebula'] .status-tile{
   background:#25244a;
   color:#efe8ff;

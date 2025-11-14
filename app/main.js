@@ -20,70 +20,110 @@ const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx = null;
 let unlockBannerTimer = null;
 
+const SOUND_FILES = {
+  success: { url: 'app/sfx/success.mp3', volume: 0.8 },
+  fail: { url: 'app/sfx/fail.mp3', volume: 0.75 },
+  click: { url: 'app/sfx/click.mp3', volume: 0.4 },
+  start: { url: 'app/sfx/start.mp3', volume: 0.7 },
+  unlock: { url: 'app/sfx/unlock.mp3', volume: 0.75 },
+  reward: { url: 'app/sfx/reward.mp3', volume: 0.85 },
+};
+
+const soundBuffers = new Map();
+const soundLoadingPromises = new Map();
+const INTRO_PROMPT_DELAY = 2000;
+
 function initAudioContext(){
-  if(!audioCtx) audioCtx = new AudioContext();
+  if(!audioCtx){
+    audioCtx = new AudioContext();
+  }
   return audioCtx;
 }
 
-// Erfolgs-Sound: Fröhlicher aufsteigender Ton
-function playSuccessSound(){
+function ensureAudioContextRunning(){
   const ctx = initAudioContext();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
-  osc.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.1); // G5
-  osc.frequency.exponentialRampToValueAtTime(1046.50, ctx.currentTime + 0.2); // C6
-
-  gain.gain.setValueAtTime(0.3, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
-
-  osc.start(ctx.currentTime);
-  osc.stop(ctx.currentTime + 0.4);
+  if(ctx.state === 'suspended'){
+    ctx.resume().catch(()=>{});
+  }
+  return ctx;
 }
 
-// Fehler-Sound: Sanfter absteigender Ton
-function playErrorSound(){
-  const ctx = initAudioContext();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
+function loadSoundBuffer(id){
+  if(soundBuffers.has(id)){
+    return Promise.resolve(soundBuffers.get(id));
+  }
+  if(soundLoadingPromises.has(id)){
+    return soundLoadingPromises.get(id);
+  }
+  const config = SOUND_FILES[id];
+  if(!config){
+    return Promise.resolve(null);
+  }
+  const ctx = ensureAudioContextRunning();
+  const loadPromise = fetch(config.url)
+    .then(response => {
+      if(!response.ok){
+        throw new Error(`Sound ${id} konnte nicht geladen werden`);
+      }
+      return response.arrayBuffer();
+    })
+    .then(data => ctx.decodeAudioData(data))
+    .then(buffer => {
+      soundBuffers.set(id, buffer);
+      soundLoadingPromises.delete(id);
+      return buffer;
+    })
+    .catch(err => {
+      soundLoadingPromises.delete(id);
+      console.warn('[Audio]', err);
+      return null;
+    });
 
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-
-  osc.type = 'triangle';
-  osc.frequency.setValueAtTime(329.63, ctx.currentTime); // E4
-  osc.frequency.exponentialRampToValueAtTime(246.94, ctx.currentTime + 0.15); // B3
-
-  gain.gain.setValueAtTime(0.2, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-
-  osc.start(ctx.currentTime);
-  osc.stop(ctx.currentTime + 0.3);
+  soundLoadingPromises.set(id, loadPromise);
+  return loadPromise;
 }
 
-// Klick-Sound: Kurzer Feedback-Ton beim Buchstaben-Klick
-function playClickSound(){
-  const ctx = initAudioContext();
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
+function playSfx(id, options = {}){
+  const config = SOUND_FILES[id];
+  if(!config){
+    return;
+  }
+  const ctx = ensureAudioContextRunning();
+  const volume = typeof options.volume === 'number' ? options.volume : (config.volume ?? 1);
 
-  osc.connect(gain);
-  gain.connect(ctx.destination);
+  const startPlayback = (buffer) => {
+    if(!buffer){
+      return;
+    }
+    const source = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    gain.gain.value = volume;
+    source.buffer = buffer;
+    source.connect(gain);
+    gain.connect(ctx.destination);
+    source.start();
+    source.addEventListener('ended', () => {
+      source.disconnect();
+      gain.disconnect();
+    });
+  };
 
-  osc.type = 'sine';
-  osc.frequency.setValueAtTime(880, ctx.currentTime); // A5
+  if(soundBuffers.has(id)){
+    startPlayback(soundBuffers.get(id));
+    return;
+  }
 
-  gain.gain.setValueAtTime(0.15, ctx.currentTime);
-  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.08);
-
-  osc.start(ctx.currentTime);
-  osc.stop(ctx.currentTime + 0.08);
+  loadSoundBuffer(id).then(startPlayback);
 }
+
+function playSuccessSound(){ playSfx('success'); }
+function playErrorSound(){ playSfx('fail'); }
+function playClickSound(){ playSfx('click'); }
+function playStartSound(){ playSfx('start'); }
+function playUnlockSound(){ playSfx('unlock'); }
+function playRewardSound(){ playSfx('reward'); }
+
+const sleep = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms));
 
 const LETTERS = Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 const clipHistoryQueues = new Map();
@@ -140,6 +180,7 @@ const elCorrectLetter = document.getElementById('correctLetter');
 const elModal = document.getElementById('modal');
 const elResultTitle = document.getElementById('resultTitle');
 const elResultText = document.getElementById('resultText');
+const elTrophyAnimation = document.getElementById('trophyAnimation');
 const elBtnStart = document.getElementById('btnStart');
 const elBtnChangeMode = document.getElementById('btnChangeMode');
 const elModeHint = document.getElementById('modeHint');
@@ -153,6 +194,8 @@ const elThemeMenu = document.getElementById('themeSwitcherMenu');
 const elThemeLabel = document.getElementById('currentThemeLabel');
 const metaThemeColor = document.querySelector('meta[name="theme-color"]');
 const themeOptionButtons = elThemeMenu ? Array.from(elThemeMenu.querySelectorAll('[data-theme-option]')) : [];
+let trophyAnimation = null;
+let trophyLoader = null;
 
 const THEME_STORAGE_KEY = 'abc-abenteuer-theme';
 const THEME_OPTIONS = {
@@ -164,6 +207,57 @@ let isThemeMenuOpen = false;
 let activeTheme = document.documentElement.getAttribute('data-theme') || DEFAULT_THEME;
 
 initThemeSelector();
+
+function ensureTrophyAnimation(path){
+  if(trophyAnimation && trophyAnimation.__path === path){
+    return Promise.resolve(trophyAnimation);
+  }
+  if(trophyLoader){
+    return trophyLoader;
+  }
+  if(!elTrophyAnimation || typeof window.lottie === 'undefined'){
+    return Promise.resolve(null);
+  }
+  trophyLoader = new Promise((resolve) => {
+    try{
+      if(trophyAnimation){
+        trophyAnimation.destroy();
+        trophyAnimation = null;
+      }
+      trophyAnimation = window.lottie.loadAnimation({
+        container: elTrophyAnimation,
+        renderer: 'svg',
+        loop: false,
+        autoplay: false,
+        path,
+      });
+      trophyAnimation.__path = path;
+      const handleReady = () => {
+        trophyAnimation.removeEventListener('data_ready', handleReady);
+        resolve(trophyAnimation);
+      };
+      trophyAnimation.addEventListener('data_ready', handleReady);
+      trophyAnimation.addEventListener('data_failed', () => {
+        trophyAnimation = null;
+        resolve(null);
+      }, { once: true });
+    }catch(err){
+      console.warn('Lottie Animation konnte nicht geladen werden', err);
+      resolve(null);
+    }
+  }).finally(() => {
+    trophyLoader = null;
+  });
+  return trophyLoader;
+}
+
+function playTrophyAnimation(path){
+  ensureTrophyAnimation(path).then(animation => {
+    if(!animation) return;
+    animation.stop();
+    animation.goToAndPlay(0, true);
+  });
+}
 
 function initThemeSelector(){
   const storedTheme = readStoredTheme();
@@ -2704,6 +2798,7 @@ async function startGame(){
     mode,
     difficulty,
     errorHistory: [],
+    introPromptDelay: INTRO_PROMPT_DELAY,
   };
   elRoundMax.textContent = rounds;
   elOk.textContent=0; elBad.textContent=0;
@@ -2720,6 +2815,7 @@ async function startGame(){
   document.getElementById('einstellungen').classList.add('hidden');
 
   // Runde 1
+  playStartSound();
   await nextRound();
 }
 
@@ -2757,6 +2853,10 @@ async function nextRound(){
   game.recent = [pick, ...(game.recent || [])].slice(0, 3);
 
   const setData = await loadSetData(game.setId);
+  if(game.introPromptDelay){
+    await sleep(game.introPromptDelay);
+    game.introPromptDelay = 0;
+  }
   const clipPlayable = await playCurrentPrompt({ setData, suppressAlert: true });
   if(!clipPlayable){
     // Aufnahme fehlt unerwartet → Buchstabe aus Pool entfernen und weiter
@@ -2912,6 +3012,7 @@ function showUnlockBanner(message){
   requestAnimationFrame(()=>{
     elUnlockBanner.classList.add('visible');
   });
+  playUnlockSound();
   unlockBannerTimer = setTimeout(()=>{
     elUnlockBanner.classList.remove('visible');
     unlockBannerTimer = setTimeout(()=>{
@@ -2954,6 +3055,18 @@ function finishGame(){
   const ok = game.ok;
   const pct = Math.round((ok/total)*100);
   const msg = `${ok} von ${total} richtig (${pct} %)`;
+  let animationPath;
+  if(game.bad === 0){
+    animationPath = 'SPECS/Trophy.json';
+    elResultTitle.textContent='Gold! Fantastisch ✨';
+  } else if(pct >= 50){
+    animationPath = 'SPECS/Silver.json';
+    elResultTitle.textContent='Silber! Super gemacht 🥈';
+  } else {
+    animationPath = 'SPECS/bronze.json';
+    elResultTitle.textContent='Bronze! Weiter so 🥉';
+  }
+  playTrophyAnimation(animationPath);
   const progressBefore = game && game.progress ? game.progress : null;
   if(progressBefore && progressBefore.mode === 'LERNWEG'){
     const beforeUnlocked = progressBefore.unlocked || 0;
@@ -2973,14 +3086,11 @@ function finishGame(){
     game.progress = saved;
   }
   // Pokalfarben anpassen (einfach über Füllung)
-  const cup = elModal.querySelector('#cup');
-  const star = elModal.querySelector('#star');
-  if(pct>=90){ cup.querySelector('path').setAttribute('fill','#ffd369'); star.setAttribute('fill','#fff176'); elResultTitle.textContent='Gold! Fantastisch ✨'; }
-  else if(pct>=70){ cup.querySelector('path').setAttribute('fill','#d6b36a'); star.setAttribute('fill','#ffe082'); elResultTitle.textContent='Silber! Super gemacht 🥈'; }
-  else if(pct>=50){ cup.querySelector('path').setAttribute('fill','#c39a5a'); star.setAttribute('fill','#ffd54f'); elResultTitle.textContent='Bronze! Weiter so 🥉'; }
-  else { cup.querySelector('path').setAttribute('fill','#c9c9c9'); star.setAttribute('fill','#e0e0e0'); elResultTitle.textContent='Stark gekämpft! 💪'; }
   // Sterne für richtige Antworten vergeben
   const earnedStars = ok;
+  if(earnedStars > 0){
+    playRewardSound();
+  }
   let fullMsg = msg;
 
   // Async-Teil für Sterne und Pack-Öffnung
@@ -3062,6 +3172,7 @@ async function startPracticeGame(letters) {
     mode: 'FREI',
     difficulty: progress.difficulty,
     errorHistory: [],
+    introPromptDelay: INTRO_PROMPT_DELAY,
   };
 
   elRounds.value = rounds;
@@ -3073,6 +3184,7 @@ async function startPracticeGame(letters) {
   document.getElementById('setup').classList.add('hidden');
   elHud.classList.remove('hidden');
 
+  playStartSound();
   await nextRound();
 }
 
