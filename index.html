@@ -12,6 +12,7 @@
 
   <!-- JSZip für Export/Import -->
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://unpkg.com/lottie-web/build/player/lottie.min.js"></script>
 
   <script>
     (function(){
@@ -52,7 +53,14 @@
           </button>
         </div>
       </div>
-      <button id="settingsBtn" class="settings-btn" title="Einstellungen">⚙️</button>
+      <button id="settingsBtn" class="settings-btn" title="Einstellungen" aria-label="Einstellungen">
+        <span class="settings-btn__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="presentation" focusable="false">
+            <circle cx="12" cy="12" r="3.2" fill="none" stroke="currentColor" stroke-width="2"></circle>
+            <path d="M19.4 12.94a7.82 7.82 0 0 0 .06-1 7.82 7.82 0 0 0-.06-1l1.72-1.34a.6.6 0 0 0 .14-.76l-1.63-2.82a.6.6 0 0 0-.74-.26l-2 .8a7.66 7.66 0 0 0-1.71-.99l-.3-2.1a.6.6 0 0 0-.6-.5h-3.26a.6.6 0 0 0-.6.5l-.3 2.1a7.66 7.66 0 0 0-1.71.99l-2-.8a.6.6 0 0 0-.74.26L2.68 8.84a.6.6 0 0 0 .14.76L4.54 11a7.82 7.82 0 0 0 0 2l-1.72 1.38a.6.6 0 0 0-.14.76l1.63 2.82a.6.6 0 0 0 .74.26l2-.8a7.66 7.66 0 0 0 1.71 1l.3 2.09a.6.6 0 0 0 .6.5h3.26a.6.6 0 0 0 .6-.5l.3-2.09a7.66 7.66 0 0 0 1.71-1l2 .8a.6.6 0 0 0 .74-.26l1.63-2.82a.6.6 0 0 0-.14-.76Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+          </svg>
+        </span>
+      </button>
     </div>
   </header>
 
@@ -305,21 +313,7 @@
   <!-- Ergebnis-Modal -->
   <div id="modal" class="modal hidden" aria-modal="true" role="dialog">
     <div class="dialog">
-      <svg class="trophy" viewBox="0 0 200 200" aria-hidden="true">
-        <!-- Einfacher Pokal -->
-        <g id="cup">
-          <rect x="80" y="130" width="40" height="20" fill="#a8875a"/>
-          <rect x="60" y="150" width="80" height="12" fill="#6b5438"/>
-          <path d="M70,55 h60 v50 a30,22 0 0 1 -60,0 z" fill="#d6b36a" stroke="#a8875a" stroke-width="3"/>
-          <path d="M70,55 h60 v8 h-60 z" fill="#e8c675"/>
-          <path d="M70,105 a30,22 0 0 0 60,0" fill="none" stroke="#855e2e" stroke-width="3" opacity=".35"/>
-          <!-- Henkel -->
-          <path d="M130,65 c25,0 30,30 5,38" stroke="#a8875a" stroke-width="6" fill="none"/>
-          <path d="M70,65 c-25,0 -30,30 -5,38" stroke="#a8875a" stroke-width="6" fill="none"/>
-          <!-- Stern -->
-          <polygon id="star" points="100,82 106,94 120,96 110,105 112,118 100,112 88,118 90,105 80,96 94,94" fill="#fff176" stroke="#d6b36a"/>
-        </g>
-      </svg>
+      <div class="trophy-animation" id="trophyAnimation" aria-hidden="true"></div>
       <h3 id="resultTitle">Toll gemacht!</h3>
       <p class="result-line"><span id="resultText">8 von 10 richtig</span></p>
       <div class="controls" style="justify-content:center; margin-top:10px">
