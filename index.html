@@ -1224,17 +1224,6 @@
       });
     }
 
-    function saveAndApply(updates){
-      const progress = getProgress();
-      const newProgress = { ...progress, ...updates };
-      saveProgress(newProgress);
-      // After saving, re-apply settings to the UI
-      updateStartButtonLabel(newProgress);
-      updateLernwegProgress(newProgress);
-      updateModeDialogCards(newProgress);
-      updateUIForRecordingState();
-    }
-
     if(elFreeCountGroup){
       elFreeCountGroup.addEventListener('click', (e) => {
         const chip = e.target.closest('[data-free-count]');
