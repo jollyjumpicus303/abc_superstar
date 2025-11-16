@@ -234,11 +234,23 @@
             <button type="button" class="chip" data-record-difficulty="SCHWER">Schwer</button>
             <button type="button" class="chip" data-record-difficulty="AFFIG">Affig</button>
           </div>
-          <div class="controls" style="margin:10px 0">
-            <button id="btnRec" class="btn">🎙️ Aufnehmen</button>
-            <button id="btnPlay" class="btn secondary" disabled>▶️ Testen</button>
-            <button id="btnDelete" class="btn ghost" disabled>🗑️ Löschen</button>
-            <span class="timer" id="timer">00:00</span>
+          <div class="controls record-controls" style="margin:10px 0">
+            <div class="record-mode-row">
+              <button id="btnRecord" class="btn">🎙️ Aufnehmen</button>
+              <label class="series-toggle">
+                <input type="checkbox" id="seriesToggle">
+                <span class="series-toggle__control" aria-hidden="true"></span>
+                <span class="series-toggle__label">
+                  Serienaufnahme
+                  <small>springt automatisch weiter</small>
+                </span>
+              </label>
+            </div>
+            <div class="record-action-row">
+              <button id="btnPlay" class="btn secondary" disabled>▶️ Testen</button>
+              <button id="btnDelete" class="btn ghost" disabled>🗑️ Löschen</button>
+              <span class="timer" id="timer">00:00</span>
+            </div>
           </div>
           <div id="clipList" class="clip-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px"></div>
           <div class="muted">Tipp: Spreche klar und kurz (z. B. „B“ oder „B – wie Ball“).</div>

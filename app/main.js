@@ -132,6 +132,10 @@ function playRewardSound(){ playSfx('reward'); }
 const sleep = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms));
 
 const LETTERS = Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
+const RECORD_MODES = {
+  SINGLE: 'single',
+  SERIES: 'series',
+};
 const clipHistoryQueues = new Map();
 
 function makeClipHistoryKey(scope, setId, letter, difficulty){
@@ -151,7 +155,8 @@ const elStatusGrid = document.getElementById('statusGrid');
 const elRecLetter = document.getElementById('recLetter');
 const elRecTitle = document.getElementById('recTitle');
 const elRecStatus = document.getElementById('recStatus');
-const elBtnRec = document.getElementById('btnRec');
+const elBtnRecord = document.getElementById('btnRecord');
+const elSeriesToggle = document.getElementById('seriesToggle');
 const elBtnPlay = document.getElementById('btnPlay');
 const elBtnDelete = document.getElementById('btnDelete');
 const elRecordDifficultyGroup = document.getElementById('recordDifficultyGroup');
@@ -2006,7 +2011,11 @@ function renderStatusGrid(hasSet=new Set(), byDifficulty=new Map()){
   LETTERS.forEach(ch=>{
     const t=document.createElement('div');
     const hasLetter = hasSet.has(ch);
-    t.className='status-tile' + (hasLetter?' has':'');
+    const isActive = currentLetter === ch;
+    const classes = ['status-tile'];
+    if(hasLetter) classes.push('has');
+    if(isActive) classes.push('active');
+    t.className = classes.join(' ');
     const diffCounts = byDifficulty.get(ch);
     let badges = '';
     if(diffCounts){
@@ -2019,6 +2028,9 @@ function renderStatusGrid(hasSet=new Set(), byDifficulty=new Map()){
     const summary = diffCounts ? AUDIO_DIFFICULTIES
       .filter(diff => (diffCounts[diff] || 0) > 0)
       .map(diff => `${formatDifficultyLabel(diff)} (${diffCounts[diff]})`) : [];
+    if(isActive){
+      t.setAttribute('aria-current', 'true');
+    }
     const title = hasLetter ? (summary.length ? 'Aufnahmen: ' + summary.join(', ') : 'Aufnahme vorhanden') : 'Keine Aufnahme';
     t.title = title;
     t.addEventListener('click', ()=> selectLetter(ch));
@@ -2774,6 +2786,144 @@ let motivationClipsCache = [];
 let medalSoundsCache = makeEmptyMedalMap();
 let motivationChainSource = null;
 let motivationChainHandler = null;
+let activeRecordMode = null;
+let autoAdvancePlanned = false;
+let recordingSession = null;
+
+function resetPrimaryRecorderButton(){
+  if(elBtnRecord){
+    elBtnRecord.disabled = false;
+    elBtnRecord.textContent = '🎙️ Aufnehmen';
+    elBtnRecord.classList.remove('danger');
+    elBtnRecord.removeAttribute('data-mode');
+  }
+  if(elSeriesToggle){
+    elSeriesToggle.disabled = false;
+  }
+}
+
+function markRecordingButton(mode){
+  if(!elBtnRecord) return;
+  const isSeries = mode === RECORD_MODES.SERIES;
+  elBtnRecord.textContent = isSeries ? '⏹️ Serie stoppen' : '⏹️ Stoppen';
+  elBtnRecord.classList.add('danger');
+  elBtnRecord.disabled = false;
+  elBtnRecord.dataset.mode = isSeries ? 'series' : 'single';
+  if(elSeriesToggle){
+    elSeriesToggle.disabled = true;
+  }
+}
+
+function resetPrimaryRecorderUI(){
+  resetPrimaryRecorderButton();
+  if(timerInt){
+    clearInterval(timerInt);
+    timerInt = null;
+  }
+  if(elTimer){
+    elTimer.classList.remove('blink');
+    elTimer.textContent = '00:00';
+  }
+  setCurrentClip(currentClipId);
+}
+
+function stopActiveRecording({ skipAutoAdvance = false } = {}){
+  if(skipAutoAdvance){
+    autoAdvancePlanned = false;
+  }
+  if(recorder && recorder.state === 'recording'){
+    resetPrimaryRecorderUI();
+    try{
+      recorder.stop();
+    }catch(err){
+      console.warn('Recorder konnte nicht gestoppt werden', err);
+    }
+  }
+}
+
+async function startPrimaryRecording(mode){
+  if(!mode){
+    return;
+  }
+  try{
+    await ensureRecordingStream();
+    if(typeof MediaRecorder === 'undefined'){
+      alert('MediaRecorder wird in diesem Browser nicht unterstützt.');
+      return;
+    }
+  }catch(err){
+    alert('Mikrofonzugriff fehlgeschlagen. Bitte Browserberechtigungen prüfen.');
+    return;
+  }
+
+  const mimeType = selectRecordingMimeType();
+  recorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : undefined);
+  recChunks = [];
+  recordingSession = {
+    letter: currentLetter,
+    difficulty: currentDifficulty,
+  };
+  activeRecordMode = mode;
+  autoAdvancePlanned = mode === RECORD_MODES.SERIES;
+
+  recorder.ondataavailable = (event) => {
+    if(event.data){
+      recChunks.push(event.data);
+    }
+  };
+
+  recorder.onstop = async () => {
+    const blob = new Blob(recChunks, { type: recorder?.mimeType || 'audio/webm' });
+    recChunks = [];
+    recorder = null;
+    const session = recordingSession;
+    recordingSession = null;
+    const recordedLetter = session && session.letter ? session.letter : currentLetter;
+    const recordedDifficulty = session && session.difficulty ? session.difficulty : currentDifficulty;
+    const shouldAdvance = autoAdvancePlanned && activeRecordMode === RECORD_MODES.SERIES;
+    autoAdvancePlanned = false;
+    activeRecordMode = null;
+    resetPrimaryRecorderUI();
+
+    try{
+      const setId = await getActiveSet();
+      await persistClip(setId, recordedLetter, recordedDifficulty, blob);
+      if(currentLetter === recordedLetter){
+        await refreshCurrentLetterClips();
+      }
+      await updateStatusGridFromDB();
+      await updateUIForRecordingState();
+      await renderSetsList();
+      if(shouldAdvance){
+        requestAnimationFrame(() => {
+          selectNextLetter(recordedLetter).catch(err => console.error('Auto-advance failed', err));
+        });
+      }
+    }catch(err){
+      console.error('Aufnahme konnte nicht gespeichert werden:', err);
+      alert('Die Aufnahme konnte nicht gespeichert werden.');
+    }
+  };
+
+  markRecordingButton(mode);
+  elBtnPlay.disabled = true;
+  elBtnDelete.disabled = true;
+  timerStart = performance.now();
+  elTimer.classList.add('blink');
+  timerInt = setInterval(() => {
+    elTimer.textContent = fmt(performance.now() - timerStart);
+  }, 200);
+  recorder.start();
+}
+
+async function handlePrimaryRecordClick(){
+  if(recorder && recorder.state === 'recording'){
+    stopActiveRecording();
+    return;
+  }
+  const mode = elSeriesToggle && elSeriesToggle.checked ? RECORD_MODES.SERIES : RECORD_MODES.SINGLE;
+  await startPrimaryRecording(mode);
+}
 
 if(elRecordDifficultyGroup){
   elRecordDifficultyGroup.addEventListener('click', (event) => {
@@ -2782,6 +2932,14 @@ if(elRecordDifficultyGroup){
     event.preventDefault();
     const diff = btn.dataset.recordDifficulty || 'LEICHT';
     setRecordDifficulty(diff);
+  });
+}
+
+if(elBtnRecord){
+  elBtnRecord.addEventListener('click', () => {
+    handlePrimaryRecordClick().catch(err => {
+      console.error('Aufnahme fehlgeschlagen', err);
+    });
   });
 }
 
@@ -2859,12 +3017,7 @@ updateStatusGridFromDB();
 async function selectLetter(ch){
   // Laufende Aufnahme stoppen, falls eine aktiv ist
   if(recorder && recorder.state === 'recording') {
-    recorder.stop();
-    elBtnRec.textContent = '🎙️ Aufnehmen';
-    elBtnRec.classList.remove('danger');
-    clearInterval(timerInt);
-    elTimer.classList.remove('blink');
-    elTimer.textContent = '00:00';
+    stopActiveRecording({ skipAutoAdvance: true });
   }
 
   currentLetter = ch;
@@ -3014,56 +3167,6 @@ function createAuxRecorder({ button, timerEl, onSave }){
     isRecording: () => localRecorder && localRecorder.state === 'recording',
   };
 }
-
-elBtnRec.addEventListener('click', async ()=>{
-  // Wenn gerade aufgenommen wird: Stoppen
-  if(recorder && recorder.state === 'recording') {
-    recorder.stop();
-    elBtnRec.textContent = '🎙️ Aufnehmen';
-    elBtnRec.classList.remove('danger');
-    clearInterval(timerInt);
-    elTimer.classList.remove('blink');
-    elTimer.textContent = '00:00';
-    return;
-  }
-
-  // Sonst: Aufnahme starten
-  try{
-    await ensureRecordingStream();
-    if(typeof MediaRecorder === 'undefined'){
-      alert('MediaRecorder wird in diesem Browser nicht unterstützt.');
-      return;
-    }
-  }catch(e){
-    alert('Mikrofonzugriff fehlgeschlagen. Bitte Browserberechtigungen prüfen.');
-    return;
-  }
-  const mimeType = selectRecordingMimeType();
-  recorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : undefined);
-  recChunks = [];
-  recorder.ondataavailable = e=> e.data && recChunks.push(e.data);
-  recorder.onstop = async ()=>{
-    const blob = new Blob(recChunks, {type: recorder.mimeType || 'audio/webm'});
-    const recordedLetter = currentLetter;
-    const recordedDifficulty = currentDifficulty;
-    const setId = await getActiveSet();
-    await persistClip(setId, recordedLetter, recordedDifficulty, blob);
-    await selectLetter(recordedLetter); // <--- FIX: Force-refresh the current letter's UI
-    await updateStatusGridFromDB();
-    await updateUIForRecordingState();
-    await renderSetsList();
-    requestAnimationFrame(() => {
-      selectNextLetter(recordedLetter).catch(err => console.error('Auto-advance failed', err));
-    });
-  };
-  recorder.start();
-  elBtnRec.textContent = '⏹️ Stoppen';
-  elBtnRec.classList.add('danger');
-  elBtnPlay.disabled=true; elBtnDelete.disabled=true;
-  timerStart = performance.now();
-  elTimer.classList.add('blink');
-  timerInt = setInterval(()=> elTimer.textContent = fmt(performance.now()-timerStart), 200);
-});
 
 elBtnPlay.addEventListener('click', async ()=>{
   if(!currentClipId){
