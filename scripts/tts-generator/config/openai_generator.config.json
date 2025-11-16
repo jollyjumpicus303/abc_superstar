@@ -1,0 +1,21 @@
+{
+  "defaultSetName": "ABC Abenteuer Stimmen",
+  "defaultEmoji": "🔤",
+  "variants": {
+    "openai_default": {
+      "provider": "openai",
+      "voice": "alloy",
+      "model": "gpt-4o-mini-tts",
+      "format": "mp3",
+      "style": "Fröhliche Erzählerstimme"
+    },
+    "openai_storyteller": {
+      "provider": "openai",
+      "voice": "alloy",
+      "model": "gpt-4o-mini-tts",
+      "format": "mp3",
+      "style": "Ruhige Vorlesestimme für ältere Kinder"
+    }
+  },
+  "contentOverrides": {}
+}

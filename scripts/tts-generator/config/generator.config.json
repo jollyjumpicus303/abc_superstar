@@ -1,0 +1,70 @@
+{
+  "defaultSetName": "ABC Abenteuer Stimmen",
+  "defaultEmoji": "🔤",
+  "defaultSpeechSpeed": 0.8,
+  "letterPronunciations": {
+    "E": {
+      "text": "Ee",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"eː\">E</phoneme>"
+    },
+    "J": {
+      "text": "Jott",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"jɔt\">J</phoneme>"
+    },
+    "Q": {
+      "text": "Kuh",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"kuː\">Q</phoneme>"
+    },
+    "U": {
+      "text": "Uh",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"uː\">U</phoneme>"
+    },
+    "W": {
+      "text": "Weh",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"veː\">W</phoneme>"
+    },
+    "Y": {
+      "text": "Ypsilon",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"ʏpsilɔn\">Y</phoneme>"
+    }
+  },
+  "variants": {
+    "openai_young_female": {
+      "provider": "openai",
+      "voice": "shimmer",
+      "model": "gpt-4o-mini-tts",
+      "format": "mp3",
+      "style": "Lebhafte junge Stimme",
+      "speed": 1,
+      "useSsml": true
+    },
+    "openai_story_female": {
+      "provider": "openai",
+      "voice": "coral",
+      "model": "gpt-4o-mini-tts", 
+      "format": "mp3",
+      "style": "Ruhige Erzählerin",
+      "speed": 0.8,
+      "useSsml": false
+    },
+    "openai_teacher_male": {
+      "provider": "openai",
+      "voice": "verse",
+      "model": "gpt-4o-mini-tts",
+      "format": "mp3",
+      "style": "Motivierender Erzähler",
+      "speed": 0.9,
+      "useSsml": false
+    },
+    "openai_radio_male": {
+      "provider": "openai",
+      "voice": "alloy",
+      "model": "gpt-4o-mini-tts",
+      "format": "mp3",
+      "style": "Radiofreundliche Erzählerstimme",
+      "speed": 0.85,
+      "useSsml": false
+    }
+  },
+  "contentOverrides": {}
+}

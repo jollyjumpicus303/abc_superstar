@@ -1,0 +1,738 @@
+[
+  {
+    "id": "d2c11c51-2258-4c32-b6f9-8e8a93f9bd90",
+    "name": "ABC Stimme – eleven_playful",
+    "emoji": "🎙️",
+    "created": 1763159548353,
+    "clips": [
+      {
+        "id": "0a6d5b14-b8eb-4d63-9fb6-9bd0d2c8d84b",
+        "letter": "A",
+        "difficulty": "LEICHT",
+        "created": 1763158116953,
+        "file": "A-eleven_playful-LEICHT-0a6d5b14-b8eb-4d63-9fb6-9bd0d2c8d84b.mp3"
+      },
+      {
+        "id": "6fc205af-5ef3-4379-bd12-0f3a66966a05",
+        "letter": "A",
+        "difficulty": "MITTEL",
+        "created": 1763158117930,
+        "file": "A-eleven_playful-MITTEL-6fc205af-5ef3-4379-bd12-0f3a66966a05.mp3"
+      },
+      {
+        "id": "a8b27254-2286-466d-bf32-177298faf36a",
+        "letter": "A",
+        "difficulty": "SCHWER",
+        "created": 1763158120103,
+        "file": "A-eleven_playful-SCHWER-a8b27254-2286-466d-bf32-177298faf36a.mp3"
+      },
+      {
+        "id": "aad88566-45d6-4272-a949-f890e75e36a7",
+        "letter": "A",
+        "difficulty": "AFFIG",
+        "created": 1763158122698,
+        "file": "A-eleven_playful-AFFIG-aad88566-45d6-4272-a949-f890e75e36a7.mp3"
+      },
+      {
+        "id": "93c79901-7a62-4ef2-97dd-6b325f5c6110",
+        "letter": "B",
+        "difficulty": "LEICHT",
+        "created": 1763158124132,
+        "file": "B-eleven_playful-LEICHT-93c79901-7a62-4ef2-97dd-6b325f5c6110.mp3"
+      },
+      {
+        "id": "9c6f0bc8-93fb-4e2b-ae13-62c7362c5bda",
+        "letter": "B",
+        "difficulty": "MITTEL",
+        "created": 1763158126310,
+        "file": "B-eleven_playful-MITTEL-9c6f0bc8-93fb-4e2b-ae13-62c7362c5bda.mp3"
+      },
+      {
+        "id": "6aa81097-7f58-4c80-a487-dfad7b7bceaf",
+        "letter": "B",
+        "difficulty": "SCHWER",
+        "created": 1763158127742,
+        "file": "B-eleven_playful-SCHWER-6aa81097-7f58-4c80-a487-dfad7b7bceaf.mp3"
+      },
+      {
+        "id": "1527e6b3-b333-4973-b70a-8284777f525c",
+        "letter": "B",
+        "difficulty": "AFFIG",
+        "created": 1763158130373,
+        "file": "B-eleven_playful-AFFIG-1527e6b3-b333-4973-b70a-8284777f525c.mp3"
+      },
+      {
+        "id": "76dc1f09-99dc-4919-84e4-f6a833d07e39",
+        "letter": "C",
+        "difficulty": "LEICHT",
+        "created": 1763158131841,
+        "file": "C-eleven_playful-LEICHT-76dc1f09-99dc-4919-84e4-f6a833d07e39.mp3"
+      },
+      {
+        "id": "436eace3-d5ae-415e-b066-367d9c452940",
+        "letter": "C",
+        "difficulty": "MITTEL",
+        "created": 1763158134031,
+        "file": "C-eleven_playful-MITTEL-436eace3-d5ae-415e-b066-367d9c452940.mp3"
+      },
+      {
+        "id": "14a503ec-9100-4d77-aa15-b78ae41d2f14",
+        "letter": "C",
+        "difficulty": "SCHWER",
+        "created": 1763158135226,
+        "file": "C-eleven_playful-SCHWER-14a503ec-9100-4d77-aa15-b78ae41d2f14.mp3"
+      },
+      {
+        "id": "359ce810-6608-47aa-86aa-9122a012dad6",
+        "letter": "C",
+        "difficulty": "AFFIG",
+        "created": 1763158138060,
+        "file": "C-eleven_playful-AFFIG-359ce810-6608-47aa-86aa-9122a012dad6.mp3"
+      },
+      {
+        "id": "4eacc219-afb0-4f00-aba3-12cdb6358632",
+        "letter": "D",
+        "difficulty": "LEICHT",
+        "created": 1763158139148,
+        "file": "D-eleven_playful-LEICHT-4eacc219-afb0-4f00-aba3-12cdb6358632.mp3"
+      },
+      {
+        "id": "5d0207b1-f740-437e-a2cf-77a4f072375f",
+        "letter": "D",
+        "difficulty": "MITTEL",
+        "created": 1763158141189,
+        "file": "D-eleven_playful-MITTEL-5d0207b1-f740-437e-a2cf-77a4f072375f.mp3"
+      },
+      {
+        "id": "21c32e19-a5c3-4d8e-83ff-797b1ae20c0d",
+        "letter": "D",
+        "difficulty": "SCHWER",
+        "created": 1763158142919,
+        "file": "D-eleven_playful-SCHWER-21c32e19-a5c3-4d8e-83ff-797b1ae20c0d.mp3"
+      },
+      {
+        "id": "fa690460-75a4-482d-8b9e-f837e13a8566",
+        "letter": "D",
+        "difficulty": "AFFIG",
+        "created": 1763158145564,
+        "file": "D-eleven_playful-AFFIG-fa690460-75a4-482d-8b9e-f837e13a8566.mp3"
+      },
+      {
+        "id": "bd0bc014-c51f-42e9-9f88-2e87cecc09fb",
+        "letter": "E",
+        "difficulty": "LEICHT",
+        "created": 1763158146936,
+        "file": "E-eleven_playful-LEICHT-bd0bc014-c51f-42e9-9f88-2e87cecc09fb.mp3"
+      },
+      {
+        "id": "e1ce06ea-eb2e-43a3-8f5a-463b090372b2",
+        "letter": "E",
+        "difficulty": "MITTEL",
+        "created": 1763158148928,
+        "file": "E-eleven_playful-MITTEL-e1ce06ea-eb2e-43a3-8f5a-463b090372b2.mp3"
+      },
+      {
+        "id": "a8dd9ce4-d3ff-4756-8f2f-362e683d5863",
+        "letter": "E",
+        "difficulty": "SCHWER",
+        "created": 1763158150399,
+        "file": "E-eleven_playful-SCHWER-a8dd9ce4-d3ff-4756-8f2f-362e683d5863.mp3"
+      },
+      {
+        "id": "287b280d-7952-46be-b507-4e1fe7a6b091",
+        "letter": "E",
+        "difficulty": "AFFIG",
+        "created": 1763158152847,
+        "file": "E-eleven_playful-AFFIG-287b280d-7952-46be-b507-4e1fe7a6b091.mp3"
+      },
+      {
+        "id": "28086f3b-e990-4ec4-aa3c-dec57f268d9f",
+        "letter": "F",
+        "difficulty": "LEICHT",
+        "created": 1763158154121,
+        "file": "F-eleven_playful-LEICHT-28086f3b-e990-4ec4-aa3c-dec57f268d9f.mp3"
+      },
+      {
+        "id": "67cd9963-cddd-440c-9490-32a7b65b8146",
+        "letter": "F",
+        "difficulty": "MITTEL",
+        "created": 1763158156487,
+        "file": "F-eleven_playful-MITTEL-67cd9963-cddd-440c-9490-32a7b65b8146.mp3"
+      },
+      {
+        "id": "a573efdf-d1d5-4818-8ab3-cd66cd861426",
+        "letter": "F",
+        "difficulty": "SCHWER",
+        "created": 1763158157644,
+        "file": "F-eleven_playful-SCHWER-a573efdf-d1d5-4818-8ab3-cd66cd861426.mp3"
+      },
+      {
+        "id": "3beaaed9-4d88-472d-bc66-2964648186b8",
+        "letter": "F",
+        "difficulty": "AFFIG",
+        "created": 1763158160675,
+        "file": "F-eleven_playful-AFFIG-3beaaed9-4d88-472d-bc66-2964648186b8.mp3"
+      },
+      {
+        "id": "e5e4ebb9-d582-4528-a3f8-b91133a3b0f7",
+        "letter": "G",
+        "difficulty": "LEICHT",
+        "created": 1763158161661,
+        "file": "G-eleven_playful-LEICHT-e5e4ebb9-d582-4528-a3f8-b91133a3b0f7.mp3"
+      },
+      {
+        "id": "375d2a9d-3747-488b-9114-f4d2472678a6",
+        "letter": "G",
+        "difficulty": "MITTEL",
+        "created": 1763158163756,
+        "file": "G-eleven_playful-MITTEL-375d2a9d-3747-488b-9114-f4d2472678a6.mp3"
+      },
+      {
+        "id": "91e13e74-15a9-4f87-9dba-10975c497d36",
+        "letter": "G",
+        "difficulty": "SCHWER",
+        "created": 1763158166058,
+        "file": "G-eleven_playful-SCHWER-91e13e74-15a9-4f87-9dba-10975c497d36.mp3"
+      },
+      {
+        "id": "327eaa33-9dea-4188-ad6a-c204c79a6666",
+        "letter": "G",
+        "difficulty": "AFFIG",
+        "created": 1763158168213,
+        "file": "G-eleven_playful-AFFIG-327eaa33-9dea-4188-ad6a-c204c79a6666.mp3"
+      },
+      {
+        "id": "2c76ca4a-43a6-4a96-add5-b4b54d42a7e7",
+        "letter": "H",
+        "difficulty": "LEICHT",
+        "created": 1763158169980,
+        "file": "H-eleven_playful-LEICHT-2c76ca4a-43a6-4a96-add5-b4b54d42a7e7.mp3"
+      },
+      {
+        "id": "ed598d97-c7ec-4909-a0d8-bafb8754340a",
+        "letter": "H",
+        "difficulty": "MITTEL",
+        "created": 1763158172153,
+        "file": "H-eleven_playful-MITTEL-ed598d97-c7ec-4909-a0d8-bafb8754340a.mp3"
+      },
+      {
+        "id": "38800ade-a534-4a32-9304-404c6ef4173d",
+        "letter": "H",
+        "difficulty": "SCHWER",
+        "created": 1763158173549,
+        "file": "H-eleven_playful-SCHWER-38800ade-a534-4a32-9304-404c6ef4173d.mp3"
+      },
+      {
+        "id": "de8616ad-7f44-496a-9797-83bebbab14f8",
+        "letter": "H",
+        "difficulty": "AFFIG",
+        "created": 1763158176220,
+        "file": "H-eleven_playful-AFFIG-de8616ad-7f44-496a-9797-83bebbab14f8.mp3"
+      },
+      {
+        "id": "297ba10b-13e8-4300-b419-5d449e61994b",
+        "letter": "I",
+        "difficulty": "LEICHT",
+        "created": 1763158177693,
+        "file": "I-eleven_playful-LEICHT-297ba10b-13e8-4300-b419-5d449e61994b.mp3"
+      },
+      {
+        "id": "5cc87dd1-f80e-415c-8b4d-8fe3c8d1da50",
+        "letter": "I",
+        "difficulty": "MITTEL",
+        "created": 1763158179770,
+        "file": "I-eleven_playful-MITTEL-5cc87dd1-f80e-415c-8b4d-8fe3c8d1da50.mp3"
+      },
+      {
+        "id": "b1503e68-2012-4ccf-be0f-e3b34e39cee2",
+        "letter": "I",
+        "difficulty": "SCHWER",
+        "created": 1763158180847,
+        "file": "I-eleven_playful-SCHWER-b1503e68-2012-4ccf-be0f-e3b34e39cee2.mp3"
+      },
+      {
+        "id": "38fabaf2-4a60-4ea6-878a-9efe893edd84",
+        "letter": "I",
+        "difficulty": "AFFIG",
+        "created": 1763158183669,
+        "file": "I-eleven_playful-AFFIG-38fabaf2-4a60-4ea6-878a-9efe893edd84.mp3"
+      },
+      {
+        "id": "83e84264-fdc4-48e6-92d5-af6c27a1ff97",
+        "letter": "J",
+        "difficulty": "LEICHT",
+        "created": 1763158184711,
+        "file": "J-eleven_playful-LEICHT-83e84264-fdc4-48e6-92d5-af6c27a1ff97.mp3"
+      },
+      {
+        "id": "0467576b-22ff-4543-b8ef-d074eebb1279",
+        "letter": "J",
+        "difficulty": "MITTEL",
+        "created": 1763158186818,
+        "file": "J-eleven_playful-MITTEL-0467576b-22ff-4543-b8ef-d074eebb1279.mp3"
+      },
+      {
+        "id": "b891ad19-775a-4cad-b94a-7d17210dc008",
+        "letter": "J",
+        "difficulty": "SCHWER",
+        "created": 1763158188518,
+        "file": "J-eleven_playful-SCHWER-b891ad19-775a-4cad-b94a-7d17210dc008.mp3"
+      },
+      {
+        "id": "6fe81ee4-1d6b-4a2b-88e9-2448769d7b45",
+        "letter": "J",
+        "difficulty": "AFFIG",
+        "created": 1763158190806,
+        "file": "J-eleven_playful-AFFIG-6fe81ee4-1d6b-4a2b-88e9-2448769d7b45.mp3"
+      },
+      {
+        "id": "e8386062-c491-46be-b15b-bb1038c4deb8",
+        "letter": "K",
+        "difficulty": "LEICHT",
+        "created": 1763158192526,
+        "file": "K-eleven_playful-LEICHT-e8386062-c491-46be-b15b-bb1038c4deb8.mp3"
+      },
+      {
+        "id": "43d2bf3a-f080-41de-808f-20c259793372",
+        "letter": "K",
+        "difficulty": "MITTEL",
+        "created": 1763158194470,
+        "file": "K-eleven_playful-MITTEL-43d2bf3a-f080-41de-808f-20c259793372.mp3"
+      },
+      {
+        "id": "50331178-5e45-4b3a-8edc-d8bad2deaeb5",
+        "letter": "K",
+        "difficulty": "SCHWER",
+        "created": 1763158195956,
+        "file": "K-eleven_playful-SCHWER-50331178-5e45-4b3a-8edc-d8bad2deaeb5.mp3"
+      },
+      {
+        "id": "ea48a81e-6d14-4755-8d6a-c3b5c051e633",
+        "letter": "K",
+        "difficulty": "AFFIG",
+        "created": 1763158198170,
+        "file": "K-eleven_playful-AFFIG-ea48a81e-6d14-4755-8d6a-c3b5c051e633.mp3"
+      },
+      {
+        "id": "ea6065ab-b4f0-4fab-ba1f-a24dffd60fa9",
+        "letter": "L",
+        "difficulty": "LEICHT",
+        "created": 1763158199855,
+        "file": "L-eleven_playful-LEICHT-ea6065ab-b4f0-4fab-ba1f-a24dffd60fa9.mp3"
+      },
+      {
+        "id": "40e2e34a-a0c5-45ec-88fe-a53405f548b8",
+        "letter": "L",
+        "difficulty": "MITTEL",
+        "created": 1763158201908,
+        "file": "L-eleven_playful-MITTEL-40e2e34a-a0c5-45ec-88fe-a53405f548b8.mp3"
+      },
+      {
+        "id": "5731d7dd-f010-4eef-a9db-1ee84237f11a",
+        "letter": "L",
+        "difficulty": "SCHWER",
+        "created": 1763158203066,
+        "file": "L-eleven_playful-SCHWER-5731d7dd-f010-4eef-a9db-1ee84237f11a.mp3"
+      },
+      {
+        "id": "1fff9da9-418e-489e-b6c3-91abd74675b1",
+        "letter": "L",
+        "difficulty": "AFFIG",
+        "created": 1763158205683,
+        "file": "L-eleven_playful-AFFIG-1fff9da9-418e-489e-b6c3-91abd74675b1.mp3"
+      },
+      {
+        "id": "0d20b65b-f9ae-4a95-b2d4-6545a32bf446",
+        "letter": "M",
+        "difficulty": "LEICHT",
+        "created": 1763158207170,
+        "file": "M-eleven_playful-LEICHT-0d20b65b-f9ae-4a95-b2d4-6545a32bf446.mp3"
+      },
+      {
+        "id": "000abdad-0913-4eb2-b12f-cb8a6083aea3",
+        "letter": "M",
+        "difficulty": "MITTEL",
+        "created": 1763158209075,
+        "file": "M-eleven_playful-MITTEL-000abdad-0913-4eb2-b12f-cb8a6083aea3.mp3"
+      },
+      {
+        "id": "8c225d80-9fa4-460d-8146-604950df20b1",
+        "letter": "M",
+        "difficulty": "SCHWER",
+        "created": 1763158210769,
+        "file": "M-eleven_playful-SCHWER-8c225d80-9fa4-460d-8146-604950df20b1.mp3"
+      },
+      {
+        "id": "6c5d1713-817c-4d62-8aa6-c339da72f61c",
+        "letter": "M",
+        "difficulty": "AFFIG",
+        "created": 1763158213166,
+        "file": "M-eleven_playful-AFFIG-6c5d1713-817c-4d62-8aa6-c339da72f61c.mp3"
+      },
+      {
+        "id": "2603f38b-a771-4eee-a80d-7b668586d6bd",
+        "letter": "N",
+        "difficulty": "LEICHT",
+        "created": 1763158624035,
+        "file": "N-eleven_playful-LEICHT-2603f38b-a771-4eee-a80d-7b668586d6bd.mp3"
+      },
+      {
+        "id": "3c5c520e-bb46-477b-bfd9-6aa94b2f8455",
+        "letter": "N",
+        "difficulty": "MITTEL",
+        "created": 1763158625176,
+        "file": "N-eleven_playful-MITTEL-3c5c520e-bb46-477b-bfd9-6aa94b2f8455.mp3"
+      },
+      {
+        "id": "f20fcd6c-6430-486b-bb64-3e1d52c21912",
+        "letter": "N",
+        "difficulty": "SCHWER",
+        "created": 1763158627582,
+        "file": "N-eleven_playful-SCHWER-f20fcd6c-6430-486b-bb64-3e1d52c21912.mp3"
+      },
+      {
+        "id": "e8e852f4-bda6-4507-a0fb-a3d97038b0db",
+        "letter": "N",
+        "difficulty": "AFFIG",
+        "created": 1763158629293,
+        "file": "N-eleven_playful-AFFIG-e8e852f4-bda6-4507-a0fb-a3d97038b0db.mp3"
+      },
+      {
+        "id": "3266e9d7-3a74-4502-abfa-b992c4f66ab8",
+        "letter": "O",
+        "difficulty": "LEICHT",
+        "created": 1763158631427,
+        "file": "O-eleven_playful-LEICHT-3266e9d7-3a74-4502-abfa-b992c4f66ab8.mp3"
+      },
+      {
+        "id": "a92c014f-d011-4307-a682-07d60c329055",
+        "letter": "O",
+        "difficulty": "MITTEL",
+        "created": 1763158632928,
+        "file": "O-eleven_playful-MITTEL-a92c014f-d011-4307-a682-07d60c329055.mp3"
+      },
+      {
+        "id": "e95bc4fa-e374-4968-8fc8-116bd6ba98b3",
+        "letter": "O",
+        "difficulty": "SCHWER",
+        "created": 1763158634738,
+        "file": "O-eleven_playful-SCHWER-e95bc4fa-e374-4968-8fc8-116bd6ba98b3.mp3"
+      },
+      {
+        "id": "ec773c78-8a61-47f0-85e2-e58a99468f89",
+        "letter": "O",
+        "difficulty": "AFFIG",
+        "created": 1763158637003,
+        "file": "O-eleven_playful-AFFIG-ec773c78-8a61-47f0-85e2-e58a99468f89.mp3"
+      },
+      {
+        "id": "bc440f99-3161-40ba-bfa4-7bfc3c58e62f",
+        "letter": "P",
+        "difficulty": "LEICHT",
+        "created": 1763158638839,
+        "file": "P-eleven_playful-LEICHT-bc440f99-3161-40ba-bfa4-7bfc3c58e62f.mp3"
+      },
+      {
+        "id": "94c91ea3-2a8c-4253-962d-87fa55a91716",
+        "letter": "P",
+        "difficulty": "MITTEL",
+        "created": 1763158641039,
+        "file": "P-eleven_playful-MITTEL-94c91ea3-2a8c-4253-962d-87fa55a91716.mp3"
+      },
+      {
+        "id": "98ec0d64-2b46-432a-88d5-4209304bea1d",
+        "letter": "P",
+        "difficulty": "SCHWER",
+        "created": 1763158642511,
+        "file": "P-eleven_playful-SCHWER-98ec0d64-2b46-432a-88d5-4209304bea1d.mp3"
+      },
+      {
+        "id": "ef83bb8d-f877-4411-b570-090311b28de3",
+        "letter": "P",
+        "difficulty": "AFFIG",
+        "created": 1763158645040,
+        "file": "P-eleven_playful-AFFIG-ef83bb8d-f877-4411-b570-090311b28de3.mp3"
+      },
+      {
+        "id": "751960d2-f7a8-4759-9916-8beced5dc651",
+        "letter": "Q",
+        "difficulty": "LEICHT",
+        "created": 1763158646712,
+        "file": "Q-eleven_playful-LEICHT-751960d2-f7a8-4759-9916-8beced5dc651.mp3"
+      },
+      {
+        "id": "e0bf8bd1-42ff-4856-a0bd-19b35b0287a5",
+        "letter": "Q",
+        "difficulty": "MITTEL",
+        "created": 1763158649676,
+        "file": "Q-eleven_playful-MITTEL-e0bf8bd1-42ff-4856-a0bd-19b35b0287a5.mp3"
+      },
+      {
+        "id": "73296e49-eecf-425c-851e-4e4dbb75e313",
+        "letter": "Q",
+        "difficulty": "SCHWER",
+        "created": 1763158650959,
+        "file": "Q-eleven_playful-SCHWER-73296e49-eecf-425c-851e-4e4dbb75e313.mp3"
+      },
+      {
+        "id": "366f14d2-de8d-4a1d-94d3-96ead2af12b3",
+        "letter": "Q",
+        "difficulty": "AFFIG",
+        "created": 1763158652839,
+        "file": "Q-eleven_playful-AFFIG-366f14d2-de8d-4a1d-94d3-96ead2af12b3.mp3"
+      },
+      {
+        "id": "a923873c-1de0-47d3-9a85-878030f4fb5e",
+        "letter": "R",
+        "difficulty": "LEICHT",
+        "created": 1763158655051,
+        "file": "R-eleven_playful-LEICHT-a923873c-1de0-47d3-9a85-878030f4fb5e.mp3"
+      },
+      {
+        "id": "d8fd2744-01ba-4091-8cfd-fb83c060e2bf",
+        "letter": "R",
+        "difficulty": "MITTEL",
+        "created": 1763158656633,
+        "file": "R-eleven_playful-MITTEL-d8fd2744-01ba-4091-8cfd-fb83c060e2bf.mp3"
+      },
+      {
+        "id": "3c515718-1360-45af-a6c2-bfe6c444599a",
+        "letter": "R",
+        "difficulty": "SCHWER",
+        "created": 1763158658391,
+        "file": "R-eleven_playful-SCHWER-3c515718-1360-45af-a6c2-bfe6c444599a.mp3"
+      },
+      {
+        "id": "57071227-6a1f-437a-8423-398e02f18541",
+        "letter": "R",
+        "difficulty": "AFFIG",
+        "created": 1763158660625,
+        "file": "R-eleven_playful-AFFIG-57071227-6a1f-437a-8423-398e02f18541.mp3"
+      },
+      {
+        "id": "514bf6b9-5d75-4a93-a651-0bb9fac83e74",
+        "letter": "S",
+        "difficulty": "LEICHT",
+        "created": 1763158662389,
+        "file": "S-eleven_playful-LEICHT-514bf6b9-5d75-4a93-a651-0bb9fac83e74.mp3"
+      },
+      {
+        "id": "7191af72-df8a-4e8e-8d2f-737e42ec4a79",
+        "letter": "S",
+        "difficulty": "MITTEL",
+        "created": 1763158664491,
+        "file": "S-eleven_playful-MITTEL-7191af72-df8a-4e8e-8d2f-737e42ec4a79.mp3"
+      },
+      {
+        "id": "3d51b5b7-9d1a-4073-8703-533417c15614",
+        "letter": "S",
+        "difficulty": "SCHWER",
+        "created": 1763158665794,
+        "file": "S-eleven_playful-SCHWER-3d51b5b7-9d1a-4073-8703-533417c15614.mp3"
+      },
+      {
+        "id": "4b2539b5-1ae9-4a73-b213-14bff401c574",
+        "letter": "S",
+        "difficulty": "AFFIG",
+        "created": 1763158668634,
+        "file": "S-eleven_playful-AFFIG-4b2539b5-1ae9-4a73-b213-14bff401c574.mp3"
+      },
+      {
+        "id": "52412bd0-a74f-47ec-8d72-372c8dcdb9d4",
+        "letter": "T",
+        "difficulty": "LEICHT",
+        "created": 1763158669731,
+        "file": "T-eleven_playful-LEICHT-52412bd0-a74f-47ec-8d72-372c8dcdb9d4.mp3"
+      },
+      {
+        "id": "41bd4427-ddd7-4264-9fc9-ad00621c9de4",
+        "letter": "T",
+        "difficulty": "MITTEL",
+        "created": 1763158671906,
+        "file": "T-eleven_playful-MITTEL-41bd4427-ddd7-4264-9fc9-ad00621c9de4.mp3"
+      },
+      {
+        "id": "759d17b1-1c00-4d4f-b582-7203f9b72107",
+        "letter": "T",
+        "difficulty": "SCHWER",
+        "created": 1763158673600,
+        "file": "T-eleven_playful-SCHWER-759d17b1-1c00-4d4f-b582-7203f9b72107.mp3"
+      },
+      {
+        "id": "b793c6df-5df0-472e-9a31-db236c8d693d",
+        "letter": "T",
+        "difficulty": "AFFIG",
+        "created": 1763158675851,
+        "file": "T-eleven_playful-AFFIG-b793c6df-5df0-472e-9a31-db236c8d693d.mp3"
+      },
+      {
+        "id": "114447e2-556a-467f-8e06-8f8a2c689bb8",
+        "letter": "U",
+        "difficulty": "LEICHT",
+        "created": 1763158677650,
+        "file": "U-eleven_playful-LEICHT-114447e2-556a-467f-8e06-8f8a2c689bb8.mp3"
+      },
+      {
+        "id": "478f74d8-5861-41d7-8d11-bbbaf436c566",
+        "letter": "U",
+        "difficulty": "MITTEL",
+        "created": 1763158679348,
+        "file": "U-eleven_playful-MITTEL-478f74d8-5861-41d7-8d11-bbbaf436c566.mp3"
+      },
+      {
+        "id": "29897b94-aeff-4eff-a33c-8eaa2c982666",
+        "letter": "U",
+        "difficulty": "SCHWER",
+        "created": 1763158681039,
+        "file": "U-eleven_playful-SCHWER-29897b94-aeff-4eff-a33c-8eaa2c982666.mp3"
+      },
+      {
+        "id": "350a52e9-3537-4ead-b92f-ab5a76054e68",
+        "letter": "U",
+        "difficulty": "AFFIG",
+        "created": 1763158683353,
+        "file": "U-eleven_playful-AFFIG-350a52e9-3537-4ead-b92f-ab5a76054e68.mp3"
+      },
+      {
+        "id": "97f8b929-7429-400a-b7eb-19901250b310",
+        "letter": "V",
+        "difficulty": "LEICHT",
+        "created": 1763158685262,
+        "file": "V-eleven_playful-LEICHT-97f8b929-7429-400a-b7eb-19901250b310.mp3"
+      },
+      {
+        "id": "4752a4ce-c9a8-49c6-9b66-9bc3d08930fb",
+        "letter": "V",
+        "difficulty": "MITTEL",
+        "created": 1763158687342,
+        "file": "V-eleven_playful-MITTEL-4752a4ce-c9a8-49c6-9b66-9bc3d08930fb.mp3"
+      },
+      {
+        "id": "ebd22f2a-2130-47d4-865f-bb32b2540596",
+        "letter": "V",
+        "difficulty": "SCHWER",
+        "created": 1763158688701,
+        "file": "V-eleven_playful-SCHWER-ebd22f2a-2130-47d4-865f-bb32b2540596.mp3"
+      },
+      {
+        "id": "6512e910-d39f-4d47-bc45-d7b35cce5333",
+        "letter": "V",
+        "difficulty": "AFFIG",
+        "created": 1763158691624,
+        "file": "V-eleven_playful-AFFIG-6512e910-d39f-4d47-bc45-d7b35cce5333.mp3"
+      },
+      {
+        "id": "24174e48-0d71-47e1-992d-bb240be5fd94",
+        "letter": "W",
+        "difficulty": "LEICHT",
+        "created": 1763158692753,
+        "file": "W-eleven_playful-LEICHT-24174e48-0d71-47e1-992d-bb240be5fd94.mp3"
+      },
+      {
+        "id": "ad45331b-2a5a-409f-b61f-6c93663d5f78",
+        "letter": "W",
+        "difficulty": "MITTEL",
+        "created": 1763158694836,
+        "file": "W-eleven_playful-MITTEL-ad45331b-2a5a-409f-b61f-6c93663d5f78.mp3"
+      },
+      {
+        "id": "f1208683-34e8-48cd-ad43-6552c6e26178",
+        "letter": "W",
+        "difficulty": "SCHWER",
+        "created": 1763158696886,
+        "file": "W-eleven_playful-SCHWER-f1208683-34e8-48cd-ad43-6552c6e26178.mp3"
+      },
+      {
+        "id": "29840dc6-20e6-4649-b38d-8cad1b98c1c1",
+        "letter": "W",
+        "difficulty": "AFFIG",
+        "created": 1763158698749,
+        "file": "W-eleven_playful-AFFIG-29840dc6-20e6-4649-b38d-8cad1b98c1c1.mp3"
+      },
+      {
+        "id": "01688d90-d250-4fb1-97ee-e82b997bf721",
+        "letter": "X",
+        "difficulty": "LEICHT",
+        "created": 1763158700751,
+        "file": "X-eleven_playful-LEICHT-01688d90-d250-4fb1-97ee-e82b997bf721.mp3"
+      },
+      {
+        "id": "747f92b9-feb2-44b5-b565-475ccd67363e",
+        "letter": "X",
+        "difficulty": "MITTEL",
+        "created": 1763158702421,
+        "file": "X-eleven_playful-MITTEL-747f92b9-feb2-44b5-b565-475ccd67363e.mp3"
+      },
+      {
+        "id": "eb3a06a5-7ccf-4e72-b1a9-e78134cd2836",
+        "letter": "X",
+        "difficulty": "SCHWER",
+        "created": 1763158704159,
+        "file": "X-eleven_playful-SCHWER-eb3a06a5-7ccf-4e72-b1a9-e78134cd2836.mp3"
+      },
+      {
+        "id": "3db1b327-eebd-420b-a637-94d1d6e45a0c",
+        "letter": "X",
+        "difficulty": "AFFIG",
+        "created": 1763158706481,
+        "file": "X-eleven_playful-AFFIG-3db1b327-eebd-420b-a637-94d1d6e45a0c.mp3"
+      },
+      {
+        "id": "1a4c29d7-ffcb-4d6f-8866-b763a72e38b7",
+        "letter": "Y",
+        "difficulty": "LEICHT",
+        "created": 1763158708159,
+        "file": "Y-eleven_playful-LEICHT-1a4c29d7-ffcb-4d6f-8866-b763a72e38b7.mp3"
+      },
+      {
+        "id": "1151678c-0626-4644-b2df-a55b6301fc88",
+        "letter": "Y",
+        "difficulty": "MITTEL",
+        "created": 1763158710230,
+        "file": "Y-eleven_playful-MITTEL-1151678c-0626-4644-b2df-a55b6301fc88.mp3"
+      },
+      {
+        "id": "9b88a19e-a387-4edf-8c63-15f5b578d0ac",
+        "letter": "Y",
+        "difficulty": "SCHWER",
+        "created": 1763158711656,
+        "file": "Y-eleven_playful-SCHWER-9b88a19e-a387-4edf-8c63-15f5b578d0ac.mp3"
+      },
+      {
+        "id": "f9ee72e7-5501-48b5-99b3-dd92fd0fc49b",
+        "letter": "Y",
+        "difficulty": "AFFIG",
+        "created": 1763158714344,
+        "file": "Y-eleven_playful-AFFIG-f9ee72e7-5501-48b5-99b3-dd92fd0fc49b.mp3"
+      },
+      {
+        "id": "96b9d759-3d67-4e57-a2e3-b10671b8aef9",
+        "letter": "Z",
+        "difficulty": "LEICHT",
+        "created": 1763158715813,
+        "file": "Z-eleven_playful-LEICHT-96b9d759-3d67-4e57-a2e3-b10671b8aef9.mp3"
+      },
+      {
+        "id": "75576e12-acd2-438a-a340-888336a936f8",
+        "letter": "Z",
+        "difficulty": "MITTEL",
+        "created": 1763158718031,
+        "file": "Z-eleven_playful-MITTEL-75576e12-acd2-438a-a340-888336a936f8.mp3"
+      },
+      {
+        "id": "8d19ce7c-cea7-4dfd-a2f6-2073f49b4e10",
+        "letter": "Z",
+        "difficulty": "SCHWER",
+        "created": 1763158719628,
+        "file": "Z-eleven_playful-SCHWER-8d19ce7c-cea7-4dfd-a2f6-2073f49b4e10.mp3"
+      },
+      {
+        "id": "956add0c-5267-42fa-8f24-9f8ad270690f",
+        "letter": "Z",
+        "difficulty": "AFFIG",
+        "created": 1763158722289,
+        "file": "Z-eleven_playful-AFFIG-956add0c-5267-42fa-8f24-9f8ad270690f.mp3"
+      }
+    ]
+  }
+]

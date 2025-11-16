@@ -9,6 +9,20 @@ Priorisierte Taskliste für die Weiterentwicklung der ABC-Lern-App.
 
 ---
 
+## Code Cleanup
+
+**Priorität:** Mittel | **Aufwand:** Niedrig
+
+### Ziele:
+- Vereinfachung der Codebasis durch Entfernung von ungenutztem Code.
+- Verbesserung der Wartbarkeit und Übersichtlichkeit.
+
+### Aufgaben:
+- [ ] **Ungenutzte `makeOptions`-Funktion entfernen:** Die Funktion `makeOptions` in `app/letterPool.js` ist obsolet und wird nicht mehr verwendet. Sie sollte entfernt werden, um den Code zu vereinfachen.
+- [ ] **`audioSet`-Logik entfernen:** Das Konzept der `audioSet`s zum Wechseln zwischen verschiedenen Audio-Dateien ist veraltet und wird in der Hauptanwendungslogik nicht mehr genutzt. Die entsprechende Logik sollte aus `app/progression.js` und `app/progressStore.js` entfernt werden.
+
+---
+
 ## 1. PWA/Offline-App verbessern ✅
 
 **Priorität:** Hoch | **Aufwand:** Niedrig | **Status:** Abgeschlossen

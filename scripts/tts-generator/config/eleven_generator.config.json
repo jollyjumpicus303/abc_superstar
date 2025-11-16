@@ -1,0 +1,70 @@
+{
+  "defaultSetName": "ABC Abenteuer Stimmen",
+  "defaultEmoji": "🔤",
+  "defaultSpeechSpeed": 0.8,
+  "letterPronunciations": {
+    "E": {
+      "text": "Äh",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"eː\">E</phoneme>"
+    },
+    "J": {
+      "text": "Jott",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"jɔt\">J</phoneme>"
+    },
+    "Q": {
+      "text": "Kuh",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"kuː\">Q</phoneme>"
+    },
+    "U": {
+      "text": "Uh",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"uː\">U</phoneme>"
+    },
+    "W": {
+      "text": "Weh",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"veː\">W</phoneme>"
+    },
+    "Y": {
+      "text": "Ypsilon",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"ʏpsilɔn\">Y</phoneme>"
+    }
+  },
+  "variants": {
+    "eleven_playful": {
+      "provider": "elevenlabs",
+      "voice": "Ewvy14akxdhONg4fmNry",
+      "model": "eleven_multilingual_v2",
+      "format": "mp3",
+      "style": "Verspielte Kinderstimme",
+      "stability": 0.35,
+      "similarity": 0.85,
+      "speed": 0.5
+    },
+    "eleven_storytime": {
+      "provider": "elevenlabs",
+      "voice": "Gng1FdSGZlhs6jKgzAxL",
+      "model": "eleven_multilingual_v2",
+      "format": "mp3",
+      "style": "Ruhige Vorlesestimme",
+      "stability": 0.55,
+      "similarity": 0.9
+    },
+    "eleven_teacher": {
+      "provider": "elevenlabs",
+      "voice": "M39iqBUcu1jyiwM5PfSy",
+      "model": "eleven_multilingual_v2",
+      "format": "mp3",
+      "style": "Motivierende Lehrerstimme",
+      "stability": 0.45,
+      "similarity": 0.92
+    },
+    "openai_default": {
+      "provider": "openai",
+      "voice": "alloy",
+      "model": "gpt-4o-mini-tts",
+      "format": "mp3",
+      "style": "Fallback OpenAI Stimme",
+      "useSsml": true
+    }
+  },
+  "contentOverrides": {}
+}

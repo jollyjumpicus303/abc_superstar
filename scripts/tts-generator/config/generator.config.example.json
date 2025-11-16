@@ -1,0 +1,66 @@
+{
+  "defaultSetName": "ABC Abenteuer Stimmen",
+  "defaultEmoji": "🔤",
+  "defaultSpeechSpeed": 0.8,
+  "letterPronunciations": {
+    "E": {
+      "text": "Äh",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"eː\">E</phoneme>"
+    },
+    "J": {
+      "text": "Jott",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"jɔt\">J</phoneme>"
+    },
+    "Q": {
+      "text": "Kuh",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"kuː\">Q</phoneme>"
+    },
+    "U": {
+      "text": "Uh",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"uː\">U</phoneme>"
+    },
+    "W": {
+      "text": "Weh",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"veː\">W</phoneme>"
+    },
+    "Y": {
+      "text": "Ypsilon",
+      "ssml": "<phoneme alphabet=\"ipa\" ph=\"ʏpsilɔn\">Y</phoneme>"
+    }
+  },
+  "variants": {
+    "youth_female": {
+      "provider": "openai",
+      "voice": "shimmer",
+      "format": "mp3",
+      "style": "Fröhliche, junge Stimme",
+      "useSsml": true
+    },
+    "adult_storyteller": {
+      "provider": "openai",
+      "voice": "coral",
+      "format": "mp3",
+      "style": "Ruhige Vorlesestimme",
+      "useSsml": true
+    },
+    "quirky_mascot": {
+      "provider": "elevenlabs",
+      "voice": "eleven_mascot_voice_id",
+      "stability": 0.4,
+      "similarity": 0.9,
+      "style": "Cartoonhafte Energie"
+    }
+  },
+  "contentOverrides": {
+    "LEICHT": {
+      "A": ["Apfel", "Astronaut"],
+      "B": "Buch"
+    },
+    "SCHWER": {
+      "Q": "Quanten-Karussell"
+    },
+    "AFFIG": {
+      "Z": ["Zauber-Zigzag, der Buchstaben jongliert"]
+    }
+  }
+}
