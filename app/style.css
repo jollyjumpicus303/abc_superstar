@@ -272,15 +272,20 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
 .mode-dialog .dialog{max-width:480px; text-align:center; padding:28px;}
 .mode-dialog h3{margin-top:0; font-size:24px; color:var(--ink);}
 .mode-dialog-cards{display:grid; gap:12px; margin:18px 0;}
-.mode-dialog-card{border:0; border-radius:20px; padding:18px; background:#fff; box-shadow:0 10px 20px rgba(15,23,42,.15);
+.mode-dialog-card{border:1px solid var(--surface-border); border-radius:20px; padding:18px; background:var(--surface); box-shadow:0 10px 20px rgba(15,23,42,.15);
   font-size:16px; font-weight:700; color:var(--ink); display:flex; flex-direction:column; gap:6px; cursor:pointer;
   transition:transform .15s ease, box-shadow .15s ease;
 }
 .mode-dialog-card strong{font-size:20px;}
-.mode-dialog-card span{font-size:14px; font-weight:600; color:#6b7896;}
+.mode-dialog-card span{font-size:14px; font-weight:600; color:var(--muted);}
 .mode-dialog-card:hover{transform:translateY(-2px); box-shadow:0 16px 30px rgba(124,58,237,.2);}
 .mode-dialog-card:active{transform:scale(.98);}
-.mode-dialog-card.active{outline:3px solid var(--brand); box-shadow:0 16px 36px rgba(124,58,237,.3);}
+.mode-dialog-card.active{
+  outline:0;
+  box-shadow:0 16px 36px rgba(124,58,237,.3);
+  border-color:var(--brand);
+  background:linear-gradient(145deg,rgba(124,58,237,.08),rgba(251,146,60,.08));
+}
 .mode-dialog-actions{display:flex; gap:12px; justify-content:center; margin-top:18px; flex-wrap:wrap;}
 .individual-panel{
   margin-top:16px;
