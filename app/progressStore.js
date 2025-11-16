@@ -1,5 +1,5 @@
 const STORAGE_KEY = 'abc_abenteuer_progress';
-const CURRENT_VERSION = 3;
+const CURRENT_VERSION = 4;
 
 const DEFAULT_STATE = Object.freeze({
   version: CURRENT_VERSION,
@@ -10,6 +10,7 @@ const DEFAULT_STATE = Object.freeze({
   audioSet: 'ANLAUT',
   difficulty: 'LEICHT',
   correctStreaks: {},
+  askedCounts: {},
   freeLetterCount: 4,
   audioStyle: 'AUTO',
   attemptLog: [],
@@ -66,6 +67,10 @@ function migrate(raw) {
 
   if (!migrated.correctStreaks || typeof migrated.correctStreaks !== 'object') {
     migrated.correctStreaks = {};
+  }
+
+  if (!migrated.askedCounts || typeof migrated.askedCounts !== 'object') {
+    migrated.askedCounts = {};
   }
 
   if (typeof migrated.freeLetterCount !== 'number' || migrated.freeLetterCount <= 0) {
@@ -147,6 +152,10 @@ function saveProgress(partial) {
       ...current.correctStreaks,
       ...(partial && partial.correctStreaks ? partial.correctStreaks : {}),
     },
+    askedCounts: {
+      ...current.askedCounts,
+      ...(partial && partial.askedCounts ? partial.askedCounts : {}),
+    },
   };
   merged.version = CURRENT_VERSION;
   const saved = writeState(merged);
@@ -177,6 +186,20 @@ function logAttempt(state, target, chosen, isCorrect) {
   }
 }
 
+function bumpAskedCount(state, letter) {
+  if (!state.askedCounts || typeof state.askedCounts !== 'object') {
+    state.askedCounts = {};
+  }
+  const normalised = normaliseLetter(letter);
+  if (!normalised) return;
+  const raw = Object.prototype.hasOwnProperty.call(state.askedCounts, normalised)
+    ? state.askedCounts[normalised]
+    : 0;
+  const numeric = Number(raw);
+  const safe = Number.isFinite(numeric) ? Math.max(0, Math.floor(numeric)) : 0;
+  state.askedCounts[normalised] = safe + 1;
+}
+
 function markCorrect(targetLetter, chosenLetter) {
   const normalisedTarget = normaliseLetter(targetLetter);
   if (!normalisedTarget) {
@@ -185,6 +208,7 @@ function markCorrect(targetLetter, chosenLetter) {
 
   const state = readState();
   logAttempt(state, targetLetter, chosenLetter, true);
+  bumpAskedCount(state, normalisedTarget);
 
   const streak = (state.correctStreaks[normalisedTarget] || 0) + 1;
   state.correctStreaks[normalisedTarget] = streak;
@@ -208,6 +232,7 @@ function markWrong(targetLetter, chosenLetter) {
 
   const state = readState();
   logAttempt(state, targetLetter, chosenLetter, false);
+  bumpAskedCount(state, normalisedTarget);
 
   state.correctStreaks[normalisedTarget] = 0;
   const current = state.wrongCounts[normalisedTarget] || 0;

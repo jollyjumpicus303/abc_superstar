@@ -81,6 +81,26 @@ test('pickNext avoids consecutive error picks when under quota', async () => {
   assert.equal(result, 'A');
 });
 
+test('pickNext prioritizes letters with fewer asks to ensure coverage', async () => {
+  const { pickNext } = await loadModule();
+  const result = pickNext({
+    pool: ['A', 'B', 'C'],
+    askedCounts: { A: 6, B: 0, C: 1 },
+    rng: createRng([0.05]),
+  });
+  assert.equal(result, 'B');
+});
+
+test('pickNext downranks letters with long correct streaks', async () => {
+  const { pickNext } = await loadModule();
+  const result = pickNext({
+    pool: ['A', 'B'],
+    correctStreaks: { B: 4 },
+    rng: createRng([0.4]),
+  });
+  assert.equal(result, 'A');
+});
+
 test('pickNext forces wrong letter after two safe rounds', async () => {
   const { pickNext } = await loadModule();
   const result = pickNext({

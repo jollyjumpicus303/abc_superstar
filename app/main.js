@@ -3700,6 +3700,8 @@ async function nextRound(){
       pool,
       last: game.last,
       wrongCounts: game.progress ? game.progress.wrongCounts : {},
+      correctStreaks: game.progress ? game.progress.correctStreaks : {},
+      askedCounts: game.progress ? game.progress.askedCounts : {},
       recent: game.recent || [],
       recentErrors: game.errorHistory || [],
     });

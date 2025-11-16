@@ -1,4 +1,9 @@
-const MAX_WEIGHT = 7;
+const RECENT_LIMIT = 4;
+const RECENCY_PENALTIES = [0.15, 0.4, 0.65, 0.85];
+const WRONG_WEIGHT_STEP = 3;
+const MASTERED_DAMPING = 0.5;
+const COVERAGE_GAP_THRESHOLD = 2;
+const MIN_WEIGHT = 0.0001;
 
 function normaliseLetter(letter) {
   if (typeof letter !== 'string') return null;
@@ -20,10 +25,77 @@ function normaliseList(list) {
   return result;
 }
 
-function computeWeight(letter, wrongCounts) {
-  const raw = wrongCounts && typeof wrongCounts === 'object' ? wrongCounts[letter] : 0;
-  const count = typeof raw === 'number' && raw > 0 ? raw : 0;
-  return Math.min(MAX_WEIGHT, 1 + 2 * count);
+function normaliseRecent(list) {
+  if (!Array.isArray(list) || !list.length) return [];
+  const seen = new Set();
+  const result = [];
+  for (const item of list) {
+    if (result.length >= RECENT_LIMIT) break;
+    const normalised = normaliseLetter(item);
+    if (!normalised || seen.has(normalised)) continue;
+    seen.add(normalised);
+    result.push(normalised);
+  }
+  return result;
+}
+
+function getSafeCount(map, letter) {
+  if (!map || typeof map !== 'object') return 0;
+  const raw = map[letter];
+  const numeric = Number(raw);
+  if (!Number.isFinite(numeric) || numeric <= 0) {
+    return 0;
+  }
+  return Math.max(0, Math.floor(numeric));
+}
+
+function computeAskedStats(letters, askedCounts) {
+  if (!letters.length) {
+    return { minAsked: null, maxAsked: null };
+  }
+  let min = Infinity;
+  let max = -Infinity;
+  for (const letter of letters) {
+    const value = getSafeCount(askedCounts, letter);
+    if (value < min) min = value;
+    if (value > max) max = value;
+  }
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return { minAsked: null, maxAsked: null };
+  }
+  return { minAsked: min, maxAsked: max };
+}
+
+function computeRecencyPenalty(letter, lastLetter, recencyMap) {
+  if (lastLetter && letter === lastLetter) {
+    return RECENCY_PENALTIES[0];
+  }
+  if (!recencyMap || !recencyMap.has(letter)) {
+    return 1;
+  }
+  const index = recencyMap.get(letter);
+  const penaltyIndex = Math.min(index + 1, RECENCY_PENALTIES.length - 1);
+  return RECENCY_PENALTIES[penaltyIndex] ?? 0.85;
+}
+
+function computeWeight(letter, wrongCounts, options = {}) {
+  const askedCounts = options && typeof options.askedCounts === 'object' ? options.askedCounts : {};
+  const correctStreaks = options && typeof options.correctStreaks === 'object' ? options.correctStreaks : {};
+  const recencyMap = options && options.recencyMap instanceof Map ? options.recencyMap : null;
+  const minAsked = Number.isFinite(options && options.minAsked) ? options.minAsked : null;
+  const lastLetter = normaliseLetter(options && options.lastLetter);
+
+  const wrong = getSafeCount(wrongCounts, letter);
+  const asked = getSafeCount(askedCounts, letter);
+  const streak = getSafeCount(correctStreaks, letter);
+
+  const wrongBoost = wrong > 0 ? 1 + wrong * WRONG_WEIGHT_STEP : 1;
+  const coverageBoost = minAsked === null ? 1 : (1 + Math.max(0, (minAsked + 1) - asked));
+  const masteryPenalty = 1 / (1 + streak * MASTERED_DAMPING);
+  const recencyPenalty = computeRecencyPenalty(letter, lastLetter, recencyMap);
+
+  const rawWeight = wrongBoost * coverageBoost * masteryPenalty * recencyPenalty;
+  return rawWeight > MIN_WEIGHT ? rawWeight : MIN_WEIGHT;
 }
 
 function clampRngValue(value) {
@@ -66,6 +138,8 @@ function pickNext(options) {
     pool,
     last = null,
     wrongCounts = {},
+    correctStreaks = {},
+    askedCounts = {},
     recent = [],
     recentErrors = [],
     rng = Math.random,
@@ -77,14 +151,18 @@ function pickNext(options) {
   }
 
   const lastLetter = normaliseLetter(last);
-  const recentLetters = normaliseList(recent);
+  const recentLetters = normaliseRecent(recent);
+  const recencyMap = new Map();
+  recentLetters.forEach((letter, index) => recencyMap.set(letter, index));
   const counts = wrongCounts && typeof wrongCounts === 'object' ? wrongCounts : {};
+  const streaks = correctStreaks && typeof correctStreaks === 'object' ? correctStreaks : {};
+  const askedMap = askedCounts && typeof askedCounts === 'object' ? askedCounts : {};
   const errorHistory = Array.isArray(recentErrors)
     ? recentErrors.filter((flag, idx) => idx < 3).map(Boolean)
     : [];
 
-  const wrongLetters = candidates.filter((letter) => (counts[letter] || 0) > 0);
-  const lastErrorIndex = recentLetters.findIndex((letter) => (counts[letter] || 0) > 0);
+  const wrongLetters = candidates.filter((letter) => getSafeCount(counts, letter) > 0);
+  const lastErrorIndex = recentLetters.findIndex((letter) => getSafeCount(counts, letter) > 0);
   const forceWrongPick = wrongLetters.length > 0 && (lastErrorIndex === -1 || lastErrorIndex >= 2);
   const avoidErrorQuota = !forceWrongPick && errorHistory.some((flag, idx) => idx < 2 && flag === true);
 
@@ -100,9 +178,28 @@ function pickNext(options) {
   }
 
   if (avoidErrorQuota) {
-    const nonError = source.filter((letter) => (counts[letter] || 0) === 0);
+    const nonError = source.filter((letter) => getSafeCount(counts, letter) === 0);
     if (nonError.length) {
       source = nonError;
+    }
+  }
+
+  let coverageStats = computeAskedStats(source, askedMap);
+  if (coverageStats.minAsked === null) {
+    coverageStats = computeAskedStats(candidates, askedMap);
+  }
+
+  if (
+    source.length > 1 &&
+    coverageStats.minAsked !== null &&
+    coverageStats.maxAsked !== null &&
+    (coverageStats.maxAsked - coverageStats.minAsked) >= COVERAGE_GAP_THRESHOLD
+  ) {
+    const limit = coverageStats.minAsked + 1;
+    const catchUp = source.filter((letter) => getSafeCount(askedMap, letter) <= limit);
+    if (catchUp.length) {
+      source = catchUp;
+      coverageStats = computeAskedStats(source, askedMap);
     }
   }
 
@@ -119,9 +216,18 @@ function pickNext(options) {
     filtered = source.slice();
   }
 
+  const effectiveStats = computeAskedStats(filtered, askedMap);
+  const minAsked = effectiveStats.minAsked !== null ? effectiveStats.minAsked : coverageStats.minAsked;
+
   const weightedEntries = filtered.map((letter) => ({
     letter,
-    weight: computeWeight(letter, counts),
+    weight: computeWeight(letter, counts, {
+      askedCounts: askedMap,
+      correctStreaks: streaks,
+      recencyMap,
+      lastLetter,
+      minAsked,
+    }),
   }));
 
   const result = weightedSelect(weightedEntries, rng);
