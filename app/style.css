@@ -82,12 +82,139 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
 .btn-letter[disabled]{opacity:.4; cursor:not-allowed; filter:grayscale(.6)}
 .btn-letter.locked{opacity:.3; border-style:dashed;}
 .hud{
-  display:grid; grid-template-columns:1fr auto; align-items:center; gap:12px; margin:8px 0 14px;
+  display:block;
+  margin:8px 0 14px;
 }
 .score{
   display:flex; gap:16px; font-weight:800; color:#1b2055;
 }
 .score .ok{color:var(--ok)} .score .bad{color:var(--bad)}
+.hud-row{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:16px;
+  justify-content:space-between;
+}
+.mission{
+  font-weight:700;
+  color:#4c1d95;
+  display:flex;
+  gap:6px;
+  align-items:center;
+  font-size:15px;
+}
+.mission-label{
+  text-transform:uppercase;
+  font-size:12px;
+  letter-spacing:.05em;
+  color:#a78bfa;
+}
+.reward-track{
+  margin-top:12px;
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.star-track{
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.star-track__stars{
+  display:flex;
+  gap:4px;
+  flex-wrap:wrap;
+}
+.star-track__star{
+  width:26px;
+  height:26px;
+  border:2px solid #f5c542;
+  clip-path:polygon(50% 2%, 61% 32%, 95% 35%, 69% 55%, 78% 92%, 50% 72%, 22% 92%, 31% 55%, 5% 35%, 39% 32%);
+  background:transparent;
+  transition:all .25s ease;
+  position:relative;
+}
+.star-track__star::after{
+  content:'';
+  position:absolute;
+  inset:-6px;
+  border-radius:50%;
+  border:2px solid rgba(255,255,255,.45);
+  opacity:0;
+  pointer-events:none;
+}
+.star-track__star.filled{
+  background:linear-gradient(145deg,#ffdd55,#fbbf24);
+  box-shadow:0 2px 8px rgba(251,191,36,.4);
+}
+.star-track__star.filled::after{
+  opacity:0;
+}
+.star-track__star.pop{
+  animation:starPop .6s ease-out;
+}
+.star-track__progress{
+  font-weight:700;
+  color:#a16207;
+  min-width:48px;
+}
+.gift-box{
+  border:0;
+  border-radius:18px;
+  padding:10px 16px;
+  background:#fef3c7;
+  color:#92400e;
+  font-weight:800;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  box-shadow:0 8px 18px rgba(251,191,36,.35);
+  cursor:pointer;
+  transition:transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+.gift-box:disabled{
+  opacity:.5;
+  cursor:not-allowed;
+  box-shadow:none;
+}
+.gift-box__label{
+  font-size:12px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+}
+.gift-box--ready{
+  background:linear-gradient(135deg,#fde68a,#f59e0b);
+  color:#7c2d12;
+  animation:giftPulse 1.4s ease-in-out infinite;
+}
+.pulse-hint{
+  animation:giftPulse 1.2s ease-in-out 2;
+}
+.star-track.shake{
+  animation:starShake .4s ease;
+}
+@keyframes starPop{
+  0%{transform:scale(.85); opacity:.7;}
+  40%{transform:scale(1.2); opacity:1;}
+  100%{transform:scale(1); opacity:1;}
+}
+@keyframes giftPulse{
+  0%{transform:translateY(0);}
+  40%{transform:translateY(-3px);}
+  100%{transform:translateY(0);}
+}
+@keyframes starShake{
+  0%{transform:translateX(0);}
+  20%{transform:translateX(-4px);}
+  40%{transform:translateX(4px);}
+  60%{transform:translateX(-2px);}
+  80%{transform:translateX(2px);}
+  100%{transform:translateX(0);}
+}
 .progress{
   height:10px; background:#eef0ff; border-radius:999px; overflow:hidden;
   box-shadow: inset 0 1px 0 rgba(0,0,0,.05);
@@ -949,6 +1076,25 @@ html[data-theme='nebula'] .clip-item{
   background:#24233e;
   border:1px solid rgba(255,255,255,.08);
   box-shadow:0 12px 26px rgba(0,0,0,.45);
+}
+html[data-theme='nebula'] .star-track__star{
+  border-color:#7dd3fc;
+}
+html[data-theme='nebula'] .star-track__star.filled{
+  background:linear-gradient(135deg,#7dd3fc,#38bdf8);
+  box-shadow:0 2px 8px rgba(56,189,248,.45);
+}
+html[data-theme='nebula'] .star-track__progress{
+  color:#7dd3fc;
+}
+html[data-theme='nebula'] .gift-box{
+  background:#2a2950;
+  color:#e4e6ff;
+  box-shadow:0 10px 20px rgba(0,0,0,.45);
+}
+html[data-theme='nebula'] .gift-box--ready{
+  background:linear-gradient(135deg,#38bdf8,#8b5cf6);
+  color:#f8fafc;
 }
 html[data-theme='nebula'] .clip-item.active{background:#2d2c54; box-shadow:0 0 0 2px rgba(107,184,255,.5);}
 html[data-theme='nebula'] .clip-badge{background:#2f2f58; color:#c8d8ff;}

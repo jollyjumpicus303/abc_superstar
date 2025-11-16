@@ -191,6 +191,11 @@ const elOk = document.getElementById('okCount');
 const elBad = document.getElementById('badCount');
 const elBar = document.getElementById('bar');
 const elHud = document.getElementById('hud');
+const elMissionText = document.getElementById('missionText');
+const elStarTrack = document.getElementById('starTrack');
+const elStarTrackStars = document.getElementById('starTrackStars');
+const elStarTrackProgressText = document.getElementById('starTrackProgressText');
+const elRewardBox = document.getElementById('btnRewardBox');
 const elOverlayGood = document.getElementById('overlayGood');
 const elOverlayBad = document.getElementById('overlayBad');
 const elCorrectLetter = document.getElementById('correctLetter');
@@ -1390,6 +1395,8 @@ function getStickerById(stickerId){
   return null;
 }
 
+const STARS_PER_PACK = 10;
+
 // Sterne abrufen
 async function getStars(){
   const stars = await idbGet('stars');
@@ -1424,6 +1431,12 @@ async function addSticker(stickerId){
   }
   return false; // Duplikat
 }
+
+const STAR_TRACK_SIZE = STARS_PER_PACK;
+let totalStarBank = 0;
+let pendingStarGain = 0;
+let starTrackNodes = [];
+let starShakeTimeout = null;
 
 // Buchstaben-Statistik abrufen
 async function getLetterStats(){
@@ -1460,6 +1473,126 @@ function openStickerPack(){
   }
 
   return pack;
+}
+
+function updateMissionStatus(completed = 0, total = 0){
+  if(!elMissionText) return;
+  if(!total){
+    elMissionText.textContent = 'Starte ein Abenteuer!';
+    return;
+  }
+  const clamped = Math.max(0, Math.min(completed, total));
+  if(clamped >= total){
+    elMissionText.textContent = 'Mission erfüllt! 🎉';
+    return;
+  }
+  elMissionText.textContent = `${clamped} von ${total} Buchstaben entdeckt`;
+}
+
+function initStarTrack(){
+  if(!elStarTrackStars) return;
+  elStarTrackStars.innerHTML = '';
+  starTrackNodes = [];
+  for(let i = 0; i < STAR_TRACK_SIZE; i += 1){
+    const star = document.createElement('span');
+    star.className = 'star-track__star';
+    star.setAttribute('aria-hidden', 'true');
+    elStarTrackStars.appendChild(star);
+    starTrackNodes.push(star);
+  }
+  updateStarTrackDisplay();
+}
+
+function updateStarTrackDisplay(){
+  if(!starTrackNodes.length) return;
+  const combined = totalStarBank + pendingStarGain;
+  const ready = combined >= STARS_PER_PACK;
+  const progress = ready ? STARS_PER_PACK : (combined % STARS_PER_PACK);
+  starTrackNodes.forEach((node, index) => {
+    node.classList.toggle('filled', index < progress);
+  });
+  if(elStarTrackProgressText){
+    elStarTrackProgressText.textContent = `${progress}/${STARS_PER_PACK}`;
+  }
+  if(elRewardBox){
+    elRewardBox.disabled = !ready;
+    elRewardBox.classList.toggle('gift-box--ready', ready);
+  }
+}
+
+function flashStarTrackError(){
+  if(!elStarTrack) return;
+  elStarTrack.classList.add('shake');
+  clearTimeout(starShakeTimeout);
+  starShakeTimeout = setTimeout(() => elStarTrack.classList.remove('shake'), 400);
+}
+
+function triggerStarPop(index){
+  const star = starTrackNodes[index];
+  if(!star) return;
+  star.classList.remove('pop');
+  // force reflow
+  void star.offsetWidth;
+  star.classList.add('pop');
+  setTimeout(() => star.classList.remove('pop'), 600);
+}
+
+function animateStarFill(previous, next){
+  if(!starTrackNodes.length) return;
+  if(next === previous) return;
+  if(next > previous){
+    for(let i = previous; i < next; i += 1){
+      triggerStarPop(i);
+    }
+    return;
+  }
+  for(let i = previous; i < STAR_TRACK_SIZE; i += 1){
+    triggerStarPop(i);
+  }
+  for(let i = 0; i < next; i += 1){
+    triggerStarPop(i);
+  }
+}
+
+function handleStarGain(amount = 1){
+  if(amount <= 0) return;
+  const beforeTotal = totalStarBank + pendingStarGain;
+  const beforeProgress = beforeTotal >= STARS_PER_PACK ? STARS_PER_PACK : (beforeTotal % STARS_PER_PACK);
+  pendingStarGain += amount;
+  const afterTotal = totalStarBank + pendingStarGain;
+  const afterProgress = afterTotal >= STARS_PER_PACK ? STARS_PER_PACK : (afterTotal % STARS_PER_PACK);
+  updateStarTrackDisplay();
+  animateStarFill(beforeProgress, afterProgress);
+  playStarJingle();
+}
+
+function resetPendingStars(){
+  if(!pendingStarGain) return;
+  pendingStarGain = 0;
+  updateStarTrackDisplay();
+}
+
+async function refreshStoredStars(){
+  totalStarBank = await getStars();
+  updateStarTrackDisplay();
+}
+
+function playStarJingle(){
+  const ctx = ensureAudioContextRunning();
+  if(!ctx) return;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  const now = ctx.currentTime;
+  osc.type = 'triangle';
+  osc.frequency.setValueAtTime(880, now);
+  osc.frequency.linearRampToValueAtTime(1320, now + 0.15);
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.35);
 }
 
 // ——————————————————————————————————————————
@@ -1590,6 +1723,8 @@ let currentAlbumTheme = 'animals';
 
 async function renderAlbum(){
   const stars = await getStars();
+  totalStarBank = stars;
+  updateStarTrackDisplay();
   const collected = await getCollectedStickers();
   const collectedSet = new Set(collected);
 
@@ -1598,7 +1733,7 @@ async function renderAlbum(){
 
   // Pack-Button aktivieren/deaktivieren
   const btnOpenPack = document.getElementById('btnOpenPack');
-  btnOpenPack.disabled = stars < 10;
+  btnOpenPack.disabled = stars < STARS_PER_PACK;
 
   // Themen-Tabs rendern
   const albumTabs = document.getElementById('albumTabs');
@@ -1646,10 +1781,12 @@ async function renderAlbum(){
 // Pack öffnen
 document.getElementById('btnOpenPack').addEventListener('click', async () => {
   const stars = await getStars();
-  if(stars < 10) return;
+  if(stars < STARS_PER_PACK) return;
 
   // 10 Sterne abziehen
-  await setStars(stars - 10);
+  await setStars(stars - STARS_PER_PACK);
+  totalStarBank = stars - STARS_PER_PACK;
+  updateStarTrackDisplay();
 
   // 3 zufällige Sticker ziehen
   const pack = openStickerPack();
@@ -3013,6 +3150,9 @@ for(const type of MEDAL_TYPES){
 setRecordDifficulty(currentDifficulty);
 selectLetter('A');
 updateStatusGridFromDB();
+initStarTrack();
+refreshStoredStars();
+updateMissionStatus();
 
 async function selectLetter(ch){
   // Laufende Aufnahme stoppen, falls eine aktiv ist
@@ -3677,6 +3817,25 @@ elBtnTestAudio.addEventListener('click', async () => {
 });
 document.getElementById('closeModal').addEventListener('click', closeModal);
 
+if(elRewardBox){
+  elRewardBox.addEventListener('click', () => {
+    if(elRewardBox.disabled){
+      flashStarTrackError();
+      return;
+    }
+    playRewardSound();
+    switchToTab('album');
+    requestAnimationFrame(() => {
+      const btnOpenPack = document.getElementById('btnOpenPack');
+      if(btnOpenPack){
+        btnOpenPack.classList.add('pulse-hint');
+        setTimeout(() => btnOpenPack.classList.remove('pulse-hint'), 2000);
+        btnOpenPack.focus({ preventScroll: false });
+      }
+    });
+  });
+}
+
 function closeModal(){ elModal.classList.add('hidden'); }
 
 function confirmEndGame() {
@@ -3706,6 +3865,8 @@ function endGame() {
   currentLetter = null;
   currentAudio = null;
   renderLetterGrid();
+  resetPendingStars();
+  updateMissionStatus();
 
   // Update UI
   updateUIForRecordingState();
@@ -3770,6 +3931,9 @@ async function startGame(){
   elRoundMax.textContent = rounds;
   elOk.textContent=0; elBad.textContent=0;
   elBar.style.width='0%';
+  pendingStarGain = 0;
+  updateStarTrackDisplay();
+  updateMissionStatus(0, rounds);
   document.getElementById('setup').classList.add('hidden');
   elHud.classList.remove('hidden');
   elLetters.classList.remove('hidden');
@@ -3791,6 +3955,7 @@ async function nextRound(){
   game.round++;
   if(game.round > game.rounds){ return finishGame(); }
   elRoundNow.textContent = game.round;
+  updateMissionStatus(game.round - 1, game.rounds);
 
   let pool = Array.isArray(game.pool) && game.pool.length ? game.pool : game.recorded;
   if(!pool || pool.length === 0){
@@ -3964,6 +4129,7 @@ async function onLetterClick(e){
     }
     // Buchstaben-Statistik für Belohnungssystem tracken
     await incrementLetterStat(targetLetter);
+    handleStarGain(1);
   } else {
     game.bad++;
     game.progress = markWrong(targetLetter, letter);
@@ -3971,6 +4137,7 @@ async function onLetterClick(e){
       game.pendingMotivations = new Set();
     }
     game.pendingMotivations.add(targetLetter);
+    flashStarTrackError();
   }
 
   game.errorHistory = [wasErrorPick, ...(game.errorHistory || [])].slice(0, 3);
@@ -4083,6 +4250,7 @@ function finishGame(){
   // Pokalfarben anpassen (einfach über Füllung)
   // Sterne für richtige Antworten vergeben
   const earnedStars = ok;
+  updateMissionStatus(game.rounds, game.rounds);
   playMedalCelebration(medalTier).then((customPlayed) => {
     if(!customPlayed && earnedStars > 0){
       playRewardSound();
@@ -4093,12 +4261,15 @@ function finishGame(){
   // Async-Teil für Sterne und Pack-Öffnung
   (async () => {
     const totalStars = await addStars(earnedStars);
+    totalStarBank = totalStars;
+    pendingStarGain = 0;
+    updateStarTrackDisplay();
 
     // Prüfen ob Pack geöffnet werden kann
-    const canOpenPack = totalStars >= 10;
+    const canOpenPack = totalStars >= STARS_PER_PACK;
     let packsToOpen = 0;
     if(canOpenPack){
-      packsToOpen = Math.floor(totalStars / 10);
+      packsToOpen = Math.floor(totalStars / STARS_PER_PACK);
     }
 
     // Erweiterte Nachricht mit Sternen
@@ -4124,7 +4295,9 @@ function finishGame(){
       }
     }
 
+    await renderAlbum();
     elResultText.textContent = fullMsg;
+    await renderAlbum();
 
     // TODO: Pack-Öffnen UI hier integrieren wenn packsToOpen > 0
   })();

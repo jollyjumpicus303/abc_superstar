@@ -113,10 +113,26 @@
       </div>
 
       <div id="hud" class="hud hidden">
-        <div class="score">
-          <span>Runde <b id="roundNow">1</b>/<b id="roundMax">10</b></span>
-          <span class="ok">Richtig: <b id="okCount">0</b></span>
-          <span class="bad">Falsch: <b id="badCount">0</b></span>
+        <div class="hud-row">
+          <div class="score">
+            <span>Runde <b id="roundNow">1</b>/<b id="roundMax">10</b></span>
+            <span class="ok">Richtig: <b id="okCount">0</b></span>
+            <span class="bad">Falsch: <b id="badCount">0</b></span>
+          </div>
+          <div class="mission" aria-live="polite">
+            <span class="mission-label">Mission:</span>
+            <span id="missionText">Starte ein Abenteuer!</span>
+          </div>
+        </div>
+        <div class="reward-track" aria-label="Sterne bis zur nächsten Belohnung">
+          <div class="star-track" id="starTrack">
+            <div class="star-track__stars" id="starTrackStars"></div>
+            <div class="star-track__progress" id="starTrackProgressText">0/10</div>
+          </div>
+          <button id="btnRewardBox" class="gift-box" type="button" disabled title="Belohnung abholen">
+            🎁
+            <span class="gift-box__label">Belohnung</span>
+          </button>
         </div>
         <div class="progress"><i id="bar"></i></div>
         <div class="in-game-controls" style="margin-top:10px; display:flex; gap:12px; align-items:center;">
