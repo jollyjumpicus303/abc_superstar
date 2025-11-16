@@ -244,8 +244,90 @@
           <div class="muted">Tipp: Spreche klar und kurz (z. B. „B“ oder „B – wie Ball“).</div>
         </aside>
       </div>
-  </section>
-</main>
+
+      <section class="extras-card">
+        <div class="extras-header">
+          <div>
+            <h3>✨ Extra-Sounds</h3>
+            <p class="muted">Motivation für schwierige Buchstaben und Jubel für Medaillen – alles an einem Ort.</p>
+          </div>
+        </div>
+        <div class="extras-grid">
+          <div class="extra-block">
+            <div class="extra-block-head">
+              <h4>💪 Motivationssounds</h4>
+              <span id="motivationStatus" class="muted">Keine Clips</span>
+            </div>
+            <p class="muted">Diese Clips hängen sich automatisch nach dem Buchstaben an, wenn er zuvor falsch war.</p>
+            <div class="controls" style="margin:10px 0">
+              <button id="btnMotivationRecord" class="btn secondary">🎙️ Aufnehmen</button>
+              <button id="btnMotivationUpload" class="btn ghost" type="button">📁 Importieren</button>
+              <span class="timer" id="motivationTimer">00:00</span>
+            </div>
+            <input type="file" id="motivationFile" accept="audio/*" multiple style="display:none">
+            <div id="motivationList" class="clip-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+          </div>
+
+          <div class="extra-block">
+            <div class="extra-block-head">
+              <h4>🏅 Medaillen-Sounds</h4>
+              <p class="muted" style="margin:4px 0 0;">Eigene Jubel für Gold, Silber und Bronze. Jeder Rang darf mehrere Clips haben.</p>
+            </div>
+            <div class="medal-grid">
+              <div class="medal-sound" data-medal="gold">
+                <div class="medal-info">
+                  <span class="medal-emoji">🥇</span>
+                  <div>
+                    <div class="medal-label">Gold</div>
+                    <div class="muted" id="medalStatus-gold">Standard-Sound aktiv</div>
+                  </div>
+                </div>
+                <div class="controls">
+                  <button id="btnMedalRecord-gold" class="btn secondary">🎙️ Aufnehmen</button>
+                  <button id="btnMedalUpload-gold" class="btn ghost" type="button">📁 Importieren</button>
+                  <span class="timer" id="medalTimer-gold">00:00</span>
+                </div>
+                <input type="file" id="medalFile-gold" accept="audio/*" multiple style="display:none">
+                <div id="medalList-gold" class="clip-list medal-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+              </div>
+              <div class="medal-sound" data-medal="silver">
+                <div class="medal-info">
+                  <span class="medal-emoji">🥈</span>
+                  <div>
+                    <div class="medal-label">Silber</div>
+                    <div class="muted" id="medalStatus-silver">Standard-Sound aktiv</div>
+                  </div>
+                </div>
+                <div class="controls">
+                  <button id="btnMedalRecord-silver" class="btn secondary">🎙️ Aufnehmen</button>
+                  <button id="btnMedalUpload-silver" class="btn ghost" type="button">📁 Importieren</button>
+                  <span class="timer" id="medalTimer-silver">00:00</span>
+                </div>
+                <input type="file" id="medalFile-silver" accept="audio/*" multiple style="display:none">
+                <div id="medalList-silver" class="clip-list medal-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+              </div>
+              <div class="medal-sound" data-medal="bronze">
+                <div class="medal-info">
+                  <span class="medal-emoji">🥉</span>
+                  <div>
+                    <div class="medal-label">Bronze</div>
+                    <div class="muted" id="medalStatus-bronze">Standard-Sound aktiv</div>
+                  </div>
+                </div>
+                <div class="controls">
+                  <button id="btnMedalRecord-bronze" class="btn secondary">🎙️ Aufnehmen</button>
+                  <button id="btnMedalUpload-bronze" class="btn ghost" type="button">📁 Importieren</button>
+                  <span class="timer" id="medalTimer-bronze">00:00</span>
+                </div>
+                <input type="file" id="medalFile-bronze" accept="audio/*" multiple style="display:none">
+                <div id="medalList-bronze" class="clip-list medal-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
 
   <div id="unlockBanner" class="unlock-banner hidden" role="status" aria-live="polite">
     <span aria-hidden="true">🎉</span>

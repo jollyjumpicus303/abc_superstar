@@ -1,9 +1,16 @@
 {
   "scripts": {
-    "start": "http-server"
+    "start": "http-server",
+    "generate:letters": "node scripts/tts-generator/generateLetters.js",
+    "split:variants": "node scripts/tts-generator/splitVariantSets.js"
   },
   "dependencies": {
     "-": "^0.0.1",
-    "http-server": "^14.1.1"
+    "commander": "^14.0.0",
+    "dotenv": "^16.4.5",
+    "elevenlabs": "^1.59.0",
+    "http-server": "^14.1.1",
+    "jszip": "^3.10.1",
+    "openai": "^6.9.0"
   }
 }

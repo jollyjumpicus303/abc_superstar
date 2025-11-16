@@ -190,6 +190,32 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
   border-radius:var(--radius); box-shadow:var(--shadow); padding:18px;
   border:2px solid #f3e8ff;
 }
+.extras-card{
+  margin-top:24px;
+  padding:24px;
+  border-radius:var(--radius);
+  background:var(--surface);
+  border:2px solid var(--surface-border);
+  box-shadow:var(--shadow);
+}
+.extras-header h3{margin:0; color:var(--ink);}
+.extras-grid{
+  margin-top:16px;
+  display:grid;
+  gap:16px;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+}
+.extra-block{
+  background:var(--surface-soft);
+  border:1px solid var(--surface-border);
+  border-radius:var(--radius-sm);
+  padding:18px;
+  box-shadow:0 8px 24px rgba(15,23,42,.08);
+}
+.extra-block-head{display:flex; align-items:flex-start; justify-content:space-between; gap:12px;}
+.extra-block-head h4{margin:0; font-size:18px; color:var(--ink);}
+.medal-grid{display:grid; gap:12px;}
+.medal-grid .medal-sound{margin-top:0;}
 .mode-section{
   margin:24px 0 32px;
   padding:24px;
@@ -323,6 +349,26 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
 .clip-edit-controls .btn{padding:6px 10px; font-size:13px;}
 .timer{font-variant-numeric:tabular-nums; font-weight:700}
 .blink{animation:blink 1s steps(1) infinite}
+.recorder-section{margin-top:20px; padding-top:16px; border-top:1px dashed #e0d5ff;}
+.medal-sound{
+  border:1px solid var(--surface-border);
+  border-radius:14px;
+  padding:12px 14px;
+  background:var(--surface);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-top:10px;
+  box-shadow:0 6px 16px rgba(15,23,42,.08);
+}
+.medal-info{display:flex; align-items:center; gap:10px;}
+.medal-emoji{font-size:30px; line-height:1;}
+.medal-label{font-weight:700; font-size:15px;}
+.recorder-section .clip-list{max-height:140px;}
+.medal-sound .clip-list{margin-top:8px;}
+.extras-card .clip-list{max-height:200px;}
 @keyframes blink{50%{opacity:.35}}
 
 /* Overlays (Regenbogen, Monster, Pokal) */

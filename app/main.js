@@ -32,6 +32,12 @@ const SOUND_FILES = {
 const soundBuffers = new Map();
 const soundLoadingPromises = new Map();
 const INTRO_PROMPT_DELAY = 2000;
+const MEDAL_TYPES = ['gold', 'silver', 'bronze'];
+const MEDAL_LABELS = {
+  gold: 'Gold',
+  silver: 'Silber',
+  bronze: 'Bronze',
+};
 
 function initAudioContext(){
   if(!audioCtx){
@@ -150,6 +156,12 @@ const elBtnPlay = document.getElementById('btnPlay');
 const elBtnDelete = document.getElementById('btnDelete');
 const elRecordDifficultyGroup = document.getElementById('recordDifficultyGroup');
 const elClipList = document.getElementById('clipList');
+const elMotivationList = document.getElementById('motivationList');
+const elMotivationStatus = document.getElementById('motivationStatus');
+const elBtnMotivationRecord = document.getElementById('btnMotivationRecord');
+const elMotivationTimer = document.getElementById('motivationTimer');
+const elBtnMotivationUpload = document.getElementById('btnMotivationUpload');
+const elMotivationFile = document.getElementById('motivationFile');
 const elInGameSetSelector = document.getElementById('inGameSetSelector');
 const elPracticeSetSelector = document.getElementById('practiceSetSelector');
 const elLernwegTrack = document.getElementById('lernwegTrack');
@@ -195,6 +207,17 @@ const elThemeMenu = document.getElementById('themeSwitcherMenu');
 const elThemeLabel = document.getElementById('currentThemeLabel');
 const metaThemeColor = document.querySelector('meta[name="theme-color"]');
 const themeOptionButtons = elThemeMenu ? Array.from(elThemeMenu.querySelectorAll('[data-theme-option]')) : [];
+const medalControls = MEDAL_TYPES.reduce((acc, type) => {
+  acc[type] = {
+    recordBtn: document.getElementById(`btnMedalRecord-${type}`),
+    uploadBtn: document.getElementById(`btnMedalUpload-${type}`),
+    fileInput: document.getElementById(`medalFile-${type}`),
+    timerEl: document.getElementById(`medalTimer-${type}`),
+    statusEl: document.getElementById(`medalStatus-${type}`),
+    listEl: document.getElementById(`medalList-${type}`),
+  };
+  return acc;
+}, {});
 let trophyAnimation = null;
 let trophyLoader = null;
 let installPromptEvent = null;
@@ -991,6 +1014,12 @@ function generateUUID(){
 
 const AUDIO_DIFFICULTIES = ['LEICHT', 'MITTEL', 'SCHWER', 'AFFIG'];
 
+function makeEmptyMedalMap(){
+  const map = {};
+  MEDAL_TYPES.forEach(type => { map[type] = []; });
+  return map;
+}
+
 function normaliseLetterInput(value){
   if(typeof value !== 'string') return null;
   const trimmed = value.trim().toUpperCase();
@@ -1002,6 +1031,40 @@ function normaliseDifficultyInput(value){
   if(!value) return fallback;
   const normalised = value.toString().trim().toUpperCase();
   return AUDIO_DIFFICULTIES.includes(normalised) ? normalised : fallback;
+}
+
+function sanitiseMotivationClips(list){
+  if(!Array.isArray(list)) return [];
+  const seen = new Set();
+  return list
+    .filter(entry => entry && typeof entry.id === 'string' && entry.id)
+    .map(entry => {
+      if(seen.has(entry.id)) return null;
+      seen.add(entry.id);
+      return {
+        id: entry.id,
+        created: typeof entry.created === 'number' ? entry.created : Date.now(),
+      };
+    })
+    .filter(Boolean);
+}
+
+function sanitiseMedalSounds(raw){
+  const result = makeEmptyMedalMap();
+  if(!raw || typeof raw !== 'object'){
+    return result;
+  }
+  for(const type of MEDAL_TYPES){
+    const source = raw[type];
+    const list = Array.isArray(source) ? source : source && typeof source === 'object' ? [source] : [];
+    result[type] = list
+      .filter(entry => entry && typeof entry.id === 'string' && entry.id)
+      .map(entry => ({
+        id: entry.id,
+        created: typeof entry.created === 'number' ? entry.created : Date.now(),
+      }));
+  }
+  return result;
 }
 
 async function loadSetData(setId){
@@ -1018,6 +1081,8 @@ async function loadSetData(setId){
     emoji: raw.emoji || '🎤',
     created: raw.created || Date.now(),
     clips: Array.isArray(raw.clips) ? raw.clips.slice() : [],
+    motivationClips: sanitiseMotivationClips(raw.motivationClips),
+    medalSounds: sanitiseMedalSounds(raw.medalSounds),
   };
 
   const seen = new Set();
@@ -1040,6 +1105,22 @@ async function loadSetData(setId){
 
   if(!Array.isArray(raw.clips) || raw.clips.length !== data.clips.length){
     changed = true;
+  }
+  if(!Array.isArray(raw.motivationClips) || raw.motivationClips.length !== data.motivationClips.length){
+    changed = true;
+  }
+  if(raw.medalSounds){
+    for(const type of MEDAL_TYPES){
+      const rawEntry = raw.medalSounds[type];
+      const rawCount = Array.isArray(rawEntry)
+        ? rawEntry.filter(entry => entry && typeof entry.id === 'string').length
+        : (rawEntry && typeof rawEntry.id === 'string' ? 1 : 0);
+      const sanitisedCount = Array.isArray(data.medalSounds[type]) ? data.medalSounds[type].length : 0;
+      if(rawCount !== sanitisedCount){
+        changed = true;
+        break;
+      }
+    }
   }
 
   const migrated = await migrateLegacyRecordingsForSet(setId, data);
@@ -1093,6 +1174,8 @@ async function createSet(name, emoji){
     emoji: emoji || '🎤',
     created: Date.now(),
     clips: [],
+    motivationClips: [],
+    medalSounds: makeEmptyMedalMap(),
   };
   await idbSet('set-' + setId, setData);
   return setId;
@@ -1120,7 +1203,12 @@ async function deleteSet(setId){
 
   // Alle Audio-Aufnahmen des Sets löschen
   const keys = await idbKeys();
-  const audioKeys = keys.filter(k => k.startsWith('audio-' + setId + '-'));
+  const prefixes = [
+    'audio-' + setId + '-',
+    'motivation-' + setId + '-',
+    'medal-' + setId + '-',
+  ];
+  const audioKeys = keys.filter(k => prefixes.some(prefix => k.startsWith(prefix)));
   for(const key of audioKeys){
     await idbDel(key);
   }
@@ -1480,6 +1568,14 @@ async function updateRecordingUI(){
   await updateUIForRecordingState();
   await updatePracticeLetterButtons();
   if(currentLetter) await selectLetter(currentLetter);
+  await refreshSupportAudioUI();
+}
+
+async function refreshSupportAudioUI(){
+  const setId = await getActiveSet();
+  const setData = await loadSetData(setId);
+  renderMotivationList(setData && Array.isArray(setData.motivationClips) ? setData.motivationClips : []);
+  updateMedalUI(setData && setData.medalSounds ? setData.medalSounds : makeEmptyMedalMap());
 }
 
 // ——————————————————————————————————————————
@@ -1993,6 +2089,90 @@ function renderClipList(clips){
   highlightClipSelection();
 }
 
+function renderMotivationList(clips){
+  motivationClipsCache = clips.slice().sort((a, b) => (b.created || 0) - (a.created || 0));
+  if(elMotivationStatus){
+    const count = motivationClipsCache.length;
+    elMotivationStatus.textContent = count ? `${count} Clip${count === 1 ? '' : 's'}` : 'Keine Clips';
+  }
+  if(!elMotivationList) return;
+  elMotivationList.innerHTML = '';
+  if(!motivationClipsCache.length){
+    const empty = document.createElement('div');
+    empty.className = 'muted';
+    empty.textContent = 'Noch keine Motivationssounds.';
+    elMotivationList.appendChild(empty);
+    return;
+  }
+  motivationClipsCache.forEach(clip => {
+    const item = document.createElement('div');
+    item.className = 'clip-item';
+    item.dataset.clipId = clip.id;
+    item.innerHTML = `
+      <div class="clip-info">
+        <span class="clip-meta">${formatClipTimestamp(clip.created)}</span>
+      </div>
+      <div class="clip-actions">
+        <button type="button" class="btn ghost" data-action="play">▶️</button>
+        <button type="button" class="btn ghost" data-action="delete">🗑️</button>
+      </div>`;
+    elMotivationList.appendChild(item);
+  });
+}
+
+function renderMedalList(type, clips){
+  const controls = medalControls[type];
+  if(!controls || !controls.listEl) return;
+  const listEl = controls.listEl;
+  listEl.innerHTML = '';
+  if(!clips || !clips.length){
+    const empty = document.createElement('div');
+    empty.className = 'muted';
+    empty.textContent = 'Noch keine Sounds.';
+    listEl.appendChild(empty);
+    return;
+  }
+  clips.forEach(clip => {
+    const item = document.createElement('div');
+    item.className = 'clip-item';
+    item.dataset.clipId = clip.id;
+    item.dataset.medalType = type;
+    item.innerHTML = `
+      <div class="clip-info">
+        <span class="clip-meta">${formatClipTimestamp(clip.created)}</span>
+      </div>
+      <div class="clip-actions">
+        <button type="button" class="btn ghost" data-action="play">▶️</button>
+        <button type="button" class="btn ghost" data-action="delete">🗑️</button>
+      </div>`;
+    listEl.appendChild(item);
+  });
+}
+
+function updateMedalUI(medalSounds = {}){
+  const map = makeEmptyMedalMap();
+  if(medalSounds && typeof medalSounds === 'object'){
+    for(const type of MEDAL_TYPES){
+      const list = medalSounds[type];
+      map[type] = Array.isArray(list)
+        ? list.slice().sort((a, b) => (b.created || 0) - (a.created || 0))
+        : [];
+    }
+  }
+  medalSoundsCache = map;
+  for(const type of MEDAL_TYPES){
+    const controls = medalControls[type];
+    if(!controls) continue;
+    const list = medalSoundsCache[type] || [];
+    if(controls.statusEl){
+      controls.statusEl.textContent = list.length
+        ? `${list.length} Clip${list.length === 1 ? '' : 's'}`
+        : 'Standard-Sound aktiv';
+    }
+    renderMedalList(type, list);
+  }
+}
+
 function setRecordDifficulty(difficulty, options = {}){
   currentDifficulty = difficulty;
   if(elRecordDifficultyGroup){
@@ -2053,11 +2233,13 @@ async function persistClip(setId, letter, difficulty, blob) {
   await idbSet(clipKey, blob);
 
   const setKey = `set-${setId}`;
-  const setData = await idbGet(setKey) || {
+  const setData = await loadSetData(setId) || {
     name: 'Meine Aufnahmen',
     emoji: '🎤',
     created: Date.now(),
     clips: [],
+    motivationClips: [],
+    medalSounds: makeEmptyMedalMap(),
   };
 
   setData.clips.push({
@@ -2068,6 +2250,112 @@ async function persistClip(setId, letter, difficulty, blob) {
   });
 
   await idbSet(setKey, setData);
+}
+
+async function persistMotivationClip(setId, blob){
+  const clipId = generateUUID();
+  const clipKey = `motivation-${setId}-${clipId}`;
+  await idbSet(clipKey, blob);
+
+  const setData = await loadSetData(setId) || {
+    name: 'Meine Aufnahmen',
+    emoji: '🎤',
+    created: Date.now(),
+    clips: [],
+    motivationClips: [],
+    medalSounds: makeEmptyMedalMap(),
+  };
+
+  if(!Array.isArray(setData.motivationClips)){
+    setData.motivationClips = [];
+  }
+  setData.motivationClips.push({ id: clipId, created: Date.now() });
+  await idbSet('set-' + setId, setData);
+  return clipId;
+}
+
+async function importMotivationFiles(files){
+  const valid = files.filter(isValidAudioFile);
+  if(!valid.length){
+    alert('Keine gültigen Audiodateien ausgewählt.');
+    return;
+  }
+  const setId = await getActiveSet();
+  let imported = 0;
+  for(const file of valid){
+    await persistMotivationClip(setId, file);
+    imported++;
+  }
+  await refreshSupportAudioUI();
+  alert(`✅ ${imported} Motivationssound${imported === 1 ? '' : 's'} importiert!`);
+}
+
+async function removeMotivationClip(setId, clipId){
+  const setData = await loadSetData(setId);
+  if(!setData || !Array.isArray(setData.motivationClips)) return;
+  setData.motivationClips = setData.motivationClips.filter(entry => entry.id !== clipId);
+  await idbSet('set-' + setId, setData);
+  await idbDel(`motivation-${setId}-${clipId}`);
+}
+
+async function getMotivationClipBlob(setId, clipId){
+  return idbGet(`motivation-${setId}-${clipId}`);
+}
+
+async function saveMedalSound(setId, type, blob){
+  if(!MEDAL_TYPES.includes(type)) return null;
+  const clipId = generateUUID();
+  await idbSet(`medal-${setId}-${clipId}`, blob);
+
+  const setData = await loadSetData(setId) || {
+    name: 'Meine Aufnahmen',
+    emoji: '🎤',
+    created: Date.now(),
+    clips: [],
+    motivationClips: [],
+    medalSounds: makeEmptyMedalMap(),
+  };
+
+  if(!setData.medalSounds || typeof setData.medalSounds !== 'object'){
+    setData.medalSounds = makeEmptyMedalMap();
+  }
+  if(!Array.isArray(setData.medalSounds[type])){
+    setData.medalSounds[type] = [];
+  }
+  setData.medalSounds[type].push({ id: clipId, created: Date.now() });
+  await idbSet('set-' + setId, setData);
+  return clipId;
+}
+
+async function importMedalFiles(type, files){
+  if(!MEDAL_TYPES.includes(type)) return;
+  const valid = files.filter(isValidAudioFile);
+  if(!valid.length){
+    alert('Keine gültigen Audiodateien ausgewählt.');
+    return;
+  }
+  const setId = await getActiveSet();
+  let imported = 0;
+  for(const file of valid){
+    await saveMedalSound(setId, type, file);
+    imported++;
+  }
+  await refreshSupportAudioUI();
+  const label = MEDAL_LABELS[type] || type;
+  alert(`✅ ${imported} ${label}-Sound${imported === 1 ? '' : 's'} importiert!`);
+}
+
+async function deleteMedalSound(setId, type, clipId){
+  if(!MEDAL_TYPES.includes(type)) return;
+  const setData = await loadSetData(setId);
+  if(!setData || !setData.medalSounds || !Array.isArray(setData.medalSounds[type])) return;
+  setData.medalSounds[type] = setData.medalSounds[type].filter(entry => entry.id !== clipId);
+  await idbSet('set-' + setId, setData);
+  await idbDel(`medal-${setId}-${clipId}`);
+}
+
+async function getMedalClipBlob(setId, clipId){
+  return idbGet(`medal-${setId}-${clipId}`);
 }
 
 function pickClip(clips, difficulty, options = {}) {
@@ -2116,6 +2404,25 @@ function pickClip(clips, difficulty, options = {}) {
   }
 
   return null;
+}
+
+function pickFromHistoryPool(pool, historyKey){
+  if(!pool || pool.length === 0){
+    return null;
+  }
+  if(!historyKey){
+    return pool[Math.floor(Math.random() * pool.length)];
+  }
+  const availableIds = pool.map(item => item.id);
+  const availableSet = new Set(availableIds);
+  let queue = clipHistoryQueues.get(historyKey) || [];
+  queue = queue.filter(id => availableSet.has(id));
+  if(queue.length === 0){
+    queue = shuffleArray(availableIds);
+  }
+  const nextId = queue.shift();
+  clipHistoryQueues.set(historyKey, queue);
+  return pool.find(item => item.id === nextId) || pool[0];
 }
 
 async function getAudio(letter, difficulty = 'LEICHT') {
@@ -2177,9 +2484,107 @@ async function fetchClipForLetter({ setId, letter, difficulty, setData, historyK
   return { clip, blob };
 }
 
+async function fetchMotivationClip({ setId, setData, historyKey }){
+  const clips = setData && Array.isArray(setData.motivationClips) ? setData.motivationClips : [];
+  if(!clips.length){
+    return null;
+  }
+  const clip = pickFromHistoryPool(clips, historyKey);
+  if(!clip) return null;
+  const blob = await getMotivationClipBlob(setId, clip.id);
+  if(!blob) return null;
+  return { clip, blob };
+}
+
 async function playClipById(clipId){
   const setId = await getActiveSet();
   const blob = await getClipBlob(setId, clipId);
+  if(!blob){
+    alert('Keine Aufnahme gefunden.');
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  audio.addEventListener('ended', () => URL.revokeObjectURL(url));
+  audio.addEventListener('error', () => URL.revokeObjectURL(url));
+  lastPlayed = audio;
+  await audio.play().catch(()=>{});
+}
+
+function hasPendingMotivation(letter){
+  if(!game || !letter) return false;
+  if(!game.pendingMotivations){
+    game.pendingMotivations = new Set();
+  }
+  return game.pendingMotivations.has(letter);
+}
+
+function clearMotivationChain(){
+  if(motivationChainSource && motivationChainHandler){
+    try {
+      motivationChainSource.removeEventListener('ended', motivationChainHandler);
+    }catch(_){ /* ignore */ }
+  }
+  motivationChainSource = null;
+  motivationChainHandler = null;
+}
+
+function queueMotivationPlayback(primaryAudio, clipData){
+  if(!primaryAudio || !clipData || !clipData.blob){
+    return;
+  }
+  clearMotivationChain();
+  motivationChainSource = primaryAudio;
+  motivationChainHandler = () => {
+    if(motivationChainSource && motivationChainHandler){
+      motivationChainSource.removeEventListener('ended', motivationChainHandler);
+    }
+    motivationChainSource = null;
+    motivationChainHandler = null;
+    const url = URL.createObjectURL(clipData.blob);
+    const followUp = new Audio(url);
+    followUp.addEventListener('ended', () => URL.revokeObjectURL(url));
+    followUp.addEventListener('error', () => URL.revokeObjectURL(url));
+    lastPlayed = followUp;
+    followUp.play().catch(() => {
+      URL.revokeObjectURL(url);
+    });
+  };
+  primaryAudio.addEventListener('ended', motivationChainHandler);
+}
+
+async function playMedalCelebration(medalType){
+  if(!medalType) return false;
+  const setId = game && game.setId ? game.setId : await getActiveSet();
+  const setData = await loadSetData(setId);
+  const list = setData && setData.medalSounds && Array.isArray(setData.medalSounds[medalType])
+    ? setData.medalSounds[medalType]
+    : [];
+  if(!list.length){
+    return false;
+  }
+  const historyKey = makeClipHistoryKey('medal', setId, medalType.toUpperCase(), 'CUSTOM');
+  const clip = pickFromHistoryPool(list, historyKey);
+  if(!clip){
+    return false;
+  }
+  const blob = await getMedalClipBlob(setId, clip.id);
+  if(!blob){
+    return false;
+  }
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  audio.addEventListener('ended', () => URL.revokeObjectURL(url));
+  audio.addEventListener('error', () => URL.revokeObjectURL(url));
+  audio.play().catch(() => {
+    URL.revokeObjectURL(url);
+  });
+  return true;
+}
+
+async function playMotivationClip(clipId){
+  const setId = await getActiveSet();
+  const blob = await getMotivationClipBlob(setId, clipId);
   if(!blob){
     alert('Keine Aufnahme gefunden.');
     return;
@@ -2206,6 +2611,34 @@ async function deleteClipById(clipId){
   await updateStatusGridFromDB();
   await updateUIForRecordingState();
   await renderSetsList();
+}
+
+async function deleteMotivationClip(clipId){
+  const setId = await getActiveSet();
+  await removeMotivationClip(setId, clipId);
+  await refreshSupportAudioUI();
+}
+
+async function playMedalClip(type, clipId){
+  if(!MEDAL_TYPES.includes(type)) return;
+  const setId = await getActiveSet();
+  const blob = await getMedalClipBlob(setId, clipId);
+  if(!blob){
+    alert('Keine Aufnahme gefunden.');
+    return;
+  }
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  audio.addEventListener('ended', () => URL.revokeObjectURL(url));
+  audio.addEventListener('error', () => URL.revokeObjectURL(url));
+  await audio.play().catch(()=>{});
+}
+
+async function deleteMedalClip(type, clipId){
+  if(!MEDAL_TYPES.includes(type)) return;
+  const setId = await getActiveSet();
+  await deleteMedalSound(setId, type, clipId);
+  await refreshSupportAudioUI();
 }
 
 async function editClipDifficulty(clipId){
@@ -2337,6 +2770,10 @@ let currentLetter='A', timerInt=null, timerStart=0, lastPlayed=null;
 let currentDifficulty='LEICHT';
 let currentClipId=null;
 let currentLetterClips=[];
+let motivationClipsCache = [];
+let medalSoundsCache = makeEmptyMedalMap();
+let motivationChainSource = null;
+let motivationChainHandler = null;
 
 if(elRecordDifficultyGroup){
   elRecordDifficultyGroup.addEventListener('click', (event) => {
@@ -2374,6 +2811,45 @@ if(elClipList){
       setRecordDifficulty(diff, { preserveSelection: true, clipId });
     }
   });
+}
+
+if(elMotivationList){
+  elMotivationList.addEventListener('click', async (event) => {
+    const item = event.target.closest('.clip-item');
+    if(!item) return;
+    const clipId = item.dataset.clipId;
+    if(!clipId) return;
+    const actionBtn = event.target.closest('[data-action]');
+    if(!actionBtn) return;
+    if(actionBtn.dataset.action === 'play'){
+      await playMotivationClip(clipId);
+    } else if(actionBtn.dataset.action === 'delete'){
+      if(confirm('Motivationssound wirklich löschen?')){
+        await deleteMotivationClip(clipId);
+      }
+    }
+  });
+}
+
+for(const type of MEDAL_TYPES){
+  const controls = medalControls[type];
+  if(controls && controls.listEl){
+    controls.listEl.addEventListener('click', async (event) => {
+      const item = event.target.closest('.clip-item');
+      if(!item) return;
+      const clipId = item.dataset.clipId;
+      if(!clipId) return;
+      const actionBtn = event.target.closest('[data-action]');
+      if(!actionBtn) return;
+      if(actionBtn.dataset.action === 'play'){
+        await playMedalClip(type, clipId);
+      } else if(actionBtn.dataset.action === 'delete'){
+        if(confirm('Sound wirklich löschen?')){
+          await deleteMedalClip(type, clipId);
+        }
+      }
+    });
+  }
 }
 
 setRecordDifficulty(currentDifficulty);
@@ -2418,6 +2894,127 @@ function fmt(t){
   return `${mm}:${ss}`;
 }
 
+const RECORDER_MIME_CANDIDATES = ['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4'];
+
+function selectRecordingMimeType(){
+  if(typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported){
+    return '';
+  }
+  for(const type of RECORDER_MIME_CANDIDATES){
+    if(MediaRecorder.isTypeSupported(type)){
+      return type;
+    }
+  }
+  return '';
+}
+
+function isValidAudioFile(file){
+  if(!file) return false;
+  if(file.type && file.type.startsWith('audio/')){
+    return true;
+  }
+  const name = typeof file.name === 'string' ? file.name : '';
+  return /\.(mp3|ogg|webm|wav|m4a|mp4)$/i.test(name);
+}
+
+async function ensureRecordingStream(){
+  if(mediaStream){
+    return mediaStream;
+  }
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    throw new Error('Mikrofonzugriff nicht verfügbar.');
+  }
+  mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  return mediaStream;
+}
+
+function createAuxRecorder({ button, timerEl, onSave }){
+  if(!button) return null;
+  let localRecorder = null;
+  let localChunks = [];
+  let localTimer = null;
+  let localTimerStart = 0;
+
+  const resetUI = () => {
+    button.textContent = '🎙️ Aufnehmen';
+    button.classList.remove('danger');
+    if(localTimer){
+      clearInterval(localTimer);
+      localTimer = null;
+    }
+    if(timerEl){
+      timerEl.classList.remove('blink');
+      timerEl.textContent = '00:00';
+    }
+  };
+
+  const stopRecording = () => {
+    if(localRecorder && localRecorder.state === 'recording'){
+      localRecorder.stop();
+    }
+  };
+
+  const startRecording = async () => {
+    try{
+      await ensureRecordingStream();
+      if(typeof MediaRecorder === 'undefined'){
+        alert('MediaRecorder wird in diesem Browser nicht unterstützt.');
+        return;
+      }
+      const mimeType = selectRecordingMimeType();
+      localRecorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : undefined);
+    }catch(err){
+      alert('Mikrofonzugriff fehlgeschlagen. Bitte Browserberechtigungen prüfen.');
+      return;
+    }
+
+    localChunks = [];
+    localRecorder.ondataavailable = (event) => {
+      if(event.data){
+        localChunks.push(event.data);
+      }
+    };
+    localRecorder.onstop = async () => {
+      const blob = new Blob(localChunks, { type: localRecorder?.mimeType || 'audio/webm' });
+      localRecorder = null;
+      localChunks = [];
+      resetUI();
+      if(onSave){
+        try {
+          await onSave(blob);
+        }catch(err){
+          console.error('Aufnahme konnte nicht gespeichert werden:', err);
+          alert('Die Aufnahme konnte nicht gespeichert werden.');
+        }
+      }
+    };
+
+    localRecorder.start();
+    button.textContent = '⏹️ Stoppen';
+    button.classList.add('danger');
+    if(timerEl){
+      localTimerStart = performance.now();
+      timerEl.classList.add('blink');
+      localTimer = setInterval(() => {
+        timerEl.textContent = fmt(performance.now() - localTimerStart);
+      }, 200);
+    }
+  };
+
+  button.addEventListener('click', () => {
+    if(localRecorder && localRecorder.state === 'recording'){
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  });
+
+  return {
+    stop: stopRecording,
+    isRecording: () => localRecorder && localRecorder.state === 'recording',
+  };
+}
+
 elBtnRec.addEventListener('click', async ()=>{
   // Wenn gerade aufgenommen wird: Stoppen
   if(recorder && recorder.state === 'recording') {
@@ -2432,13 +3029,16 @@ elBtnRec.addEventListener('click', async ()=>{
 
   // Sonst: Aufnahme starten
   try{
-    if(!mediaStream) mediaStream = await navigator.mediaDevices.getUserMedia({audio:true});
+    await ensureRecordingStream();
+    if(typeof MediaRecorder === 'undefined'){
+      alert('MediaRecorder wird in diesem Browser nicht unterstützt.');
+      return;
+    }
   }catch(e){
     alert('Mikrofonzugriff fehlgeschlagen. Bitte Browserberechtigungen prüfen.');
     return;
   }
-  const types = ['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4'];
-  let mimeType = types.find(t=> window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || '';
+  const mimeType = selectRecordingMimeType();
   recorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : undefined);
   recChunks = [];
   recorder.ondataavailable = e=> e.data && recChunks.push(e.data);
@@ -2483,12 +3083,61 @@ elBtnDelete.addEventListener('click', async ()=>{
   }
 });
 
+if(elBtnMotivationRecord){
+  createAuxRecorder({
+    button: elBtnMotivationRecord,
+    timerEl: elMotivationTimer,
+    onSave: async (blob) => {
+      const setId = await getActiveSet();
+      await persistMotivationClip(setId, blob);
+      await refreshSupportAudioUI();
+    },
+  });
+}
+
+if(elBtnMotivationUpload && elMotivationFile){
+  elBtnMotivationUpload.addEventListener('click', () => elMotivationFile.click());
+  elMotivationFile.addEventListener('change', async (event) => {
+    const files = Array.from(event.target.files || []);
+    if(files.length){
+      await importMotivationFiles(files);
+    }
+    event.target.value = '';
+  });
+}
+
+for(const type of MEDAL_TYPES){
+  const controls = medalControls[type];
+  if(!controls || !controls.recordBtn) continue;
+  createAuxRecorder({
+    button: controls.recordBtn,
+    timerEl: controls.timerEl,
+    onSave: async (blob) => {
+      const setId = await getActiveSet();
+      await saveMedalSound(setId, type, blob);
+      await refreshSupportAudioUI();
+    },
+  });
+
+  if(controls.uploadBtn && controls.fileInput){
+    controls.uploadBtn.addEventListener('click', () => controls.fileInput.click());
+    controls.fileInput.addEventListener('change', async (event) => {
+      const files = Array.from(event.target.files || []);
+      if(files.length){
+        await importMedalFiles(type, files);
+      }
+      event.target.value = '';
+    });
+  }
+}
+
 document.getElementById('clearAll').addEventListener('click', async ()=>{
   if(confirm('Wirklich ALLE Aufnahmen löschen?')){
     await idbClear();
     updateStatusGridFromDB();
     updateUIForRecordingState();
     if(currentLetter) selectLetter(currentLetter);
+    await refreshSupportAudioUI();
   }
 });
 
@@ -2513,6 +3162,8 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     for(const set of sets){
       const setFolder = zip.folder(set.id);
       const clipEntries = [];
+      const motivationEntries = [];
+      const medalEntries = makeEmptyMedalMap();
 
       if(Array.isArray(set.clips)){
         for(const clip of set.clips){
@@ -2543,12 +3194,72 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
         }
       }
 
+      if(Array.isArray(set.motivationClips)){
+        for(const clip of set.motivationClips){
+          const blob = await getMotivationClipBlob(set.id, clip.id);
+          if(!blob){
+            console.warn('Motivationsclip ohne Audiodatei, wird übersprungen:', set.id, clip.id);
+            continue;
+          }
+          const extension = blob.type.includes('webm') ? 'webm'
+            : blob.type.includes('ogg') ? 'ogg'
+            : blob.type.includes('mp3') ? 'mp3'
+            : blob.type.includes('m4a') ? 'm4a'
+            : blob.type.includes('wav') ? 'wav'
+            : blob.type.includes('mp4') ? 'mp4'
+            : 'audio';
+          const fileName = `motivation/${clip.id}.${extension}`;
+          if(setFolder){
+            setFolder.file(fileName, blob);
+          }
+          motivationEntries.push({
+            id: clip.id,
+            created: clip.created,
+            file: fileName,
+          });
+          totalAudio++;
+        }
+      }
+
+      if(set.medalSounds && typeof set.medalSounds === 'object'){
+        for(const type of MEDAL_TYPES){
+          const entries = Array.isArray(set.medalSounds[type]) ? set.medalSounds[type] : [];
+          for(const meta of entries){
+            if(!meta || !meta.id) continue;
+            const blob = await idbGet(`medal-${set.id}-${meta.id}`);
+            if(!blob){
+              console.warn('Medaillen-Sound ohne Audiodatei, wird übersprungen:', set.id, type);
+              continue;
+            }
+            const extension = blob.type.includes('webm') ? 'webm'
+              : blob.type.includes('ogg') ? 'ogg'
+              : blob.type.includes('mp3') ? 'mp3'
+              : blob.type.includes('m4a') ? 'm4a'
+              : blob.type.includes('wav') ? 'wav'
+              : blob.type.includes('mp4') ? 'mp4'
+              : 'audio';
+            const fileName = `medals/${type}-${meta.id}.${extension}`;
+            if(setFolder){
+              setFolder.file(fileName, blob);
+            }
+            medalEntries[type].push({
+              id: meta.id,
+              created: meta.created,
+              file: fileName,
+            });
+            totalAudio++;
+          }
+        }
+      }
+
       setsMetadata.push({
         id: set.id,
         name: set.name,
         emoji: set.emoji,
         created: set.created,
         clips: clipEntries,
+        motivationClips: motivationEntries,
+        medals: medalEntries,
       });
     }
 
@@ -2606,6 +3317,8 @@ document.getElementById('importFile').addEventListener('change', async (e)=>{
         }
 
         const clipList = [];
+        const motivationList = [];
+        const medalMap = makeEmptyMedalMap();
         const setPrefix = `${setMeta.id}/`;
 
         if(Array.isArray(setMeta.clips) && setMeta.clips.length){
@@ -2680,11 +3393,105 @@ document.getElementById('importFile').addEventListener('change', async (e)=>{
           }
         }
 
+        if(Array.isArray(setMeta.motivationClips) && setMeta.motivationClips.length){
+          for(const clipMeta of setMeta.motivationClips){
+            const clipId = clipMeta && clipMeta.id ? clipMeta.id : generateUUID();
+            let fileName = clipMeta && clipMeta.file ? clipMeta.file : '';
+
+            let zipEntry = null;
+            if(fileName){
+              const normalizedFile = fileName.replace(/^\/+/, '');
+              zipEntry = contents.files[setPrefix + normalizedFile];
+              if(!zipEntry){
+                zipEntry = contents.files[normalizedFile];
+              }
+            }
+            if(!zipEntry){
+              zipEntry = Object.entries(contents.files).find(([name]) => {
+                return !name.endsWith('/') && name.startsWith(setPrefix + 'motivation/') && name.includes(clipId);
+              });
+              if(zipEntry){
+                fileName = zipEntry[0].replace(setPrefix, '');
+                zipEntry = zipEntry[1];
+              }
+            }
+
+            if(!zipEntry || zipEntry.dir){
+              console.warn('Audio-Datei für Motivationsclip nicht gefunden:', setMeta.id, clipId);
+              errorCount++;
+              continue;
+            }
+
+            const blob = await zipEntry.async('blob');
+            if(!blob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
+              errorCount++;
+              continue;
+            }
+
+            await idbSet(`motivation-${setMeta.id}-${clipId}`, blob);
+            motivationList.push({
+              id: clipId,
+              created: typeof clipMeta?.created === 'number' ? clipMeta.created : Date.now(),
+            });
+            importedAudio++;
+          }
+        }
+
+        if(setMeta.medals && typeof setMeta.medals === 'object'){
+          for(const type of MEDAL_TYPES){
+            const entries = setMeta.medals[type];
+            const list = Array.isArray(entries) ? entries : entries ? [entries] : [];
+            for(const medalMeta of list){
+              const clipId = medalMeta && medalMeta.id ? medalMeta.id : generateUUID();
+              let fileName = medalMeta && medalMeta.file ? medalMeta.file : '';
+
+              let zipEntry = null;
+              if(fileName){
+                const normalizedFile = fileName.replace(/^\/+/, '');
+                zipEntry = contents.files[setPrefix + normalizedFile];
+                if(!zipEntry){
+                  zipEntry = contents.files[normalizedFile];
+                }
+              }
+              if(!zipEntry){
+                zipEntry = Object.entries(contents.files).find(([name]) => {
+                  return !name.endsWith('/') && name.startsWith(setPrefix + 'medals/') && name.includes(clipId);
+                });
+                if(zipEntry){
+                  fileName = zipEntry[0].replace(setPrefix, '');
+                  zipEntry = zipEntry[1];
+                }
+              }
+
+              if(!zipEntry || zipEntry.dir){
+                console.warn('Audio-Datei für Medaillen-Sound nicht gefunden:', setMeta.id, type);
+                errorCount++;
+                continue;
+              }
+
+              const blob = await zipEntry.async('blob');
+              if(!blob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
+                errorCount++;
+                continue;
+              }
+
+              await idbSet(`medal-${setMeta.id}-${clipId}`, blob);
+              medalMap[type].push({
+                id: clipId,
+                created: typeof medalMeta?.created === 'number' ? medalMeta.created : Date.now(),
+              });
+              importedAudio++;
+            }
+          }
+        }
+
         await idbSet('set-' + setMeta.id, {
           name: setMeta.name,
           emoji: setMeta.emoji,
           created: setMeta.created || Date.now(),
           clips: clipList,
+          motivationClips: motivationList,
+          medalSounds: medalMap,
         });
 
         importedSets++;
@@ -2737,6 +3544,7 @@ document.getElementById('importFile').addEventListener('change', async (e)=>{
     await updateStatusGridFromDB();
     await updateUIForRecordingState();
     if(currentLetter) await selectLetter(currentLetter);
+    await refreshSupportAudioUI();
 
     // Reset file input
     e.target.value = '';
@@ -2778,6 +3586,11 @@ function confirmEndGame() {
 }
 
 function endGame() {
+  clearMotivationChain();
+  if(lastPlayed){
+    try { lastPlayed.pause(); } catch(_){ /* ignore */ }
+    try { lastPlayed.currentTime = 0; } catch(_){ /* ignore */ }
+  }
   // Hide game view
   elHud.classList.add('hidden');
   elLetters.classList.add('hidden');
@@ -2850,6 +3663,7 @@ async function startGame(){
     errorHistory: [],
     introPromptDelay: INTRO_PROMPT_DELAY,
   };
+  game.pendingMotivations = new Set();
   elRoundMax.textContent = rounds;
   elOk.textContent=0; elBad.textContent=0;
   elBar.style.width='0%';
@@ -2955,6 +3769,17 @@ async function playCurrentPrompt({ setData = null, suppressAlert = false } = {})
     return false;
   }
 
+  let motivationClipData = null;
+  let shouldChainMotivation = hasPendingMotivation(game.target);
+  if(shouldChainMotivation){
+    const motivationHistoryKey = makeClipHistoryKey('motivation', game.setId, 'ALL', desiredDifficulty);
+    motivationClipData = await fetchMotivationClip({ setId: game.setId, setData: dataset, historyKey: motivationHistoryKey });
+    if(!motivationClipData){
+      shouldChainMotivation = false;
+    }
+  }
+
+  clearMotivationChain();
   if(lastPlayed){
     try { lastPlayed.pause(); } catch(e) {}
     try { lastPlayed.currentTime = 0; } catch(e) {}
@@ -2964,6 +3789,9 @@ async function playCurrentPrompt({ setData = null, suppressAlert = false } = {})
   lastPlayed = new Audio(url);
   lastPlayed.addEventListener('ended', () => URL.revokeObjectURL(url));
   lastPlayed.addEventListener('error', () => URL.revokeObjectURL(url));
+  if(shouldChainMotivation && motivationClipData){
+    queueMotivationPlayback(lastPlayed, motivationClipData);
+  }
   if(elBtnTestAudio){
     elBtnTestAudio.disabled = false;
   }
@@ -3019,17 +3847,25 @@ async function onLetterClick(e){
   // Klick-Sound
   playClickSound();
 
+  const targetLetter = game.target;
   const wrongCountsBefore = game.progress && game.progress.wrongCounts ? game.progress.wrongCounts : {};
-  const wasErrorPick = (wrongCountsBefore[game.target] || 0) > 0;
-  const correct = letter === game.target;
+  const wasErrorPick = (wrongCountsBefore[targetLetter] || 0) > 0;
+  const correct = letter === targetLetter;
   if(correct){
     game.ok++;
-    game.progress = markCorrect(game.target, letter);
+    game.progress = markCorrect(targetLetter, letter);
+    if(game.pendingMotivations){
+      game.pendingMotivations.delete(targetLetter);
+    }
     // Buchstaben-Statistik für Belohnungssystem tracken
-    await incrementLetterStat(game.target);
+    await incrementLetterStat(targetLetter);
   } else {
     game.bad++;
-    game.progress = markWrong(game.target, letter);
+    game.progress = markWrong(targetLetter, letter);
+    if(!game.pendingMotivations){
+      game.pendingMotivations = new Set();
+    }
+    game.pendingMotivations.add(targetLetter);
   }
 
   game.errorHistory = [wasErrorPick, ...(game.errorHistory || [])].slice(0, 3);
@@ -3045,7 +3881,7 @@ async function onLetterClick(e){
   }
 
   // Feedback zeigen
-  await showFeedback(correct, game.target);
+  await showFeedback(correct, targetLetter);
 
   // nächste Runde
   await nextRound();
@@ -3106,15 +3942,19 @@ function finishGame(){
   const pct = Math.round((ok/total)*100);
   const msg = `${ok} von ${total} richtig (${pct} %)`;
   let animationPath;
+  let medalTier = 'bronze';
   if(game.bad === 0){
-    animationPath = 'SPECS/Trophy.json';
+    animationPath = 'app/assets/animations/Trophy.json';
     elResultTitle.textContent='Gold! Fantastisch ✨';
+    medalTier = 'gold';
   } else if(pct >= 50){
-    animationPath = 'SPECS/Silver.json';
+    animationPath = 'app/assets/animations/Silver.json';
     elResultTitle.textContent='Silber! Super gemacht 🥈';
+    medalTier = 'silver';
   } else {
-    animationPath = 'SPECS/bronze.json';
+    animationPath = 'app/assets/animations/bronze.json';
     elResultTitle.textContent='Bronze! Weiter so 🥉';
+    medalTier = 'bronze';
   }
   playTrophyAnimation(animationPath);
   const progressBefore = game && game.progress ? game.progress : null;
@@ -3138,9 +3978,11 @@ function finishGame(){
   // Pokalfarben anpassen (einfach über Füllung)
   // Sterne für richtige Antworten vergeben
   const earnedStars = ok;
-  if(earnedStars > 0){
-    playRewardSound();
-  }
+  playMedalCelebration(medalTier).then((customPlayed) => {
+    if(!customPlayed && earnedStars > 0){
+      playRewardSound();
+    }
+  });
   let fullMsg = msg;
 
   // Async-Teil für Sterne und Pack-Öffnung
@@ -3224,6 +4066,7 @@ async function startPracticeGame(letters) {
     errorHistory: [],
     introPromptDelay: INTRO_PROMPT_DELAY,
   };
+  game.pendingMotivations = new Set();
 
   elRounds.value = rounds;
   elRoundsOut.textContent = rounds;
@@ -3265,4 +4108,5 @@ elLetters.addEventListener('keydown', (e)=>{
   updateStartButtonLabel(getProgress());
   await updateLetterButtons();
   await updateUIForRecordingState();
+  await refreshSupportAudioUI();
 })();
