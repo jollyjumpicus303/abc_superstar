@@ -91,6 +91,18 @@ test('pickNext prioritizes letters with fewer asks to ensure coverage', async ()
   assert.equal(result, 'B');
 });
 
+test('pickNext still avoids immediate repeats when coverage focus is on last letter', async () => {
+  const { pickNext } = await loadModule();
+  const result = pickNext({
+    pool: ['A', 'B', 'C'],
+    last: 'A',
+    askedCounts: { A: 0, B: 5, C: 5 },
+    rng: createRng([0.2]),
+  });
+  assert.notEqual(result, 'A');
+  assert.ok(['B', 'C'].includes(result));
+});
+
 test('pickNext downranks letters with long correct streaks', async () => {
   const { pickNext } = await loadModule();
   const result = pickNext({

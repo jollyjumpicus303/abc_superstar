@@ -206,14 +206,29 @@ function pickNext(options) {
   let filtered = source.filter((letter) => !avoidFull.has(letter));
 
   if (!filtered.length && source.length) {
-    const avoidLastOnly = lastLetter ? new Set([lastLetter]) : null;
-    if (avoidLastOnly) {
-      filtered = source.filter((letter) => !avoidLastOnly.has(letter));
+    if (lastLetter) {
+      const withoutLast = source.filter((letter) => letter !== lastLetter);
+      if (withoutLast.length) {
+        filtered = withoutLast;
+      }
     }
   }
 
   if (!filtered.length) {
-    filtered = source.slice();
+    if (lastLetter) {
+      const fallbackNonLast = candidates.filter((letter) => letter !== lastLetter);
+      if (fallbackNonLast.length) {
+        filtered = fallbackNonLast;
+      } else if (source.length) {
+        filtered = source.slice();
+      } else {
+        filtered = candidates.slice();
+      }
+    } else if (source.length) {
+      filtered = source.slice();
+    } else {
+      filtered = candidates.slice();
+    }
   }
 
   const effectiveStats = computeAskedStats(filtered, askedMap);
