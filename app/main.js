@@ -2488,16 +2488,6 @@ async function importLetterAudioFile(file){
     setData.clips = [];
   }
 
-  const existingIndex = setData.clips.findIndex((clip) => (
-    clip.letter === letter && normaliseDifficultyInput(clip.difficulty) === difficulty
-  ));
-  if(existingIndex !== -1){
-    const existing = setData.clips.splice(existingIndex, 1)[0];
-    if(existing && existing.id){
-      await idbDel(`audio-${setId}-${existing.id}`);
-    }
-  }
-
   const clipId = generateUUID();
   setData.clips.push({
     id: clipId,
@@ -2514,7 +2504,7 @@ async function importLetterAudioFile(file){
   await updateStatusGridFromDB();
   await updateUIForRecordingState();
   await renderSetsList();
-  alert(`✅ Aufnahme für ${letter} (${difficulty}) importiert.`);
+  alert(`✅ Neue Aufnahme für ${letter} (${difficulty}) hinzugefügt. Alte Versionen bleiben erhalten, du kannst sie bei Bedarf löschen.`);
 }
 
 async function persistMotivationClip(setId, blob){
