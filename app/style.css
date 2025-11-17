@@ -685,13 +685,15 @@ html[data-theme='nebula'] .dialog h3{
   color:#ede9fe;
 }
 .trophy-animation{
-  width:min(180px, 55vw);
-  height:min(180px, 55vw);
-  margin:0 auto 2px;
+  width:min(150px, 50vw);
+  height:min(150px, 50vw);
+  margin:-4px auto 2px;
+  overflow:hidden;
 }
 .trophy-animation svg{
   width:100% !important;
   height:100% !important;
+  transform:scale(.9) translateY(-16px);
 }
 .result-line{font-weight:900; font-size:18px; white-space:pre-line}
 .result-stars{

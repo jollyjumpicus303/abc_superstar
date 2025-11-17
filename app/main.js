@@ -253,6 +253,8 @@ const elBtnTestAudio = document.getElementById('btnTestAudio');
 const elBtnEndGame = document.getElementById('btnEndGame');
 const elRounds = document.getElementById('rounds');
 const elRoundsOut = document.getElementById('roundsOut');
+const elLetterImport = document.getElementById('btnLetterImport');
+const elLetterImportFile = document.getElementById('letterImportFile');
 const elThemeSwitcher = document.getElementById('themeSwitcher');
 const elThemeTrigger = document.getElementById('themeSwitcherBtn');
 const elThemeMenu = document.getElementById('themeSwitcherMenu');
@@ -1065,11 +1067,19 @@ function generateUUID(){
 }
 
 const AUDIO_DIFFICULTIES = ['LEICHT', 'MITTEL', 'SCHWER', 'AFFIG'];
+const AUDIO_FILE_EXT_PATTERN = /\.(webm|ogg|mp3|mp4|m4a|wav)$/i;
 
 function makeEmptyMedalMap(){
   const map = {};
   MEDAL_TYPES.forEach(type => { map[type] = []; });
   return map;
+}
+
+function isAudioFileLike(file){
+  if(!file) return false;
+  if(file.type && file.type.startsWith('audio/')) return true;
+  if(file.name && AUDIO_FILE_EXT_PATTERN.test(file.name)) return true;
+  return false;
 }
 
 function normaliseLetterInput(value){
@@ -2448,6 +2458,65 @@ async function persistClip(setId, letter, difficulty, blob) {
   await idbSet(setKey, setData);
 }
 
+async function importLetterAudioFile(file){
+  if(!file){
+    return;
+  }
+  const letter = normaliseLetterInput(currentLetter);
+  if(!letter){
+    alert('Bitte wähle zuerst einen Buchstaben aus.');
+    return;
+  }
+  if(!isAudioFileLike(file)){
+    alert('Bitte wähle eine gültige Audiodatei (mp3, wav, ogg …).');
+    return;
+  }
+  const difficulty = normaliseDifficultyInput(currentDifficulty);
+  const setId = await getActiveSet();
+  let setData = await loadSetData(setId);
+  if(!setData){
+    setData = {
+      name: 'Meine Aufnahmen',
+      emoji: '🎤',
+      created: Date.now(),
+      clips: [],
+      motivationClips: [],
+      medalSounds: makeEmptyMedalMap(),
+    };
+  }
+  if(!Array.isArray(setData.clips)){
+    setData.clips = [];
+  }
+
+  const existingIndex = setData.clips.findIndex((clip) => (
+    clip.letter === letter && normaliseDifficultyInput(clip.difficulty) === difficulty
+  ));
+  if(existingIndex !== -1){
+    const existing = setData.clips.splice(existingIndex, 1)[0];
+    if(existing && existing.id){
+      await idbDel(`audio-${setId}-${existing.id}`);
+    }
+  }
+
+  const clipId = generateUUID();
+  setData.clips.push({
+    id: clipId,
+    letter,
+    difficulty,
+    created: Date.now(),
+  });
+
+  await idbSet(`audio-${setId}-${clipId}`, file);
+  await idbSet(`set-${setId}`, setData);
+  currentClipId = clipId;
+
+  await refreshCurrentLetterClips();
+  await updateStatusGridFromDB();
+  await updateUIForRecordingState();
+  await renderSetsList();
+  alert(`✅ Aufnahme für ${letter} (${difficulty}) importiert.`);
+}
+
 async function persistMotivationClip(setId, blob){
   const clipId = generateUUID();
   const clipKey = `motivation-${setId}-${clipId}`;
@@ -3127,6 +3196,30 @@ if(elBtnRecord){
     handlePrimaryRecordClick().catch(err => {
       console.error('Aufnahme fehlgeschlagen', err);
     });
+  });
+}
+
+if(elLetterImport && elLetterImportFile){
+  elLetterImport.addEventListener('click', () => {
+    if(!normaliseLetterInput(currentLetter)){
+      alert('Bitte wähle zuerst einen Buchstaben aus.');
+      return;
+    }
+    elLetterImportFile.value = '';
+    elLetterImportFile.click();
+  });
+
+  elLetterImportFile.addEventListener('change', async (event) => {
+    const file = event.target.files && event.target.files[0];
+    if(!file) return;
+    try{
+      await importLetterAudioFile(file);
+    }catch(err){
+      console.error('Buchstaben-Import fehlgeschlagen', err);
+      alert('❌ Die Datei konnte nicht importiert werden.');
+    }finally{
+      event.target.value = '';
+    }
   });
 }
 

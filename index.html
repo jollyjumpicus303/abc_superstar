@@ -253,6 +253,7 @@
           <div class="controls record-controls" style="margin:10px 0">
             <div class="record-mode-row">
               <button id="btnRecord" class="btn">🎙️ Aufnehmen</button>
+              <button id="btnLetterImport" class="btn secondary" type="button">📁 Buchstabe importieren</button>
               <label class="series-toggle">
                 <input type="checkbox" id="seriesToggle">
                 <span class="series-toggle__control" aria-hidden="true"></span>
@@ -268,6 +269,7 @@
               <span class="timer" id="timer">00:00</span>
             </div>
           </div>
+          <input type="file" id="letterImportFile" accept="audio/*" style="display:none">
           <div id="clipList" class="clip-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px"></div>
           <div class="muted">Tipp: Spreche klar und kurz (z. B. „B“ oder „B – wie Ball“).</div>
         </aside>
@@ -425,7 +427,7 @@
       <div class="trophy-animation" id="trophyAnimation" aria-hidden="true"></div>
       <h3 id="resultTitle">Toll gemacht!</h3>
       <div class="result-stars" aria-live="polite">
-        <canvas id="starCanvas" width="560" height="220" aria-label="Sternwertung"></canvas>
+        <canvas id="starCanvas" width="560" height="160" aria-label="Sternwertung"></canvas>
         <div class="result-stars__text">
           <p class="result-stars__label">Deine Sternwertung</p>
           <p class="result-stars__value" id="starSummaryText">0 von 5 Sternen</p>
