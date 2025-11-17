@@ -6,6 +6,8 @@ import {
 } from './progressStore.js';
 import { pickNext } from './letterPool.js';
 import { advanceAfterRun } from './progression.js';
+import { computeRunStars, MAX_RUN_STARS } from './rewardUtils.js';
+import StarReveal from './js/starRevealCanvas.js';
 
 // Persisted Lernfortschritt wird sofort initialisiert
 getProgress();
@@ -27,6 +29,9 @@ const SOUND_FILES = {
   start: { url: 'app/sfx/start.mp3', volume: 0.7 },
   unlock: { url: 'app/sfx/unlock.mp3', volume: 0.75 },
   reward: { url: 'app/sfx/reward.mp3', volume: 0.85 },
+  starReveal: { url: 'SPECS/AdditionalInput/star.mp3', volume: 0.9 },
+  medalIntro: { url: 'SPECS/AdditionalInput/PlayBeforeMedalSound.mp3', volume: 0.85 },
+  giftPop: { url: 'SPECS/AdditionalInput/pop.mp3', volume: 0.8 },
 };
 
 const soundBuffers = new Map();
@@ -128,6 +133,39 @@ function playClickSound(){ playSfx('click'); }
 function playStartSound(){ playSfx('start'); }
 function playUnlockSound(){ playSfx('unlock'); }
 function playRewardSound(){ playSfx('reward'); }
+function playStarRevealSound(){ playSfx('starReveal'); }
+function playGiftPopSound(){ playSfx('giftPop'); }
+
+async function playSfxAndWait(id, options = {}){
+  const config = SOUND_FILES[id];
+  if(!config){
+    return 0;
+  }
+  const ctx = ensureAudioContextRunning();
+  const buffer = soundBuffers.get(id) || await loadSoundBuffer(id);
+  if(!buffer){
+    return 0;
+  }
+  return new Promise((resolve) => {
+    const source = ctx.createBufferSource();
+    const gain = ctx.createGain();
+    const volume = typeof options.volume === 'number' ? options.volume : (config.volume ?? 1);
+    gain.gain.value = volume;
+    source.buffer = buffer;
+    source.connect(gain);
+    gain.connect(ctx.destination);
+    source.start();
+    source.addEventListener('ended', () => {
+      source.disconnect();
+      gain.disconnect();
+      resolve(buffer.duration);
+    });
+  });
+}
+
+function playMedalIntroSound(){
+  return playSfxAndWait('medalIntro');
+}
 
 const sleep = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -195,13 +233,17 @@ const elMissionText = document.getElementById('missionText');
 const elStarTrack = document.getElementById('starTrack');
 const elStarTrackStars = document.getElementById('starTrackStars');
 const elStarTrackProgressText = document.getElementById('starTrackProgressText');
-const elRewardBox = document.getElementById('btnRewardBox');
 const elOverlayGood = document.getElementById('overlayGood');
 const elOverlayBad = document.getElementById('overlayBad');
 const elCorrectLetter = document.getElementById('correctLetter');
 const elModal = document.getElementById('modal');
 const elResultTitle = document.getElementById('resultTitle');
 const elResultText = document.getElementById('resultText');
+const elStarCanvas = document.getElementById('starCanvas');
+const elStarSummaryText = document.getElementById('starSummaryText');
+const elResultGift = document.getElementById('resultGift');
+const elResultGiftButton = document.getElementById('resultGiftButton');
+const elResultGiftLottie = document.getElementById('resultGiftLottie');
 const elTrophyAnimation = document.getElementById('trophyAnimation');
 const elInstallBtn = document.getElementById('installBtn');
 const elBtnStart = document.getElementById('btnStart');
@@ -1434,9 +1476,19 @@ async function addSticker(stickerId){
 
 const STAR_TRACK_SIZE = STARS_PER_PACK;
 let totalStarBank = 0;
-let pendingStarGain = 0;
 let starTrackNodes = [];
-let starShakeTimeout = null;
+let starRevealWidget = null;
+let giftLottieAnimation = null;
+const reduceMotionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+let prefersReducedMotion = reduceMotionQuery.matches;
+const handleReduceMotionChange = (event) => {
+  prefersReducedMotion = event.matches;
+};
+if(typeof reduceMotionQuery.addEventListener === 'function'){
+  reduceMotionQuery.addEventListener('change', handleReduceMotionChange);
+} else if(typeof reduceMotionQuery.addListener === 'function'){
+  reduceMotionQuery.addListener(handleReduceMotionChange);
+}
 
 // Buchstaben-Statistik abrufen
 async function getLetterStats(){
@@ -1450,6 +1502,10 @@ async function incrementLetterStat(letter){
   stats[letter] = (stats[letter] || 0) + 1;
   await idbSet('letterStats', stats);
   return stats[letter];
+}
+
+function shouldReduceMotion(){
+  return prefersReducedMotion;
 }
 
 // Badge-Level für Buchstabe berechnen (Bronze: 3, Silber: 10, Gold: 25)
@@ -1505,7 +1561,7 @@ function initStarTrack(){
 
 function updateStarTrackDisplay(){
   if(!starTrackNodes.length) return;
-  const combined = totalStarBank + pendingStarGain;
+  const combined = totalStarBank;
   const ready = combined >= STARS_PER_PACK;
   const progress = ready ? STARS_PER_PACK : (combined % STARS_PER_PACK);
   starTrackNodes.forEach((node, index) => {
@@ -1514,62 +1570,6 @@ function updateStarTrackDisplay(){
   if(elStarTrackProgressText){
     elStarTrackProgressText.textContent = `${progress}/${STARS_PER_PACK}`;
   }
-  if(elRewardBox){
-    elRewardBox.disabled = !ready;
-    elRewardBox.classList.toggle('gift-box--ready', ready);
-  }
-}
-
-function flashStarTrackError(){
-  if(!elStarTrack) return;
-  elStarTrack.classList.add('shake');
-  clearTimeout(starShakeTimeout);
-  starShakeTimeout = setTimeout(() => elStarTrack.classList.remove('shake'), 400);
-}
-
-function triggerStarPop(index){
-  const star = starTrackNodes[index];
-  if(!star) return;
-  star.classList.remove('pop');
-  // force reflow
-  void star.offsetWidth;
-  star.classList.add('pop');
-  setTimeout(() => star.classList.remove('pop'), 600);
-}
-
-function animateStarFill(previous, next){
-  if(!starTrackNodes.length) return;
-  if(next === previous) return;
-  if(next > previous){
-    for(let i = previous; i < next; i += 1){
-      triggerStarPop(i);
-    }
-    return;
-  }
-  for(let i = previous; i < STAR_TRACK_SIZE; i += 1){
-    triggerStarPop(i);
-  }
-  for(let i = 0; i < next; i += 1){
-    triggerStarPop(i);
-  }
-}
-
-function handleStarGain(amount = 1){
-  if(amount <= 0) return;
-  const beforeTotal = totalStarBank + pendingStarGain;
-  const beforeProgress = beforeTotal >= STARS_PER_PACK ? STARS_PER_PACK : (beforeTotal % STARS_PER_PACK);
-  pendingStarGain += amount;
-  const afterTotal = totalStarBank + pendingStarGain;
-  const afterProgress = afterTotal >= STARS_PER_PACK ? STARS_PER_PACK : (afterTotal % STARS_PER_PACK);
-  updateStarTrackDisplay();
-  animateStarFill(beforeProgress, afterProgress);
-  playStarJingle();
-}
-
-function resetPendingStars(){
-  if(!pendingStarGain) return;
-  pendingStarGain = 0;
-  updateStarTrackDisplay();
 }
 
 async function refreshStoredStars(){
@@ -1577,22 +1577,69 @@ async function refreshStoredStars(){
   updateStarTrackDisplay();
 }
 
-function playStarJingle(){
-  const ctx = ensureAudioContextRunning();
-  if(!ctx) return;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  const now = ctx.currentTime;
-  osc.type = 'triangle';
-  osc.frequency.setValueAtTime(880, now);
-  osc.frequency.linearRampToValueAtTime(1320, now + 0.15);
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start(now);
-  osc.stop(now + 0.35);
+function updateStarSummary(count){
+  if(!elStarSummaryText) return;
+  const safe = Math.max(0, Math.min(MAX_RUN_STARS, count));
+  elStarSummaryText.textContent = `${safe} von ${MAX_RUN_STARS} Sternen`;
+}
+
+function getStarRevealWidget(){
+  if(!elStarCanvas) return null;
+  if(!starRevealWidget){
+    starRevealWidget = new StarReveal(elStarCanvas, {
+      onReveal: () => {
+        if(shouldReduceMotion()) return;
+        playStarRevealSound();
+      },
+      revealDelay: 520,
+    });
+  }
+  return starRevealWidget;
+}
+
+async function animateResultStars(count){
+  updateStarSummary(count);
+  const widget = getStarRevealWidget();
+  if(!widget){
+    return;
+  }
+  await widget.setStars(0);
+  await widget.setStars(count);
+}
+
+function ensureGiftLottie(){
+  if(!elResultGiftLottie || typeof lottie === 'undefined'){
+    return null;
+  }
+  if(!giftLottieAnimation){
+    giftLottieAnimation = lottie.loadAnimation({
+      container: elResultGiftLottie,
+      renderer: 'svg',
+      loop: true,
+      autoplay: false,
+      path: 'SPECS/AdditionalInput/GiftLotti.json',
+    });
+  }
+  return giftLottieAnimation;
+}
+
+function toggleResultGift(show){
+  if(!elResultGift) return;
+  if(show){
+    if(elResultGift.classList.contains('hidden')){
+      playGiftPopSound();
+    }
+    elResultGift.classList.remove('hidden');
+    const anim = ensureGiftLottie();
+    if(anim){
+      anim.goToAndPlay(0, true);
+    }
+  } else {
+    elResultGift.classList.add('hidden');
+    if(giftLottieAnimation){
+      giftLottieAnimation.stop();
+    }
+  }
 }
 
 // ——————————————————————————————————————————
@@ -2723,12 +2770,15 @@ async function playMedalCelebration(medalType){
   }
   const url = URL.createObjectURL(blob);
   const audio = new Audio(url);
-  audio.addEventListener('ended', () => URL.revokeObjectURL(url));
-  audio.addEventListener('error', () => URL.revokeObjectURL(url));
-  audio.play().catch(() => {
-    URL.revokeObjectURL(url);
+  return new Promise((resolve) => {
+    const cleanup = (result) => {
+      URL.revokeObjectURL(url);
+      resolve(result);
+    };
+    audio.addEventListener('ended', () => cleanup(true), { once: true });
+    audio.addEventListener('error', () => cleanup(false), { once: true });
+    audio.play().catch(() => cleanup(false));
   });
-  return true;
 }
 
 async function playMotivationClip(clipId){
@@ -3817,13 +3867,10 @@ elBtnTestAudio.addEventListener('click', async () => {
 });
 document.getElementById('closeModal').addEventListener('click', closeModal);
 
-if(elRewardBox){
-  elRewardBox.addEventListener('click', () => {
-    if(elRewardBox.disabled){
-      flashStarTrackError();
-      return;
-    }
+if(elResultGiftButton){
+  elResultGiftButton.addEventListener('click', () => {
     playRewardSound();
+    closeModal();
     switchToTab('album');
     requestAnimationFrame(() => {
       const btnOpenPack = document.getElementById('btnOpenPack');
@@ -3836,7 +3883,10 @@ if(elRewardBox){
   });
 }
 
-function closeModal(){ elModal.classList.add('hidden'); }
+function closeModal(){
+  elModal.classList.add('hidden');
+  toggleResultGift(false);
+}
 
 function confirmEndGame() {
   if (!game) return false;
@@ -3865,7 +3915,6 @@ function endGame() {
   currentLetter = null;
   currentAudio = null;
   renderLetterGrid();
-  resetPendingStars();
   updateMissionStatus();
 
   // Update UI
@@ -3931,7 +3980,6 @@ async function startGame(){
   elRoundMax.textContent = rounds;
   elOk.textContent=0; elBad.textContent=0;
   elBar.style.width='0%';
-  pendingStarGain = 0;
   updateStarTrackDisplay();
   updateMissionStatus(0, rounds);
   document.getElementById('setup').classList.add('hidden');
@@ -4129,7 +4177,6 @@ async function onLetterClick(e){
     }
     // Buchstaben-Statistik für Belohnungssystem tracken
     await incrementLetterStat(targetLetter);
-    handleStarGain(1);
   } else {
     game.bad++;
     game.progress = markWrong(targetLetter, letter);
@@ -4137,7 +4184,6 @@ async function onLetterClick(e){
       game.pendingMotivations = new Set();
     }
     game.pendingMotivations.add(targetLetter);
-    flashStarTrackError();
   }
 
   game.errorHistory = [wasErrorPick, ...(game.errorHistory || [])].slice(0, 3);
@@ -4208,7 +4254,9 @@ function showFeedback(ok, correctLetter){
   return show(elOverlayBad, false); // Muss weggeklickt werden
 }
 
-function finishGame(){
+async function finishGame(){
+  if(!game) return;
+  toggleResultGift(false);
   const total = game.rounds;
   const ok = game.ok;
   const pct = Math.round((ok/total)*100);
@@ -4247,61 +4295,14 @@ function finishGame(){
     }
     game.progress = saved;
   }
-  // Pokalfarben anpassen (einfach über Füllung)
-  // Sterne für richtige Antworten vergeben
-  const earnedStars = ok;
+  const savedProgressSnapshot = game && game.progress ? game.progress : progressBefore;
+  const runStars = computeRunStars(ok, total);
+  updateStarSummary(runStars);
+  const existingWidget = getStarRevealWidget();
+  if(existingWidget){
+    existingWidget.setStars(0);
+  }
   updateMissionStatus(game.rounds, game.rounds);
-  playMedalCelebration(medalTier).then((customPlayed) => {
-    if(!customPlayed && earnedStars > 0){
-      playRewardSound();
-    }
-  });
-  let fullMsg = msg;
-
-  // Async-Teil für Sterne und Pack-Öffnung
-  (async () => {
-    const totalStars = await addStars(earnedStars);
-    totalStarBank = totalStars;
-    pendingStarGain = 0;
-    updateStarTrackDisplay();
-
-    // Prüfen ob Pack geöffnet werden kann
-    const canOpenPack = totalStars >= STARS_PER_PACK;
-    let packsToOpen = 0;
-    if(canOpenPack){
-      packsToOpen = Math.floor(totalStars / STARS_PER_PACK);
-    }
-
-    // Erweiterte Nachricht mit Sternen
-    if(earnedStars > 0){
-      fullMsg += `\n⭐ +${earnedStars} Stern${earnedStars > 1 ? 'e' : ''}! (${totalStars} gesamt)`;
-    }
-    if(packsToOpen > 0){
-      fullMsg += `\n\n🎁 ${packsToOpen} Sticker-Pack${packsToOpen > 1 ? 's' : ''} verfügbar!`;
-    }
-
-    const savedProgress = game && game.progress ? game.progress : progressBefore;
-    if(savedProgress && savedProgress.wrongCounts){
-      const trouble = Object.entries(savedProgress.wrongCounts)
-        .filter(([, count]) => count > 0)
-        .sort((a, b) => b[1] - a[1])
-        .slice(0, 3);
-      if(trouble.length){
-        const tipLetters = trouble.map(([letter, count]) => `${letter} (${count}x)`);
-        const tipSentence = trouble.length === 1
-          ? `${tipLetters[0]} fällt noch schwer.`
-          : `${tipLetters.join(', ')} fallen noch schwer.`;
-        fullMsg += `\n\n👨‍👩‍👧 Eltern-Tipp: ${tipSentence} Hört euch die Aufnahme gemeinsam an oder wiederholt den Buchstaben spielerisch.`;
-      }
-    }
-
-    await renderAlbum();
-    elResultText.textContent = fullMsg;
-    await renderAlbum();
-
-    // TODO: Pack-Öffnen UI hier integrieren wenn packsToOpen > 0
-  })();
-
   elResultText.textContent = msg;
 
   document.getElementById('setup').classList.remove('hidden');
@@ -4313,6 +4314,32 @@ function finishGame(){
 
   // Zurück in Preview-Modus: Buttons basierend auf Aufnahmen aktivieren
   updateLetterButtons();
+
+  await playMedalIntroSound();
+  const customPlayed = await playMedalCelebration(medalTier);
+  if(!customPlayed && runStars > 0){
+    playRewardSound();
+  }
+  await animateResultStars(runStars);
+  let totalStars = totalStarBank;
+  if(runStars > 0){
+    totalStars = await addStars(runStars);
+  } else {
+    totalStars = await getStars();
+  }
+  totalStarBank = totalStars;
+  updateStarTrackDisplay();
+  const canOpenPack = totalStars >= STARS_PER_PACK;
+  const packsToOpen = canOpenPack ? Math.floor(totalStars / STARS_PER_PACK) : 0;
+  let fullMsg = msg;
+  if(runStars > 0){
+    fullMsg += `\n⭐ +${runStars} Stern${runStars === 1 ? '' : 'e'}! (${totalStars} gesamt)`;
+  } else {
+    fullMsg += `\n⭐ Dieses Mal gab es keine Sterne – probiere es gleich nochmal!`;
+  }
+  elResultText.textContent = fullMsg;
+  await renderAlbum();
+  toggleResultGift(packsToOpen > 0);
 }
 
 async function startPracticeGame(letters) {

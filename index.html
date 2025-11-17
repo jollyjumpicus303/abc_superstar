@@ -124,16 +124,6 @@
             <span id="missionText">Starte ein Abenteuer!</span>
           </div>
         </div>
-        <div class="reward-track" aria-label="Sterne bis zur nächsten Belohnung">
-          <div class="star-track" id="starTrack">
-            <div class="star-track__stars" id="starTrackStars"></div>
-            <div class="star-track__progress" id="starTrackProgressText">0/10</div>
-          </div>
-          <button id="btnRewardBox" class="gift-box" type="button" disabled title="Belohnung abholen">
-            🎁
-            <span class="gift-box__label">Belohnung</span>
-          </button>
-        </div>
         <div class="progress"><i id="bar"></i></div>
         <div class="in-game-controls" style="margin-top:10px; display:flex; gap:12px; align-items:center;">
           <button id="btnTestAudio" class="btn secondary" title="Aktuellen Buchstaben nochmals anhören" disabled>🔊 Nochmal anhören</button>
@@ -167,6 +157,16 @@
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
         <h2 style="margin:0">🎁 Mein Sticker-Album</h2>
         <div style="font-weight:800; font-size:18px">⭐ <span id="starCount">0</span> Sterne</div>
+      </div>
+
+      <div class="album-star-widget" aria-label="Belohnungen">
+        <div class="album-star-widget__head">
+          <span>Belohnungs-Fortschritt</span>
+          <span id="starTrackProgressText">0/10</span>
+        </div>
+        <div class="star-track" id="starTrack">
+          <div class="star-track__stars" id="starTrackStars"></div>
+        </div>
       </div>
 
       <div id="albumTabs" style="display:flex; gap:8px; margin-bottom:16px; overflow-x:auto"></div>
@@ -424,6 +424,22 @@
     <div class="dialog">
       <div class="trophy-animation" id="trophyAnimation" aria-hidden="true"></div>
       <h3 id="resultTitle">Toll gemacht!</h3>
+      <div class="result-stars" aria-live="polite">
+        <canvas id="starCanvas" width="560" height="220" aria-label="Sternwertung"></canvas>
+        <div class="result-stars__text">
+          <p class="result-stars__label">Deine Sternwertung</p>
+          <p class="result-stars__value" id="starSummaryText">0 von 5 Sternen</p>
+        </div>
+      </div>
+      <div id="resultGift" class="result-gift hidden">
+        <button id="resultGiftButton" class="result-gift__button" type="button">
+          <div id="resultGiftLottie" class="result-gift__lottie" aria-hidden="true"></div>
+          <div class="result-gift__text">
+            <strong>Du hast genug Sterne für neue Sticker, hol sie dir!</strong>
+            <span>Tippe hier und ab geht's.</span>
+          </div>
+        </button>
+      </div>
       <p class="result-line"><span id="resultText">8 von 10 richtig</span></p>
       <div class="controls" style="justify-content:center; margin-top:10px">
         <button id="again" class="btn">Nochmal spielen</button>
