@@ -29,7 +29,7 @@ const SOUND_FILES = {
   start: { url: 'app/sfx/start.mp3', volume: 0.7 },
   unlock: { url: 'app/sfx/unlock.mp3', volume: 0.75 },
   reward: { url: 'app/sfx/reward.mp3', volume: 0.85 },
-  starReveal: { url: 'SPECS/AdditionalInput/star.mp3', volume: 0.9 },
+  starReveal: { url: 'app/sfx/star.mp3', volume: 0.9 },
   medalIntro: { url: 'SPECS/AdditionalInput/PlayBeforeMedalSound.mp3', volume: 0.85 },
   giftPop: { url: 'SPECS/AdditionalInput/pop.mp3', volume: 0.8 },
 };
@@ -1664,7 +1664,7 @@ function getStarRevealWidget(){
         if(shouldReduceMotion()) return;
         playStarRevealSound();
       },
-      revealDelay: 520,
+      revealDelay: 1500,
     });
   }
   return starRevealWidget;
