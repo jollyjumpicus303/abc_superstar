@@ -4,13 +4,24 @@ import {
   markCorrect,
   markWrong
 } from './progressStore.js';
+import {
+  ensureProfileSetup,
+  getActiveProfile,
+  getActiveProfileId,
+  getProfiles,
+  setActiveProfile,
+  createProfile,
+  updateProfile,
+  deleteProfile,
+  setProfileLastSet,
+  getProfileLastSet,
+  markProfileMigrated,
+  wasProfileMigrated,
+} from './profileStore.js';
 import { pickNext } from './letterPool.js';
 import { advanceAfterRun } from './progression.js';
 import { computeRunStars, MAX_RUN_STARS } from './rewardUtils.js';
 import StarReveal from './js/starRevealCanvas.js';
-
-// Persisted Lernfortschritt wird sofort initialisiert
-getProgress();
 // ——————————————————————————————————————————
 // ABC-Abenteuer – Logik
 // ——————————————————————————————————————————
@@ -268,6 +279,16 @@ const elThemeMenu = document.getElementById('themeSwitcherMenu');
 const elThemeLabel = document.getElementById('currentThemeLabel');
 const metaThemeColor = document.querySelector('meta[name="theme-color"]');
 const themeOptionButtons = elThemeMenu ? Array.from(elThemeMenu.querySelectorAll('[data-theme-option]')) : [];
+const elProfileBtn = document.getElementById('profileBtn');
+const elProfileEmoji = document.getElementById('profileEmoji');
+const elProfileName = document.getElementById('profileName');
+const elProfileModal = document.getElementById('profileModal');
+const elCloseProfileModal = document.getElementById('closeProfileModal');
+const elProfileList = document.getElementById('profileList');
+const elParentProfileList = document.getElementById('parentProfileList');
+const elParentStats = document.getElementById('parentStats');
+const elBtnAddProfileParent = document.getElementById('btnAddProfileParent');
+let isProfileModalOpen = false;
 const medalControls = MEDAL_TYPES.reduce((acc, type) => {
   acc[type] = {
     recordBtn: document.getElementById(`btnMedalRecord-${type}`),
@@ -295,6 +316,207 @@ let activeTheme = document.documentElement.getAttribute('data-theme') || DEFAULT
 initThemeSelector();
 registerServiceWorker();
 initPWAInstall();
+
+function updateProfileBadge(){
+  if(!elProfileEmoji || !elProfileName) return;
+  const profile = getActiveProfile();
+  const emoji = profile?.emoji || '🐣';
+  const name = profile?.name || 'SPIELER';
+  elProfileEmoji.textContent = emoji;
+  elProfileName.textContent = name;
+}
+
+function renderProfileCards(){
+  if(!elProfileList) return;
+  const profiles = getProfiles();
+  const activeId = getActiveProfileId();
+  elProfileList.innerHTML = '';
+  profiles.forEach(profile => {
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'profile-card' + (profile.id === activeId ? ' active' : '');
+    card.innerHTML = `
+      <span class="profile-card__emoji">${profile.emoji || '🐣'}</span>
+      <span class="profile-card__name">${profile.name}</span>
+      ${profile.id === activeId ? '<span class="profile-card__badge">Jetzt</span>' : ''}
+    `;
+    card.addEventListener('click', () => {
+      switchProfile(profile.id);
+    });
+    elProfileList.appendChild(card);
+  });
+  const addCard = document.createElement('button');
+  addCard.type = 'button';
+  addCard.className = 'profile-card add';
+  addCard.innerHTML = '<span>➕</span><strong>Neues Profil</strong>';
+  addCard.addEventListener('click', () => handleCreateProfile());
+  elProfileList.appendChild(addCard);
+}
+
+function openProfileModal(){
+  if(!elProfileModal) return;
+  isProfileModalOpen = true;
+  renderProfileCards();
+  elProfileModal.classList.remove('hidden');
+}
+
+function closeProfileModal(){
+  if(!elProfileModal) return;
+  isProfileModalOpen = false;
+  elProfileModal.classList.add('hidden');
+}
+
+async function handleCreateProfile(){
+  const nameInput = prompt('Name des Kindes:', '');
+  if(!nameInput){
+    return;
+  }
+  const trimmedName = nameInput.trim();
+  if(!trimmedName){
+    return;
+  }
+  const emojiInput = prompt('Lieblings-Emoji (optional):', '🐣');
+  const profile = createProfile({ name: trimmedName, emoji: emojiInput && emojiInput.trim() ? emojiInput.trim() : undefined });
+  await migrateProfileScopedData(profile);
+  await switchProfile(profile.id);
+}
+
+function renderParentProfileList(){
+  if(!elParentProfileList){
+    return;
+  }
+  const profiles = getProfiles();
+  const activeId = getActiveProfileId();
+  if(!profiles.length){
+    elParentProfileList.innerHTML = '<p class="muted">Noch keine Profile gespeichert.</p>';
+    return;
+  }
+  elParentProfileList.innerHTML = '';
+  profiles.forEach(profile => {
+    const row = document.createElement('div');
+    row.className = 'parent-profile-row';
+    row.innerHTML = `
+      <div class="parent-profile-info">
+        <span class="parent-profile-emoji">${profile.emoji || '🐣'}</span>
+        <div>
+          <strong>${profile.name}</strong>
+          ${profile.id === activeId ? '<span class="badge">aktiv</span>' : ''}
+        </div>
+      </div>
+      <div class="parent-profile-actions">
+        <button type="button" data-action="edit" data-id="${profile.id}">✏️</button>
+        ${profiles.length > 1 ? `<button type="button" data-action="delete" data-id="${profile.id}">🗑️</button>` : ''}
+      </div>
+    `;
+    const actions = row.querySelector('.parent-profile-actions');
+    if(actions){
+      actions.addEventListener('click', async (event) => {
+        const btn = event.target.closest('button');
+        if(!btn) return;
+        const id = btn.dataset.id;
+        if(btn.dataset.action === 'edit'){
+          const current = getProfiles().find(p => p.id === id);
+          if(!current) return;
+          let newName = prompt('Neuer Name:', current.name);
+          if(newName){
+            newName = newName.trim();
+          }
+          const safeName = newName && newName.length ? newName : current.name;
+          let newEmoji = prompt('Emoji (optional):', current.emoji || '🐣');
+          if(newEmoji){
+            newEmoji = newEmoji.trim();
+          }
+          const safeEmoji = newEmoji && newEmoji.length ? newEmoji : current.emoji;
+          updateProfile(id, { name: safeName, emoji: safeEmoji });
+          updateProfileBadge();
+          renderProfileCards();
+          renderParentProfileList();
+        } else if(btn.dataset.action === 'delete'){
+          if(!confirm('Dieses Profil wirklich löschen?')) return;
+          const prevActive = getActiveProfileId();
+          deleteProfile(id);
+          profileSetCache.delete(id);
+          const nextId = getActiveProfileId();
+          if(nextId && nextId !== prevActive){
+            await switchProfile(nextId, { keepModalOpen: true });
+          }else{
+            await hydrateProfileState();
+          }
+          renderProfileCards();
+          renderParentProfileList();
+        }
+      });
+    }
+    elParentProfileList.appendChild(row);
+  });
+}
+
+async function hydrateProfileState(){
+  await refreshStoredStars();
+  await getActiveSet();
+  await renderSetsList();
+  await updateStatusGridFromDB();
+  await populateSetSelector();
+  await populateDefaultSetSelector();
+  applyModeToUI(getProgress());
+  updateStartButtonLabel(getProgress());
+  await updateLetterButtons();
+  await updateUIForRecordingState();
+  await refreshSupportAudioUI();
+  await renderAlbum();
+  updateProfileBadge();
+  renderProfileCards();
+  renderParentProfileList();
+  renderStatistics();
+}
+
+async function switchProfile(profileId, { keepModalOpen = false } = {}){
+  if(!profileId){
+    return;
+  }
+  const currentId = getActiveProfileId();
+  if(profileId !== currentId){
+    if(game){
+      endGame();
+    }
+    setActiveProfile(profileId);
+    const profile = getActiveProfile();
+    await migrateProfileScopedData(profile);
+  }
+  await hydrateProfileState();
+  if(!keepModalOpen){
+    closeProfileModal();
+  }
+}
+
+function setupProfileEvents(){
+  if(elProfileBtn){
+    elProfileBtn.addEventListener('click', () => {
+      renderProfileCards();
+      openProfileModal();
+    });
+  }
+  if(elCloseProfileModal){
+    elCloseProfileModal.addEventListener('click', closeProfileModal);
+  }
+  if(elProfileModal){
+    elProfileModal.addEventListener('click', (event) => {
+      if(event.target === elProfileModal){
+        closeProfileModal();
+      }
+    });
+  }
+  document.addEventListener('keydown', (event) => {
+    if(event.key === 'Escape' && isProfileModalOpen){
+      closeProfileModal();
+    }
+  });
+  if(elBtnAddProfileParent){
+    elBtnAddProfileParent.addEventListener('click', () => handleCreateProfile());
+  }
+}
+
+setupProfileEvents();
 
 function ensureTrophyAnimation(path){
   if(trophyAnimation && trophyAnimation.__path === path){
@@ -591,12 +813,12 @@ tabsContainer.addEventListener('click', (e) => {
 });
 
 function renderStatistics() {
-  const elternSection = document.getElementById('eltern');
+  if(!elParentStats) return;
   const progress = getProgress();
   const log = progress.attemptLog || [];
 
   if (log.length < 10) { // Require a minimum amount of data
-    elternSection.innerHTML = `
+    elParentStats.innerHTML = `
       <h2>Statistiken & Fortschritt</h2>
       <p class="muted">Es sind noch nicht genügend Daten vorhanden. Spielen Sie noch ein paar Runden, um eine aussagekräftige Auswertung zu sehen.</p>
     `;
@@ -672,10 +894,10 @@ function renderStatistics() {
     html += '<p class="muted">Noch keine Super-Buchstaben. Aber das wird schon!</p>';
   }
 
-  elternSection.innerHTML = html;
+  elParentStats.innerHTML = html;
 
   // Add event listeners for the new buttons
-  elternSection.querySelectorAll('.practice-btn').forEach(btn => {
+  elParentStats.querySelectorAll('.practice-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const letters = e.currentTarget.dataset.letters.split(',');
       startPracticeGame(letters);
@@ -1010,7 +1232,10 @@ function idbGet(key){
     const tx = db.transaction(STORE,'readonly');
     const st = tx.objectStore(STORE);
     const r = st.get(key);
-    r.onsuccess = ()=> res(r.result || null);
+    r.onsuccess = ()=> {
+      const value = typeof r.result === 'undefined' ? null : r.result;
+      res(value);
+    };
     r.onerror = ()=> rej(r.error);
   }));
 }
@@ -1059,10 +1284,36 @@ function idbClear(){
   }));
 }
 
+const profileSetCache = new Map();
+
+function makeProfileScopedKey(base, profileId){
+  const id = profileId || getActiveProfileId();
+  return id ? `profile-${id}-${base}` : base;
+}
+
+async function migrateProfileScopedData(profile){
+  if(!profile || wasProfileMigrated(profile.id)){
+    return;
+  }
+  const profileId = profile.id;
+  const keysToMigrate = ['stars', 'collectedStickers', 'letterStats', 'activeSet'];
+  for(const key of keysToMigrate){
+    const scopedKey = makeProfileScopedKey(key, profileId);
+    const existing = await idbGet(scopedKey);
+    if(existing !== null){
+      continue;
+    }
+    const legacy = await idbGet(key);
+    if(legacy !== null){
+      await idbSet(scopedKey, legacy);
+    }
+  }
+  markProfileMigrated(profileId);
+}
+
 // ——————————————————————————————————————————
 // Set-Management
 // ——————————————————————————————————————————
-let currentSetId = null;
 
 // UUID generieren
 function generateUUID(){
@@ -1295,26 +1546,39 @@ async function updateSet(setId, name, emoji){
 
 // Aktives Set setzen
 async function setActiveSet(setId){
-  currentSetId = setId;
-  await idbSet('activeSet', setId);
+  const profileId = getActiveProfileId();
+  if(profileId){
+    profileSetCache.set(profileId, setId);
+    setProfileLastSet(profileId, setId);
+  }
+  await idbSet(makeProfileScopedKey('activeSet', profileId), setId);
 }
 
 // Aktives Set laden
 async function getActiveSet(){
-  if(currentSetId) return currentSetId;
-  const saved = await idbGet('activeSet');
+  const profileId = getActiveProfileId();
+  if(profileId && profileSetCache.has(profileId)){
+    return profileSetCache.get(profileId);
+  }
+  const saved = await idbGet(makeProfileScopedKey('activeSet', profileId));
   if(saved){
-    currentSetId = saved;
+    if(profileId){
+      profileSetCache.set(profileId, saved);
+    }
     return saved;
   }
-  // Kein aktives Set? Erstes verfügbares Set nutzen oder Default erstellen
+  if(profileId){
+    const remembered = getProfileLastSet(profileId);
+    if(remembered){
+      await setActiveSet(remembered);
+      return remembered;
+    }
+  }
   const sets = await getAllSets();
   if(sets.length > 0){
-    currentSetId = sets[0].id;
-    await setActiveSet(currentSetId);
-    return currentSetId;
+    await setActiveSet(sets[0].id);
+    return sets[0].id;
   }
-  // Default-Set erstellen
   const defaultId = await createSet('Meine Aufnahmen', '🎤');
   await setActiveSet(defaultId);
   return defaultId;
@@ -1524,14 +1788,14 @@ function getStickerThemeKey(stickerId){
 const STARS_PER_PACK = 10;
 
 // Sterne abrufen
-async function getStars(){
-  const stars = await idbGet('stars');
-  return stars || 0;
+async function getStars(profileId){
+  const stars = await idbGet(makeProfileScopedKey('stars', profileId));
+  return typeof stars === 'number' ? stars : 0;
 }
 
 // Sterne setzen
 async function setStars(count){
-  await idbSet('stars', count);
+  await idbSet(makeProfileScopedKey('stars'), count);
 }
 
 // Sterne hinzufügen
@@ -1542,9 +1806,9 @@ async function addStars(count){
 }
 
 // Gesammelte Sticker abrufen
-async function getCollectedStickers(){
-  const stickers = await idbGet('collectedStickers');
-  return stickers || [];
+async function getCollectedStickers(profileId){
+  const stickers = await idbGet(makeProfileScopedKey('collectedStickers', profileId));
+  return Array.isArray(stickers) ? stickers : [];
 }
 
 // Sticker hinzufügen
@@ -1552,7 +1816,7 @@ async function addSticker(stickerId){
   const collected = await getCollectedStickers();
   if(!collected.includes(stickerId)){
     collected.push(stickerId);
-    await idbSet('collectedStickers', collected);
+    await idbSet(makeProfileScopedKey('collectedStickers'), collected);
     return true; // Neu gesammelt
   }
   return false; // Duplikat
@@ -1575,16 +1839,16 @@ if(typeof reduceMotionQuery.addEventListener === 'function'){
 }
 
 // Buchstaben-Statistik abrufen
-async function getLetterStats(){
-  const stats = await idbGet('letterStats');
-  return stats || {}; // {A: 5, B: 3, ...}
+async function getLetterStats(profileId){
+  const stats = await idbGet(makeProfileScopedKey('letterStats', profileId));
+  return stats && typeof stats === 'object' ? stats : {}; // {A: 5, B: 3, ...}
 }
 
 // Buchstaben-Statistik inkrementieren
 async function incrementLetterStat(letter){
   const stats = await getLetterStats();
   stats[letter] = (stats[letter] || 0) + 1;
-  await idbSet('letterStats', stats);
+  await idbSet(makeProfileScopedKey('letterStats'), stats);
   return stats[letter];
 }
 
@@ -1871,7 +2135,8 @@ async function renderAlbum(){
   albumTabs.innerHTML = '';
   for(const [key, theme] of Object.entries(STICKER_CATALOG)){
     const btn = document.createElement('button');
-    btn.className = 'btn secondary';
+    btn.className = 'btn secondary album-tab-btn';
+    btn.dataset.albumTheme = key;
     if(key === currentAlbumTheme) btn.classList.add('active');
     btn.textContent = `${theme.emoji} ${theme.name}`;
     btn.onclick = () => { currentAlbumTheme = key; renderAlbum(); };
@@ -1925,6 +2190,11 @@ async function animateStickerUnlock(stickers){
       currentAlbumTheme = themeKey;
     }
     await renderAlbum();
+    const tabBtn = document.querySelector(`[data-album-theme="${currentAlbumTheme}"]`);
+    if(tabBtn){
+      tabBtn.classList.add('album-tab-highlight');
+      setTimeout(() => tabBtn.classList.remove('album-tab-highlight'), 1200);
+    }
     await sleep(60);
     const slot = document.querySelector(`[data-sticker-id=\"${sticker.id}\"]`);
     if(slot){
@@ -4632,20 +4902,13 @@ elLetters.addEventListener('keydown', (e)=>{
 
 // Inhalte initial
 (async function init(){
+  const { profile } = ensureProfileSetup();
+  await migrateProfileScopedData(profile);
   // Migration alter Aufnahmen (falls vorhanden)
   await migrateOldRecordings();
   await importBundledSetsIfNeeded();
   await cleanupPlaceholderSets();
 
   // Default-Set sicherstellen und UI initialisieren
-  await getActiveSet();
-  await renderSetsList();
-  await updateStatusGridFromDB();
-  await populateSetSelector();
-  await populateDefaultSetSelector();
-  applyModeToUI(getProgress());
-  updateStartButtonLabel(getProgress());
-  await updateLetterButtons();
-  await updateUIForRecordingState();
-  await refreshSupportAudioUI();
+  await hydrateProfileState();
 })();
