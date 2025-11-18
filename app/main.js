@@ -1664,7 +1664,7 @@ function getStarRevealWidget(){
         if(shouldReduceMotion()) return;
         playStarRevealSound();
       },
-      revealDelay: 1500,
+      revealDelay: 1000,
     });
   }
   return starRevealWidget;
@@ -4470,6 +4470,7 @@ async function finishGame(){
     medalTier = 'bronze';
   }
   playTrophyAnimation(animationPath);
+  const medalIntroPromise = playMedalIntroSound();
   const progressBefore = game && game.progress ? game.progress : null;
   if(progressBefore && progressBefore.mode === 'LERNWEG'){
     const beforeUnlocked = progressBefore.unlocked || 0;
@@ -4508,7 +4509,7 @@ async function finishGame(){
   // Zurück in Preview-Modus: Buttons basierend auf Aufnahmen aktivieren
   updateLetterButtons();
 
-  await playMedalIntroSound();
+  await medalIntroPromise;
   const customPlayed = await playMedalCelebration(medalTier);
   if(!customPlayed && runStars > 0){
     playRewardSound();
