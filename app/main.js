@@ -4350,6 +4350,36 @@ document.getElementById('importFile').addEventListener('change', async (e)=>{
   }
 });
 
+const elBtnLoadDefaultSets = document.getElementById('btnLoadDefaultSets');
+if(elBtnLoadDefaultSets){
+  elBtnLoadDefaultSets.addEventListener('click', async () => {
+    if(!BUNDLED_SETS_CONFIG.url){
+      alert('Keine Standard-Sets verfügbar.');
+      return;
+    }
+    elBtnLoadDefaultSets.disabled = true;
+    const prevLabel = elBtnLoadDefaultSets.textContent;
+    elBtnLoadDefaultSets.textContent = 'Lade...';
+    try{
+      const response = await fetch(BUNDLED_SETS_CONFIG.url);
+      if(!response.ok){
+        throw new Error(`HTTP ${response.status}`);
+      }
+      const blob = await response.blob();
+      const summary = await importSetsZipBlob(blob);
+      if(summary.importedSets > 0){
+        markBundledSetsImported();
+        await hydrateProfileState();
+      }
+    }catch(err){
+      alert('❌ Standard-Sets konnten nicht geladen werden: ' + err.message);
+    }finally{
+      elBtnLoadDefaultSets.disabled = false;
+      elBtnLoadDefaultSets.textContent = prevLabel;
+    }
+  });
+}
+
 // ——————————————————————————————————————————
 // Spiel-Logik
 // ——————————————————————————————————————————

@@ -32,6 +32,13 @@
   <header>
     <h1>ABC‑Abenteuer · Hör &amp; Finde</h1>
     <div class="header-actions">
+      <button id="profileBtn" class="profile-btn" type="button" aria-haspopup="dialog">
+        <span class="profile-btn__emoji" id="profileEmoji">🐣</span>
+        <span class="profile-btn__label">
+          <small>Ich bin</small>
+          <strong id="profileName">SPIELER 1</strong>
+        </span>
+      </button>
       <button id="installBtn" class="install-btn">📱 Installieren</button>
       <div class="theme-switcher" id="themeSwitcher">
         <button type="button" class="theme-switcher__trigger" id="themeSwitcherBtn" aria-haspopup="true" aria-expanded="false">
@@ -62,6 +69,18 @@
       </button>
     </div>
   </header>
+
+  <div id="profileModal" class="profile-modal hidden" role="dialog" aria-modal="true" aria-label="Profil auswählen">
+    <div class="profile-modal__content">
+      <div class="profile-modal__head">
+        <h2>Wer spielt gerade?</h2>
+        <button type="button" id="closeProfileModal" class="profile-modal__close" aria-label="Schließen">✖️</button>
+      </div>
+      <p class="muted">Tippe dein Symbol an oder füge ein neues hinzu.</p>
+      <div id="profileList" class="profile-card-grid"></div>
+      <p class="muted small">Profile verwalten Sie im Elternbereich.</p>
+    </div>
+  </div>
 
   <main>
     <nav class="tabs">
@@ -199,8 +218,20 @@
 
     <!-- ELTERN-BEREICH -->
     <section id="eltern" class="card hidden">
-      <h2>Statistiken & Fortschritt</h2>
-      <p class="muted">Hier sehen Sie bald eine Auswertung des Lernfortschritts.</p>
+      <div id="parentStats">
+        <h2>Statistiken & Fortschritt</h2>
+        <p class="muted">Hier sehen Sie bald eine Auswertung des Lernfortschritts.</p>
+      </div>
+      <div class="profile-manager">
+        <div class="profile-manager__head">
+          <div>
+            <h3>Kindprofile</h3>
+            <p class="muted">Jedes Kind sammelt seine eigenen Sterne & Fortschritte.</p>
+          </div>
+          <button type="button" id="btnAddProfileParent" class="btn secondary">➕ Neues Profil</button>
+        </div>
+        <div id="parentProfileList" class="profile-manager__list"></div>
+      </div>
     </section>
 
     <!-- EINSTELLUNGEN -->
@@ -231,6 +262,7 @@
             <button id="exportBtn" class="btn secondary">📦 Exportieren</button>
             <button id="importBtn" class="btn secondary">📥 Importieren</button>
             <input type="file" id="importFile" accept=".zip" style="display:none">
+            <button id="btnLoadDefaultSets" class="btn ghost" type="button">📦 Standard-Sets laden</button>
             <button id="clearAll" class="btn danger">Alle löschen</button>
             <span class="muted">Mikrofon benötigt https/localhost.</span>
           </div>
