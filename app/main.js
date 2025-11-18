@@ -1326,6 +1326,64 @@ async function getSetRecordingCount(setId){
   return uniqueLetters.size;
 }
 
+function hasMedalSounds(map){
+  if(!map || typeof map !== 'object'){
+    return false;
+  }
+  return MEDAL_TYPES.some(type => Array.isArray(map[type]) && map[type].length > 0);
+}
+
+function isSetCompletelyEmpty(data){
+  if(!data) return true;
+  const hasClips = Array.isArray(data.clips) && data.clips.length > 0;
+  const hasMotivations = Array.isArray(data.motivationClips) && data.motivationClips.length > 0;
+  const hasMedals = hasMedalSounds(data.medalSounds);
+  return !hasClips && !hasMotivations && !hasMedals;
+}
+
+async function cleanupPlaceholderSets(){
+  const sets = await getAllSets();
+  if(!sets.length){
+    return;
+  }
+
+  const placeholderIds = [];
+  for(const set of sets){
+    if((set.name || '').trim() !== 'Meine Aufnahmen') continue;
+    if((set.emoji || '').trim() !== '🎤') continue;
+    const data = await loadSetData(set.id);
+    if(isSetCompletelyEmpty(data)){
+      placeholderIds.push(set.id);
+    }
+  }
+
+  if(!placeholderIds.length){
+    return;
+  }
+
+  const remainingCandidates = sets.filter(set => !placeholderIds.includes(set.id));
+  if(!remainingCandidates.length){
+    // Behalte mindestens ein Set, damit Aufnahmen weiterhin möglich sind.
+    return;
+  }
+
+  const activeSetId = await getActiveSet();
+  let activeRemoved = false;
+  for(const id of placeholderIds){
+    await deleteSet(id);
+    if(id === activeSetId){
+      activeRemoved = true;
+    }
+  }
+
+  if(activeRemoved){
+    const remainingSets = await getAllSets();
+    if(remainingSets.length){
+      await setActiveSet(remainingSets[0].id);
+    }
+  }
+}
+
 // Migration: Alte Aufnahmen (audio-X) in neues Format (audio-SETID-X) migrieren
 async function migrateOldRecordings(){
   const keys = await idbKeys();
@@ -4538,6 +4596,7 @@ elLetters.addEventListener('keydown', (e)=>{
   // Migration alter Aufnahmen (falls vorhanden)
   await migrateOldRecordings();
   await importBundledSetsIfNeeded();
+  await cleanupPlaceholderSets();
 
   // Default-Set sicherstellen und UI initialisieren
   await getActiveSet();
