@@ -32,6 +32,7 @@ const SOUND_FILES = {
   starReveal: { url: 'app/sfx/star.mp3', volume: 0.9 },
   medalIntro: { url: 'SPECS/AdditionalInput/PlayBeforeMedalSound.mp3', volume: 0.85 },
   giftPop: { url: 'SPECS/AdditionalInput/pop.mp3', volume: 0.8 },
+  stickerPop: { url: 'app/sfx/pop.mp3', volume: 0.85 },
 };
 
 const BUNDLED_SETS_CONFIG = Object.freeze({
@@ -140,6 +141,7 @@ function playUnlockSound(){ playSfx('unlock'); }
 function playRewardSound(){ playSfx('reward'); }
 function playStarRevealSound(){ playSfx('starReveal'); }
 function playGiftPopSound(){ playSfx('giftPop'); }
+function playStickerPopSound(){ playSfx('stickerPop'); }
 
 async function playSfxAndWait(id, options = {}){
   const config = SOUND_FILES[id];
@@ -1510,6 +1512,15 @@ function getStickerById(stickerId){
   return null;
 }
 
+function getStickerThemeKey(stickerId){
+  for(const [key, theme] of Object.entries(STICKER_CATALOG)){
+    if(theme.stickers.some(s => s.id === stickerId)){
+      return key;
+    }
+  }
+  return null;
+}
+
 const STARS_PER_PACK = 10;
 
 // Sterne abrufen
@@ -1876,6 +1887,7 @@ async function renderAlbum(){
   for(const sticker of theme.stickers){
     const slot = document.createElement('div');
     slot.className = 'sticker-slot';
+    slot.dataset.stickerId = sticker.id;
     const hasSticker = collectedSet.has(sticker.id);
     if(hasSticker){
       slot.classList.add('collected');
@@ -1896,6 +1908,35 @@ async function renderAlbum(){
   progress.style.marginTop = '16px';
   progress.textContent = `${themeCollected} von ${theme.stickers.length} Stickern gesammelt`;
   albumContent.appendChild(progress);
+}
+
+async function animateStickerUnlock(stickers){
+  if(!Array.isArray(stickers) || !stickers.length){
+    return;
+  }
+  const albumSection = document.getElementById('album');
+  if(albumSection && albumSection.classList.contains('hidden')){
+    switchToTab('album');
+    await sleep(150);
+  }
+  for(const sticker of stickers){
+    const themeKey = getStickerThemeKey(sticker.id);
+    if(themeKey){
+      currentAlbumTheme = themeKey;
+    }
+    await renderAlbum();
+    await sleep(60);
+    const slot = document.querySelector(`[data-sticker-id=\"${sticker.id}\"]`);
+    if(slot){
+      slot.classList.add('reveal');
+      playStickerPopSound();
+      await sleep(1100);
+      slot.classList.remove('reveal');
+    } else {
+      await sleep(300);
+    }
+  }
+  await renderAlbum();
 }
 
 // Pack öffnen
@@ -1919,15 +1960,12 @@ document.getElementById('btnOpenPack').addEventListener('click', async () => {
     }
   }
 
-  // Simple Alert (TODO: schöne Animation)
   if(newStickers.length > 0){
-    const msg = newStickers.map(s => `${s.emoji} ${s.name}`).join('\n');
-    alert(`🎁 Pack geöffnet!\n\nNeue Sticker:\n${msg}`);
+    await animateStickerUnlock(newStickers);
   } else {
     alert('🎁 Pack geöffnet!\n\nLeider nur Duplikate. Versuche es erneut!');
+    await renderAlbum();
   }
-
-  await renderAlbum();
 });
 
 async function onPracticeLetterClick(e) {

@@ -853,6 +853,15 @@ footer{max-width:1100px; margin:-52px auto 32px; padding:0 16px; color:#6b7280; 
 .sticker-slot.locked{opacity:.3; background:#f0f0f0; cursor:default}
 .sticker-slot.locked:hover{transform:none}
 .sticker-slot.collected{animation:popIn .3s ease}
+.sticker-slot.reveal{
+  animation:stickerReveal .7s ease;
+  box-shadow:0 0 0 0 rgba(255,255,255,0.8), 0 12px 24px rgba(124,58,237,.3);
+}
+@keyframes stickerReveal{
+  0%{transform:scale(.1) rotate(-10deg); opacity:0;}
+  50%{transform:scale(1.15) rotate(6deg); opacity:1;}
+  100%{transform:scale(1) rotate(0deg); opacity:1;}
+}
 @keyframes popIn{ 0%{transform:scale(.8)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
 .album-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(80px,1fr)); gap:12px}
 
