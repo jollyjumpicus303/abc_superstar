@@ -1,14 +1,28 @@
 const CACHE_NAME = 'abc-abenteuer-cache-v10'; // increment version
+
+const BASE_URL = (() => {
+  const url = new URL(self.location.href);
+  const path = url.pathname.replace(/sw\.js$/, '');
+  return path.endsWith('/') ? path : `${path}/`;
+})();
+
+function withBase(path = '') {
+  if(!path || path === '/' || path === './'){
+    return BASE_URL;
+  }
+  return `${BASE_URL}${path.replace(/^\//, '')}`;
+}
+
 const FILES_TO_CACHE = [
-  '/abc_superstar/',
-  '/abc_superstar/index.html',
-  '/abc_superstar/manifest.json',
-  '/abc_superstar/icon.svg',
-  '/abc_superstar/sw.js',
-  '/abc_superstar/app/letterPool.js',
-  '/abc_superstar/app/progression.js',
-  '/abc_superstar/app/progressStore.js'
-];
+  '',
+  'index.html',
+  'manifest.json',
+  'icon.svg',
+  'sw.js',
+  'app/letterPool.js',
+  'app/progression.js',
+  'app/progressStore.js',
+].map(withBase);
 
 // 1. Installieren: Cache öffnen und App-Shell-Dateien hinzufügen
 self.addEventListener('install', (event) => {
