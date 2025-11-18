@@ -47,8 +47,8 @@ const SOUND_FILES = {
 };
 
 const BUNDLED_SETS_CONFIG = Object.freeze({
-  url: 'abc-abenteuer-sets-2025-11-18.zip',
-  storageKey: 'bundledSetsImported-2025-11-18',
+  url: 'abc-abenteuer-sets.zip',
+  storageKey: 'bundledSetsImported-v2',
 });
 
 const soundBuffers = new Map();
