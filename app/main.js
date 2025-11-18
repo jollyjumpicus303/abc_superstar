@@ -34,6 +34,11 @@ const SOUND_FILES = {
   giftPop: { url: 'SPECS/AdditionalInput/pop.mp3', volume: 0.8 },
 };
 
+const BUNDLED_SETS_CONFIG = Object.freeze({
+  url: 'abc-abenteuer-sets-2025-11-18.zip',
+  storageKey: 'bundledSetsImported-2025-11-18',
+});
+
 const soundBuffers = new Map();
 const soundLoadingPromises = new Map();
 const INTRO_PROMPT_DELAY = 2000;
@@ -3660,6 +3665,300 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
   }
 });
 
+async function importSetsZipBlob(blob, { showAlerts = true } = {}){
+  const zip = new JSZip();
+  const contents = await zip.loadAsync(blob);
+
+  let importedSets = 0;
+  let importedAudio = 0;
+  let errorCount = 0;
+
+  const setsJsonFile = contents.files['sets.json'];
+
+  if(setsJsonFile){
+    const setsJsonText = await setsJsonFile.async('text');
+    const setsMetadata = JSON.parse(setsJsonText);
+
+    for(const setMeta of setsMetadata){
+      if(!setMeta || !setMeta.id){
+        errorCount++;
+        continue;
+      }
+
+      const clipList = [];
+      const motivationList = [];
+      const medalMap = makeEmptyMedalMap();
+      const setPrefix = `${setMeta.id}/`;
+
+      if(Array.isArray(setMeta.clips) && setMeta.clips.length){
+        for(const clipMeta of setMeta.clips){
+          const clipId = clipMeta && clipMeta.id ? clipMeta.id : generateUUID();
+          const letter = normaliseLetterInput(clipMeta && clipMeta.letter ? clipMeta.letter : null) || 'A';
+          const difficulty = normaliseDifficultyInput(clipMeta && clipMeta.difficulty ? clipMeta.difficulty : 'LEICHT');
+          let fileName = clipMeta && clipMeta.file ? clipMeta.file : '';
+
+          let zipEntry = null;
+          if(fileName){
+            const normalizedFile = fileName.replace(/^\/+/, '');
+            zipEntry = contents.files[setPrefix + normalizedFile];
+            if(!zipEntry){
+              zipEntry = contents.files[normalizedFile];
+            }
+          }
+          if(!zipEntry){
+            zipEntry = Object.entries(contents.files).find(([name]) => {
+              return !name.endsWith('/') && name.startsWith(setPrefix) && name.includes(clipId);
+            });
+            if(zipEntry){
+              fileName = zipEntry[0].replace(setPrefix, '');
+              zipEntry = zipEntry[1];
+            }
+          }
+
+          if(!zipEntry || zipEntry.dir){
+            console.warn('Audio-Datei für Clip nicht gefunden:', setMeta.id, clipId);
+            errorCount++;
+            continue;
+          }
+
+          const audioBlob = await zipEntry.async('blob');
+          if(!audioBlob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
+            errorCount++;
+            continue;
+          }
+
+          await idbSet(`audio-${setMeta.id}-${clipId}`, audioBlob);
+          clipList.push({
+            id: clipId,
+            letter,
+            difficulty,
+            created: typeof clipMeta?.created === 'number' ? clipMeta.created : Date.now(),
+          });
+          importedAudio++;
+        }
+      } else {
+        for(const [filename, zipEntry] of Object.entries(contents.files)){
+          if(zipEntry.dir || !filename.startsWith(setPrefix)) continue;
+          const rawName = filename.replace(setPrefix, '');
+          if(!rawName) continue;
+          const letter = normaliseLetterInput(rawName.split('.')[0]) || 'A';
+          const audioBlob = await zipEntry.async('blob');
+          if(!audioBlob.type.startsWith('audio/') && !rawName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
+            errorCount++;
+            continue;
+          }
+          const clipId = generateUUID();
+          await idbSet(`audio-${setMeta.id}-${clipId}`, audioBlob);
+          clipList.push({
+            id: clipId,
+            letter,
+            difficulty: 'LEICHT',
+            created: Date.now(),
+          });
+          importedAudio++;
+        }
+      }
+
+      if(Array.isArray(setMeta.motivationClips) && setMeta.motivationClips.length){
+        for(const clipMeta of setMeta.motivationClips){
+          const clipId = clipMeta && clipMeta.id ? clipMeta.id : generateUUID();
+          let fileName = clipMeta && clipMeta.file ? clipMeta.file : '';
+
+          let zipEntry = null;
+          if(fileName){
+            const normalizedFile = fileName.replace(/^\/+/, '');
+            zipEntry = contents.files[setPrefix + normalizedFile];
+            if(!zipEntry){
+              zipEntry = contents.files[normalizedFile];
+            }
+          }
+          if(!zipEntry){
+            zipEntry = Object.entries(contents.files).find(([name]) => {
+              return !name.endsWith('/') && name.startsWith(setPrefix + 'motivation/') && name.includes(clipId);
+            });
+            if(zipEntry){
+              fileName = zipEntry[0].replace(setPrefix, '');
+              zipEntry = zipEntry[1];
+            }
+          }
+
+          if(!zipEntry || zipEntry.dir){
+            console.warn('Audio-Datei für Motivationsclip nicht gefunden:', setMeta.id, clipId);
+            errorCount++;
+            continue;
+          }
+
+          const audioBlob = await zipEntry.async('blob');
+          if(!audioBlob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
+            errorCount++;
+            continue;
+          }
+
+          await idbSet(`motivation-${setMeta.id}-${clipId}`, audioBlob);
+          motivationList.push({
+            id: clipId,
+            created: typeof clipMeta?.created === 'number' ? clipMeta.created : Date.now(),
+          });
+          importedAudio++;
+        }
+      }
+
+      if(setMeta.medals && typeof setMeta.medals === 'object'){
+        for(const type of MEDAL_TYPES){
+          const entries = setMeta.medals[type];
+          const list = Array.isArray(entries) ? entries : entries ? [entries] : [];
+          for(const medalMeta of list){
+            const clipId = medalMeta && medalMeta.id ? medalMeta.id : generateUUID();
+            let fileName = medalMeta && medalMeta.file ? medalMeta.file : '';
+
+            let zipEntry = null;
+            if(fileName){
+              const normalizedFile = fileName.replace(/^\/+/, '');
+              zipEntry = contents.files[setPrefix + normalizedFile];
+              if(!zipEntry){
+                zipEntry = contents.files[normalizedFile];
+              }
+            }
+            if(!zipEntry){
+              zipEntry = Object.entries(contents.files).find(([name]) => {
+                return !name.endsWith('/') && name.startsWith(setPrefix + 'medals/') && name.includes(clipId);
+              });
+              if(zipEntry){
+                fileName = zipEntry[0].replace(setPrefix, '');
+                zipEntry = zipEntry[1];
+              }
+            }
+
+            if(!zipEntry || zipEntry.dir){
+              console.warn('Audio-Datei für Medaillen-Sound nicht gefunden:', setMeta.id, type);
+              errorCount++;
+              continue;
+            }
+
+            const audioBlob = await zipEntry.async('blob');
+            if(!audioBlob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
+              errorCount++;
+              continue;
+            }
+
+            await idbSet(`medal-${setMeta.id}-${clipId}`, audioBlob);
+            medalMap[type].push({
+              id: clipId,
+              created: typeof medalMeta?.created === 'number' ? medalMeta.created : Date.now(),
+            });
+            importedAudio++;
+          }
+        }
+      }
+
+      await idbSet('set-' + setMeta.id, {
+        name: setMeta.name,
+        emoji: setMeta.emoji,
+        created: setMeta.created || Date.now(),
+        clips: clipList,
+        motivationClips: motivationList,
+        medalSounds: medalMap,
+      });
+
+      importedSets++;
+    }
+
+    if(showAlerts){
+      alert(`✅ ${importedSets} Set(s) mit ${importedAudio} Aufnahmen importiert!${errorCount > 0 ? `\n⚠️ ${errorCount} Dateien übersprungen.` : ''}`);
+    }
+  } else {
+    const currentSetId = await getActiveSet();
+
+    for(const [filename, zipEntry] of Object.entries(contents.files)){
+      if(zipEntry.dir || filename.startsWith('__MACOSX') || filename.startsWith('.')) continue;
+
+      const letter = normaliseLetterInput(filename.split('.')[0]) || '';
+      if(!/^[A-ZÄÖÜ]$/.test(letter)){
+        errorCount++;
+        continue;
+      }
+
+      const audioBlob = await zipEntry.async('blob');
+      if(!audioBlob.type.startsWith('audio/') && !filename.match(/\.(webm|ogg|mp3|mp4|m4a|wav)$/i)){
+        errorCount++;
+        continue;
+      }
+
+      const clipId = generateUUID();
+      await idbSet('audio-' + currentSetId + '-' + clipId, audioBlob);
+      const setData = await loadSetData(currentSetId) || { name: 'Meine Aufnahmen', emoji: '🎤', created: Date.now(), clips: [] };
+      setData.clips.push({
+        id: clipId,
+        letter,
+        difficulty: 'LEICHT',
+        created: Date.now(),
+      });
+      await idbSet('set-' + currentSetId, setData);
+      importedAudio++;
+    }
+
+    if(showAlerts){
+      if(importedAudio > 0){
+        alert(`✅ ${importedAudio} Aufnahmen in aktuelles Set importiert!${errorCount > 0 ? `\n⚠️ ${errorCount} Dateien übersprungen.` : ''}`);
+      } else {
+        alert('❌ Keine gültigen Aufnahmen gefunden.');
+      }
+    }
+  }
+
+  return {
+    importedSets,
+    importedAudio,
+    errorCount,
+  };
+}
+
+function wasBundledSetsImportCompleted(){
+  if(!BUNDLED_SETS_CONFIG.storageKey) return false;
+  try{
+    return typeof localStorage !== 'undefined' && localStorage.getItem(BUNDLED_SETS_CONFIG.storageKey) === '1';
+  }catch(_){
+    return false;
+  }
+}
+
+function markBundledSetsImported(){
+  if(!BUNDLED_SETS_CONFIG.storageKey) return;
+  try{
+    if(typeof localStorage !== 'undefined'){
+      localStorage.setItem(BUNDLED_SETS_CONFIG.storageKey, '1');
+    }
+  }catch(_){}
+}
+
+async function importBundledSetsIfNeeded(){
+  if(!BUNDLED_SETS_CONFIG.url || wasBundledSetsImportCompleted()){
+    return false;
+  }
+  try{
+    const existingSets = await getAllSets();
+    if(existingSets.length > 0){
+      markBundledSetsImported();
+      return false;
+    }
+    const response = await fetch(BUNDLED_SETS_CONFIG.url);
+    if(!response.ok){
+      console.warn('Standardsets konnten nicht geladen werden:', response.status, response.statusText);
+      return false;
+    }
+    const bundledBlob = await response.blob();
+    const summary = await importSetsZipBlob(bundledBlob, { showAlerts: false });
+    if(summary.importedSets > 0){
+      markBundledSetsImported();
+      console.info(`[Sets] ${summary.importedSets} vorinstallierte Set(s) importiert.`);
+      return true;
+    }
+  }catch(err){
+    console.warn('Automatischer Set-Import fehlgeschlagen:', err);
+  }
+  return false;
+}
+
 document.getElementById('importBtn').addEventListener('click', ()=>{
   document.getElementById('importFile').click();
 });
@@ -3671,263 +3970,16 @@ document.getElementById('importFile').addEventListener('change', async (e)=>{
   }
 
   try{
-    const zip = new JSZip();
-    const contents = await zip.loadAsync(file);
-
-    let importedSets = 0;
-    let importedAudio = 0;
-    let errorCount = 0;
-
-    // Prüfe ob sets.json vorhanden ist (neues Format)
-    const setsJsonFile = contents.files['sets.json'];
-
-    if(setsJsonFile){
-      // Neues Format: Sets mit Metadaten & Clip-Informationen
-      const setsJsonText = await setsJsonFile.async('text');
-      const setsMetadata = JSON.parse(setsJsonText);
-
-      for(const setMeta of setsMetadata){
-        if(!setMeta || !setMeta.id){
-          errorCount++;
-          continue;
-        }
-
-        const clipList = [];
-        const motivationList = [];
-        const medalMap = makeEmptyMedalMap();
-        const setPrefix = `${setMeta.id}/`;
-
-        if(Array.isArray(setMeta.clips) && setMeta.clips.length){
-          for(const clipMeta of setMeta.clips){
-            const clipId = clipMeta && clipMeta.id ? clipMeta.id : generateUUID();
-            const letter = normaliseLetterInput(clipMeta && clipMeta.letter ? clipMeta.letter : null) || 'A';
-            const difficulty = normaliseDifficultyInput(clipMeta && clipMeta.difficulty ? clipMeta.difficulty : 'LEICHT');
-            let fileName = clipMeta && clipMeta.file ? clipMeta.file : '';
-
-            let zipEntry = null;
-            if(fileName){
-              const normalizedFile = fileName.replace(/^\/+/, '');
-              zipEntry = contents.files[setPrefix + normalizedFile];
-              if(!zipEntry){
-                // Fallback: vielleicht wurde Datei ohne Unterordner exportiert
-                zipEntry = contents.files[normalizedFile];
-              }
-            }
-            if(!zipEntry){
-              // Fallback: Suche nach Datei, die die Clip-ID enthält
-              zipEntry = Object.entries(contents.files).find(([name]) => {
-                return !name.endsWith('/') && name.startsWith(setPrefix) && name.includes(clipId);
-              });
-              if(zipEntry){
-                fileName = zipEntry[0].replace(setPrefix, '');
-                zipEntry = zipEntry[1];
-              }
-            }
-
-            if(!zipEntry || zipEntry.dir){
-              console.warn('Audio-Datei für Clip nicht gefunden:', setMeta.id, clipId);
-              errorCount++;
-              continue;
-            }
-
-            const blob = await zipEntry.async('blob');
-            if(!blob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
-              errorCount++;
-              continue;
-            }
-
-            await idbSet(`audio-${setMeta.id}-${clipId}`, blob);
-            clipList.push({
-              id: clipId,
-              letter,
-              difficulty,
-              created: typeof clipMeta?.created === 'number' ? clipMeta.created : Date.now(),
-            });
-            importedAudio++;
-          }
-        } else {
-          // Fallback: Keine Clip-Metadaten vorhanden → alles als LEICHT importieren
-          for(const [filename, zipEntry] of Object.entries(contents.files)){
-            if(zipEntry.dir || !filename.startsWith(setPrefix)) continue;
-            const rawName = filename.replace(setPrefix, '');
-            if(!rawName) continue;
-            const letter = normaliseLetterInput(rawName.split('.')[0]) || 'A';
-            const blob = await zipEntry.async('blob');
-            if(!blob.type.startsWith('audio/') && !rawName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
-              errorCount++;
-              continue;
-            }
-            const clipId = generateUUID();
-            await idbSet(`audio-${setMeta.id}-${clipId}`, blob);
-            clipList.push({
-              id: clipId,
-              letter,
-              difficulty: 'LEICHT',
-              created: Date.now(),
-            });
-            importedAudio++;
-          }
-        }
-
-        if(Array.isArray(setMeta.motivationClips) && setMeta.motivationClips.length){
-          for(const clipMeta of setMeta.motivationClips){
-            const clipId = clipMeta && clipMeta.id ? clipMeta.id : generateUUID();
-            let fileName = clipMeta && clipMeta.file ? clipMeta.file : '';
-
-            let zipEntry = null;
-            if(fileName){
-              const normalizedFile = fileName.replace(/^\/+/, '');
-              zipEntry = contents.files[setPrefix + normalizedFile];
-              if(!zipEntry){
-                zipEntry = contents.files[normalizedFile];
-              }
-            }
-            if(!zipEntry){
-              zipEntry = Object.entries(contents.files).find(([name]) => {
-                return !name.endsWith('/') && name.startsWith(setPrefix + 'motivation/') && name.includes(clipId);
-              });
-              if(zipEntry){
-                fileName = zipEntry[0].replace(setPrefix, '');
-                zipEntry = zipEntry[1];
-              }
-            }
-
-            if(!zipEntry || zipEntry.dir){
-              console.warn('Audio-Datei für Motivationsclip nicht gefunden:', setMeta.id, clipId);
-              errorCount++;
-              continue;
-            }
-
-            const blob = await zipEntry.async('blob');
-            if(!blob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
-              errorCount++;
-              continue;
-            }
-
-            await idbSet(`motivation-${setMeta.id}-${clipId}`, blob);
-            motivationList.push({
-              id: clipId,
-              created: typeof clipMeta?.created === 'number' ? clipMeta.created : Date.now(),
-            });
-            importedAudio++;
-          }
-        }
-
-        if(setMeta.medals && typeof setMeta.medals === 'object'){
-          for(const type of MEDAL_TYPES){
-            const entries = setMeta.medals[type];
-            const list = Array.isArray(entries) ? entries : entries ? [entries] : [];
-            for(const medalMeta of list){
-              const clipId = medalMeta && medalMeta.id ? medalMeta.id : generateUUID();
-              let fileName = medalMeta && medalMeta.file ? medalMeta.file : '';
-
-              let zipEntry = null;
-              if(fileName){
-                const normalizedFile = fileName.replace(/^\/+/, '');
-                zipEntry = contents.files[setPrefix + normalizedFile];
-                if(!zipEntry){
-                  zipEntry = contents.files[normalizedFile];
-                }
-              }
-              if(!zipEntry){
-                zipEntry = Object.entries(contents.files).find(([name]) => {
-                  return !name.endsWith('/') && name.startsWith(setPrefix + 'medals/') && name.includes(clipId);
-                });
-                if(zipEntry){
-                  fileName = zipEntry[0].replace(setPrefix, '');
-                  zipEntry = zipEntry[1];
-                }
-              }
-
-              if(!zipEntry || zipEntry.dir){
-                console.warn('Audio-Datei für Medaillen-Sound nicht gefunden:', setMeta.id, type);
-                errorCount++;
-                continue;
-              }
-
-              const blob = await zipEntry.async('blob');
-              if(!blob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
-                errorCount++;
-                continue;
-              }
-
-              await idbSet(`medal-${setMeta.id}-${clipId}`, blob);
-              medalMap[type].push({
-                id: clipId,
-                created: typeof medalMeta?.created === 'number' ? medalMeta.created : Date.now(),
-              });
-              importedAudio++;
-            }
-          }
-        }
-
-        await idbSet('set-' + setMeta.id, {
-          name: setMeta.name,
-          emoji: setMeta.emoji,
-          created: setMeta.created || Date.now(),
-          clips: clipList,
-          motivationClips: motivationList,
-          medalSounds: medalMap,
-        });
-
-        importedSets++;
-      }
-
-      alert(`✅ ${importedSets} Set(s) mit ${importedAudio} Aufnahmen importiert!${errorCount > 0 ? `\n⚠️ ${errorCount} Dateien übersprungen.` : ''}`);
-
-    } else {
-      // Altes Format: Direkte Audio-Dateien ohne Sets
-      // Importiere in aktuelles Set
-      const currentSetId = await getActiveSet();
-
-      for(const [filename, zipEntry] of Object.entries(contents.files)){
-        if(zipEntry.dir || filename.startsWith('__MACOSX') || filename.startsWith('.')) continue;
-
-        const letter = filename.split('.')[0].toUpperCase();
-        if(!/^[A-Z]$/.test(letter)){
-          errorCount++;
-          continue;
-        }
-
-        const blob = await zipEntry.async('blob');
-        if(!blob.type.startsWith('audio/') && !filename.match(/\.(webm|ogg|mp3|mp4|m4a|wav)$/i)){
-          errorCount++;
-          continue;
-        }
-
-        const clipId = generateUUID();
-        await idbSet('audio-' + currentSetId + '-' + clipId, blob);
-        const setData = await loadSetData(currentSetId) || { name: 'Meine Aufnahmen', emoji: '🎤', created: Date.now(), clips: [] };
-        setData.clips.push({
-          id: clipId,
-          letter,
-          difficulty: 'LEICHT',
-          created: Date.now(),
-        });
-        await idbSet('set-' + currentSetId, setData);
-        importedAudio++;
-      }
-
-      if(importedAudio > 0){
-        alert(`✅ ${importedAudio} Aufnahmen in aktuelles Set importiert!${errorCount > 0 ? `\n⚠️ ${errorCount} Dateien übersprungen.` : ''}`);
-      } else {
-        alert('❌ Keine gültigen Aufnahmen gefunden.');
-      }
-    }
-
-    // UI aktualisieren
+    await importSetsZipBlob(file);
     await renderSetsList();
     await updateStatusGridFromDB();
     await updateUIForRecordingState();
     if(currentLetter) await selectLetter(currentLetter);
     await refreshSupportAudioUI();
-
-    // Reset file input
-    e.target.value = '';
-
-  }catch(e){
-    console.error('Import fehlgeschlagen:', e);
-    alert('❌ Import fehlgeschlagen: ' + e.message);
+  }catch(err){
+    console.error('Import fehlgeschlagen:', err);
+    alert('❌ Import fehlgeschlagen: ' + err.message);
+  }finally{
     e.target.value = '';
   }
 });
@@ -4485,6 +4537,7 @@ elLetters.addEventListener('keydown', (e)=>{
 (async function init(){
   // Migration alter Aufnahmen (falls vorhanden)
   await migrateOldRecordings();
+  await importBundledSetsIfNeeded();
 
   // Default-Set sicherstellen und UI initialisieren
   await getActiveSet();
