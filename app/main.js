@@ -1555,6 +1555,21 @@ async function setActiveSet(setId){
 }
 
 // Aktives Set laden
+const DEFAULT_PLACEHOLDER_NAME = 'Meine Aufnahmen';
+const DEFAULT_PLACEHOLDER_EMOJI = '🎤';
+
+function isPlaceholderMeta(set){
+  return (set.name || '').trim() === DEFAULT_PLACEHOLDER_NAME && (set.emoji || '').trim() === DEFAULT_PLACEHOLDER_EMOJI;
+}
+
+async function isPlaceholderSet(set){
+  if(!set || !isPlaceholderMeta(set)){
+    return false;
+  }
+  const data = await loadSetData(set.id);
+  return isSetCompletelyEmpty(data);
+}
+
 async function getActiveSet(){
   const profileId = getActiveProfileId();
   if(profileId && profileSetCache.has(profileId)){
@@ -1579,7 +1594,7 @@ async function getActiveSet(){
     await setActiveSet(sets[0].id);
     return sets[0].id;
   }
-  const defaultId = await createSet('Meine Aufnahmen', '🎤');
+  const defaultId = await createSet(DEFAULT_PLACEHOLDER_NAME, DEFAULT_PLACEHOLDER_EMOJI);
   await setActiveSet(defaultId);
   return defaultId;
 }
@@ -1615,10 +1630,7 @@ async function cleanupPlaceholderSets(){
 
   const placeholderIds = [];
   for(const set of sets){
-    if((set.name || '').trim() !== 'Meine Aufnahmen') continue;
-    if((set.emoji || '').trim() !== '🎤') continue;
-    const data = await loadSetData(set.id);
-    if(isSetCompletelyEmpty(data)){
+    if(await isPlaceholderSet(set)){
       placeholderIds.push(set.id);
     }
   }
@@ -1659,7 +1671,7 @@ async function migrateOldRecordings(){
 
   console.log(`Migriere ${oldKeys.length} alte Aufnahmen...`);
 
-  const migrationSetId = await createSet('Meine Aufnahmen', '🎤');
+  const migrationSetId = await createSet(DEFAULT_PLACEHOLDER_NAME, DEFAULT_PLACEHOLDER_EMOJI);
   const setData = await loadSetData(migrationSetId) || { clips: [] };
 
   for(const oldKey of oldKeys){
@@ -4302,8 +4314,16 @@ async function importBundledSetsIfNeeded(){
     return false;
   }
   try{
+    await cleanupPlaceholderSets();
     const existingSets = await getAllSets();
-    if(existingSets.length > 0){
+    let hasRealSets = false;
+    for(const set of existingSets){
+      if(!(await isPlaceholderSet(set))){
+        hasRealSets = true;
+        break;
+      }
+    }
+    if(hasRealSets){
       markBundledSetsImported();
       return false;
     }
