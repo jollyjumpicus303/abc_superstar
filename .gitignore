@@ -2,3 +2,14 @@ node_modules/
 .DS_Store
 *.log
 .env
+journal.md
+TASKS.md
+android/
+scripts/
+dist/
+*.zip
+!abc-abenteuer-sets.zip
+.vscode/
+.idea/
+coverage/
+tmp/
