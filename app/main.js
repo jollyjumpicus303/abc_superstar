@@ -61,36 +61,36 @@ const MEDAL_LABELS = {
   bronze: 'Bronze',
 };
 
-function initAudioContext(){
-  if(!audioCtx){
+function initAudioContext() {
+  if (!audioCtx) {
     audioCtx = new AudioContext();
   }
   return audioCtx;
 }
 
-function ensureAudioContextRunning(){
+function ensureAudioContextRunning() {
   const ctx = initAudioContext();
-  if(ctx.state === 'suspended'){
-    ctx.resume().catch(()=>{});
+  if (ctx.state === 'suspended') {
+    ctx.resume().catch(() => { });
   }
   return ctx;
 }
 
-function loadSoundBuffer(id){
-  if(soundBuffers.has(id)){
+function loadSoundBuffer(id) {
+  if (soundBuffers.has(id)) {
     return Promise.resolve(soundBuffers.get(id));
   }
-  if(soundLoadingPromises.has(id)){
+  if (soundLoadingPromises.has(id)) {
     return soundLoadingPromises.get(id);
   }
   const config = SOUND_FILES[id];
-  if(!config){
+  if (!config) {
     return Promise.resolve(null);
   }
   const ctx = ensureAudioContextRunning();
   const loadPromise = fetch(config.url)
     .then(response => {
-      if(!response.ok){
+      if (!response.ok) {
         throw new Error(`Sound ${id} konnte nicht geladen werden`);
       }
       return response.arrayBuffer();
@@ -111,16 +111,16 @@ function loadSoundBuffer(id){
   return loadPromise;
 }
 
-function playSfx(id, options = {}){
+function playSfx(id, options = {}) {
   const config = SOUND_FILES[id];
-  if(!config){
+  if (!config) {
     return;
   }
   const ctx = ensureAudioContextRunning();
   const volume = typeof options.volume === 'number' ? options.volume : (config.volume ?? 1);
 
   const startPlayback = (buffer) => {
-    if(!buffer){
+    if (!buffer) {
       return;
     }
     const source = ctx.createBufferSource();
@@ -136,7 +136,7 @@ function playSfx(id, options = {}){
     });
   };
 
-  if(soundBuffers.has(id)){
+  if (soundBuffers.has(id)) {
     startPlayback(soundBuffers.get(id));
     return;
   }
@@ -144,24 +144,24 @@ function playSfx(id, options = {}){
   loadSoundBuffer(id).then(startPlayback);
 }
 
-function playSuccessSound(){ playSfx('success'); }
-function playErrorSound(){ playSfx('fail'); }
-function playClickSound(){ playSfx('click'); }
-function playStartSound(){ playSfx('start'); }
-function playUnlockSound(){ playSfx('unlock'); }
-function playRewardSound(){ playSfx('reward'); }
-function playStarRevealSound(){ playSfx('starReveal'); }
-function playGiftPopSound(){ playSfx('giftPop'); }
-function playStickerPopSound(){ playSfx('stickerPop'); }
+function playSuccessSound() { playSfx('success'); }
+function playErrorSound() { playSfx('fail'); }
+function playClickSound() { playSfx('click'); }
+function playStartSound() { playSfx('start'); }
+function playUnlockSound() { playSfx('unlock'); }
+function playRewardSound() { playSfx('reward'); }
+function playStarRevealSound() { playSfx('starReveal'); }
+function playGiftPopSound() { playSfx('giftPop'); }
+function playStickerPopSound() { playSfx('stickerPop'); }
 
-async function playSfxAndWait(id, options = {}){
+async function playSfxAndWait(id, options = {}) {
   const config = SOUND_FILES[id];
-  if(!config){
+  if (!config) {
     return 0;
   }
   const ctx = ensureAudioContextRunning();
   const buffer = soundBuffers.get(id) || await loadSoundBuffer(id);
-  if(!buffer){
+  if (!buffer) {
     return 0;
   }
   return new Promise((resolve) => {
@@ -181,7 +181,7 @@ async function playSfxAndWait(id, options = {}){
   });
 }
 
-function playMedalIntroSound(){
+function playMedalIntroSound() {
   return playSfxAndWait('medalIntro');
 }
 
@@ -194,13 +194,13 @@ const RECORD_MODES = {
 };
 const clipHistoryQueues = new Map();
 
-function makeClipHistoryKey(scope, setId, letter, difficulty){
+function makeClipHistoryKey(scope, setId, letter, difficulty) {
   return `${scope}:${setId || 'default'}:${letter || '?'}:${(difficulty || 'LEICHT').toUpperCase()}`;
 }
 
-function shuffleArray(array){
+function shuffleArray(array) {
   const arr = array.slice();
-  for(let i = arr.length - 1; i > 0; i--){
+  for (let i = arr.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
@@ -317,8 +317,8 @@ initThemeSelector();
 registerServiceWorker();
 initPWAInstall();
 
-function updateProfileBadge(){
-  if(!elProfileEmoji || !elProfileName) return;
+function updateProfileBadge() {
+  if (!elProfileEmoji || !elProfileName) return;
   const profile = getActiveProfile();
   const emoji = profile?.emoji || '🐣';
   const name = profile?.name || 'SPIELER';
@@ -326,8 +326,8 @@ function updateProfileBadge(){
   elProfileName.textContent = name;
 }
 
-function renderProfileCards(){
-  if(!elProfileList) return;
+function renderProfileCards() {
+  if (!elProfileList) return;
   const profiles = getProfiles();
   const activeId = getActiveProfileId();
   elProfileList.innerHTML = '';
@@ -353,26 +353,33 @@ function renderProfileCards(){
   elProfileList.appendChild(addCard);
 }
 
-function openProfileModal(){
-  if(!elProfileModal) return;
+function openProfileModal() {
+  if (!elProfileModal) return;
   isProfileModalOpen = true;
   renderProfileCards();
   elProfileModal.classList.remove('hidden');
 }
 
-function closeProfileModal(){
-  if(!elProfileModal) return;
+let isStartup = true;
+
+function closeProfileModal() {
+  if (!elProfileModal) return;
   isProfileModalOpen = false;
   elProfileModal.classList.add('hidden');
+
+  if (isStartup) {
+    isStartup = false;
+    showWelcomeDialog();
+  }
 }
 
-async function handleCreateProfile(){
+async function handleCreateProfile() {
   const nameInput = prompt('Name des Kindes:', '');
-  if(!nameInput){
+  if (!nameInput) {
     return;
   }
   const trimmedName = nameInput.trim();
-  if(!trimmedName){
+  if (!trimmedName) {
     return;
   }
   const emojiInput = prompt('Lieblings-Emoji (optional):', '🐣');
@@ -381,13 +388,13 @@ async function handleCreateProfile(){
   await switchProfile(profile.id);
 }
 
-function renderParentProfileList(){
-  if(!elParentProfileList){
+function renderParentProfileList() {
+  if (!elParentProfileList) {
     return;
   }
   const profiles = getProfiles();
   const activeId = getActiveProfileId();
-  if(!profiles.length){
+  if (!profiles.length) {
     elParentProfileList.innerHTML = '<p class="muted">Noch keine Profile gespeichert.</p>';
     return;
   }
@@ -409,21 +416,21 @@ function renderParentProfileList(){
       </div>
     `;
     const actions = row.querySelector('.parent-profile-actions');
-    if(actions){
+    if (actions) {
       actions.addEventListener('click', async (event) => {
         const btn = event.target.closest('button');
-        if(!btn) return;
+        if (!btn) return;
         const id = btn.dataset.id;
-        if(btn.dataset.action === 'edit'){
+        if (btn.dataset.action === 'edit') {
           const current = getProfiles().find(p => p.id === id);
-          if(!current) return;
+          if (!current) return;
           let newName = prompt('Neuer Name:', current.name);
-          if(newName){
+          if (newName) {
             newName = newName.trim();
           }
           const safeName = newName && newName.length ? newName : current.name;
           let newEmoji = prompt('Emoji (optional):', current.emoji || '🐣');
-          if(newEmoji){
+          if (newEmoji) {
             newEmoji = newEmoji.trim();
           }
           const safeEmoji = newEmoji && newEmoji.length ? newEmoji : current.emoji;
@@ -431,15 +438,15 @@ function renderParentProfileList(){
           updateProfileBadge();
           renderProfileCards();
           renderParentProfileList();
-        } else if(btn.dataset.action === 'delete'){
-          if(!confirm('Dieses Profil wirklich löschen?')) return;
+        } else if (btn.dataset.action === 'delete') {
+          if (!confirm('Dieses Profil wirklich löschen?')) return;
           const prevActive = getActiveProfileId();
           deleteProfile(id);
           profileSetCache.delete(id);
           const nextId = getActiveProfileId();
-          if(nextId && nextId !== prevActive){
+          if (nextId && nextId !== prevActive) {
             await switchProfile(nextId, { keepModalOpen: true });
-          }else{
+          } else {
             await hydrateProfileState();
           }
           renderProfileCards();
@@ -451,7 +458,7 @@ function renderParentProfileList(){
   });
 }
 
-async function hydrateProfileState(){
+async function hydrateProfileState() {
   await refreshStoredStars();
   await getActiveSet();
   await renderSetsList();
@@ -470,13 +477,13 @@ async function hydrateProfileState(){
   renderStatistics();
 }
 
-async function switchProfile(profileId, { keepModalOpen = false } = {}){
-  if(!profileId){
+async function switchProfile(profileId, { keepModalOpen = false } = {}) {
+  if (!profileId) {
     return;
   }
   const currentId = getActiveProfileId();
-  if(profileId !== currentId){
-    if(game){
+  if (profileId !== currentId) {
+    if (game) {
       endGame();
     }
     setActiveProfile(profileId);
@@ -484,53 +491,53 @@ async function switchProfile(profileId, { keepModalOpen = false } = {}){
     await migrateProfileScopedData(profile);
   }
   await hydrateProfileState();
-  if(!keepModalOpen){
+  if (!keepModalOpen) {
     closeProfileModal();
   }
 }
 
-function setupProfileEvents(){
-  if(elProfileBtn){
+function setupProfileEvents() {
+  if (elProfileBtn) {
     elProfileBtn.addEventListener('click', () => {
       renderProfileCards();
       openProfileModal();
     });
   }
-  if(elCloseProfileModal){
+  if (elCloseProfileModal) {
     elCloseProfileModal.addEventListener('click', closeProfileModal);
   }
-  if(elProfileModal){
+  if (elProfileModal) {
     elProfileModal.addEventListener('click', (event) => {
-      if(event.target === elProfileModal){
+      if (event.target === elProfileModal) {
         closeProfileModal();
       }
     });
   }
   document.addEventListener('keydown', (event) => {
-    if(event.key === 'Escape' && isProfileModalOpen){
+    if (event.key === 'Escape' && isProfileModalOpen) {
       closeProfileModal();
     }
   });
-  if(elBtnAddProfileParent){
+  if (elBtnAddProfileParent) {
     elBtnAddProfileParent.addEventListener('click', () => handleCreateProfile());
   }
 }
 
 setupProfileEvents();
 
-function ensureTrophyAnimation(path){
-  if(trophyAnimation && trophyAnimation.__path === path){
+function ensureTrophyAnimation(path) {
+  if (trophyAnimation && trophyAnimation.__path === path) {
     return Promise.resolve(trophyAnimation);
   }
-  if(trophyLoader){
+  if (trophyLoader) {
     return trophyLoader;
   }
-  if(!elTrophyAnimation || typeof window.lottie === 'undefined'){
+  if (!elTrophyAnimation || typeof window.lottie === 'undefined') {
     return Promise.resolve(null);
   }
   trophyLoader = new Promise((resolve) => {
-    try{
-      if(trophyAnimation){
+    try {
+      if (trophyAnimation) {
         trophyAnimation.destroy();
         trophyAnimation = null;
       }
@@ -551,7 +558,7 @@ function ensureTrophyAnimation(path){
         trophyAnimation = null;
         resolve(null);
       }, { once: true });
-    }catch(err){
+    } catch (err) {
       console.warn('Lottie Animation konnte nicht geladen werden', err);
       resolve(null);
     }
@@ -561,30 +568,30 @@ function ensureTrophyAnimation(path){
   return trophyLoader;
 }
 
-function playTrophyAnimation(path){
+function playTrophyAnimation(path) {
   ensureTrophyAnimation(path).then(animation => {
-    if(!animation) return;
+    if (!animation) return;
     animation.stop();
     animation.goToAndPlay(0, true);
   });
 }
 
-function registerServiceWorker(){
-  if(!('serviceWorker' in navigator)) return;
+function registerServiceWorker() {
+  if (!('serviceWorker' in navigator)) return;
   const register = () => {
     navigator.serviceWorker.register('sw.js').catch(err => {
       console.warn('Service Worker Registrierung fehlgeschlagen', err);
     });
   };
-  if(document.readyState === 'complete'){
+  if (document.readyState === 'complete') {
     register();
   } else {
     window.addEventListener('load', register, { once: true });
   }
 }
 
-function initPWAInstall(){
-  if(!elInstallBtn) return;
+function initPWAInstall() {
+  if (!elInstallBtn) return;
 
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
@@ -593,17 +600,17 @@ function initPWAInstall(){
   });
 
   elInstallBtn.addEventListener('click', async () => {
-    if(!installPromptEvent) return;
+    if (!installPromptEvent) return;
     elInstallBtn.disabled = true;
-    try{
+    try {
       installPromptEvent.prompt();
       const result = await installPromptEvent.userChoice;
-      if(result && result.outcome === 'accepted'){
+      if (result && result.outcome === 'accepted') {
         elInstallBtn.classList.remove('show');
       }
-    }catch(err){
+    } catch (err) {
       console.warn('PWA-Installation fehlgeschlagen', err);
-    }finally{
+    } finally {
       installPromptEvent = null;
       elInstallBtn.disabled = false;
     }
@@ -615,11 +622,11 @@ function initPWAInstall(){
   });
 }
 
-function initThemeSelector(){
+function initThemeSelector() {
   const storedTheme = readStoredTheme();
   applyTheme(storedTheme);
 
-  if(!elThemeTrigger || !elThemeMenu || !elThemeSwitcher) return;
+  if (!elThemeTrigger || !elThemeMenu || !elThemeSwitcher) return;
 
   elThemeTrigger.addEventListener('click', (event) => {
     event.stopPropagation();
@@ -639,40 +646,40 @@ function initThemeSelector(){
   document.addEventListener('keydown', handleThemeMenuKeydown);
 }
 
-function readStoredTheme(){
-  try{
+function readStoredTheme() {
+  try {
     const stored = localStorage.getItem(THEME_STORAGE_KEY);
-    if(stored && THEME_OPTIONS[stored]){
+    if (stored && THEME_OPTIONS[stored]) {
       return stored;
     }
-  }catch(err){ /* ignore storage issues */ }
+  } catch (err) { /* ignore storage issues */ }
   return document.documentElement.getAttribute('data-theme') || DEFAULT_THEME;
 }
 
-function saveTheme(themeId){
-  try{
+function saveTheme(themeId) {
+  try {
     localStorage.setItem(THEME_STORAGE_KEY, themeId);
-  }catch(err){ /* ignore storage issues */ }
+  } catch (err) { /* ignore storage issues */ }
 }
 
-function applyTheme(themeId){
+function applyTheme(themeId) {
   const nextTheme = THEME_OPTIONS[themeId] ? themeId : DEFAULT_THEME;
   activeTheme = nextTheme;
   document.documentElement.setAttribute('data-theme', nextTheme);
   const theme = THEME_OPTIONS[nextTheme];
-  if(metaThemeColor && theme?.metaColor){
+  if (metaThemeColor && theme?.metaColor) {
     metaThemeColor.setAttribute('content', theme.metaColor);
   }
   updateThemeMenu(nextTheme);
   saveTheme(nextTheme);
 }
 
-function updateThemeMenu(themeId){
+function updateThemeMenu(themeId) {
   const theme = THEME_OPTIONS[themeId] || THEME_OPTIONS[DEFAULT_THEME];
-  if(elThemeLabel && theme){
+  if (elThemeLabel && theme) {
     elThemeLabel.textContent = `${theme.emoji} ${theme.label}`;
   }
-  if(themeOptionButtons.length){
+  if (themeOptionButtons.length) {
     themeOptionButtons.forEach(btn => {
       const isActive = btn.dataset.themeOption === themeId;
       btn.setAttribute('aria-checked', String(isActive));
@@ -681,40 +688,40 @@ function updateThemeMenu(themeId){
   }
 }
 
-function selectTheme(themeId){
+function selectTheme(themeId) {
   applyTheme(themeId);
   closeThemeMenu();
 }
 
-function toggleThemeMenu(){
+function toggleThemeMenu() {
   setThemeMenuOpen(!isThemeMenuOpen);
 }
 
-function setThemeMenuOpen(shouldOpen){
-  if(!elThemeMenu || !elThemeTrigger || !elThemeSwitcher) return;
+function setThemeMenuOpen(shouldOpen) {
+  if (!elThemeMenu || !elThemeTrigger || !elThemeSwitcher) return;
   isThemeMenuOpen = shouldOpen;
   elThemeMenu.classList.toggle('hidden', !shouldOpen);
   elThemeTrigger.setAttribute('aria-expanded', String(shouldOpen));
   elThemeSwitcher.classList.toggle('open', shouldOpen);
 }
 
-function closeThemeMenu(){
-  if(isThemeMenuOpen){
+function closeThemeMenu() {
+  if (isThemeMenuOpen) {
     setThemeMenuOpen(false);
   }
 }
 
-function handleThemeMenuOutside(event){
-  if(!isThemeMenuOpen || !elThemeSwitcher) return;
-  if(!elThemeSwitcher.contains(event.target)){
+function handleThemeMenuOutside(event) {
+  if (!isThemeMenuOpen || !elThemeSwitcher) return;
+  if (!elThemeSwitcher.contains(event.target)) {
     closeThemeMenu();
   }
 }
 
-function handleThemeMenuKeydown(event){
-  if(event.key === 'Escape' && isThemeMenuOpen){
+function handleThemeMenuKeydown(event) {
+  if (event.key === 'Escape' && isThemeMenuOpen) {
     closeThemeMenu();
-    if(elThemeTrigger){
+    if (elThemeTrigger) {
       elThemeTrigger.focus();
     }
   }
@@ -796,9 +803,9 @@ tabsContainer.addEventListener('click', (e) => {
   if (!targetButton) return;
   const tabName = targetButton.dataset.tab;
 
-  if(tabName === 'spiel' && game){
+  if (tabName === 'spiel' && game) {
     const ended = confirmEndGame();
-    if(ended){
+    if (ended) {
       switchToTab('spiel');
     }
     return;
@@ -813,7 +820,7 @@ tabsContainer.addEventListener('click', (e) => {
 });
 
 function renderStatistics() {
-  if(!elParentStats) return;
+  if (!elParentStats) return;
   const progress = getProgress();
   const log = progress.attemptLog || [];
 
@@ -921,16 +928,16 @@ dialogModeCards.forEach(card => {
   });
 });
 
-if(elModeDialogStart){
+if (elModeDialogStart) {
   elModeDialogStart.addEventListener('click', () => {
-    if(!pendingModeSelection) return;
+    if (!pendingModeSelection) return;
 
-    const updates = { 
-      mode: pendingModeSelection.mode, 
+    const updates = {
+      mode: pendingModeSelection.mode,
       difficulty: pendingModeSelection.difficulty || 'LEICHT',
     };
 
-    if(pendingModeSelection.mode === 'FREI'){
+    if (pendingModeSelection.mode === 'FREI') {
       updates.freeLetterCount = pendingModeSelection.freeLetterCount || 4;
     } else {
       // Lernweg uses its own progression for letter count
@@ -942,23 +949,23 @@ if(elModeDialogStart){
   });
 }
 
-if(elFreeCountGroup){
+if (elFreeCountGroup) {
   elFreeCountGroup.addEventListener('click', (e) => {
     const chip = e.target.closest('[data-free-count]');
-    if(!chip || !pendingModeSelection) return;
+    if (!chip || !pendingModeSelection) return;
     const count = Number(chip.dataset.freeCount || 0);
-    if(!count) return;
+    if (!count) return;
     pendingModeSelection.freeLetterCount = count;
     setActiveChip(elFreeCountGroup, c => c === chip);
   });
 }
 
-if(elDifficultyGroup){
+if (elDifficultyGroup) {
   elDifficultyGroup.addEventListener('click', (e) => {
     const chip = e.target.closest('[data-difficulty]');
-    if(!chip || !pendingModeSelection) return;
+    if (!chip || !pendingModeSelection) return;
     const value = chip.dataset.difficulty;
-    if(!value) return;
+    if (!value) return;
     pendingModeSelection.difficulty = value;
     setActiveChip(elDifficultyGroup, c => c === chip);
   });
@@ -966,11 +973,11 @@ if(elDifficultyGroup){
 elModeDialogCancel.addEventListener('click', closeModeDialog);
 
 const elInGameDifficulty = document.getElementById('inGameDifficulty');
-if(elInGameDifficulty){
-  elInGameDifficulty.addEventListener('change', async (e)=>{
+if (elInGameDifficulty) {
+  elInGameDifficulty.addEventListener('change', async (e) => {
     const value = e.target.value || 'LEICHT';
     const saved = saveAndApply({ difficulty: value });
-    if(game){
+    if (game) {
       game.difficulty = value;
       game.progress = saved;
       await playCurrentPrompt();
@@ -979,7 +986,7 @@ if(elInGameDifficulty){
 }
 
 const elModeWarningAction = document.getElementById('modeWarningAction');
-if(elModeWarningAction){
+if (elModeWarningAction) {
   elModeWarningAction.addEventListener('click', () => {
     switchToTab('einstellungen');
     elStatusGrid?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -987,7 +994,7 @@ if(elModeWarningAction){
 }
 
 // Rundenanzeige
-elRounds.addEventListener('input', ()=> elRoundsOut.textContent = elRounds.value);
+elRounds.addEventListener('input', () => elRoundsOut.textContent = elRounds.value);
 
 // UX: Aufnahmen-Status prüfen und UI aktualisieren
 const elEmptyState = document.getElementById('emptyState');
@@ -1013,19 +1020,19 @@ async function updateUIForRecordingState() {
   updateLernwegProgress(progress);
 
   const baseWarnings = [];
-  if(hasRecordings){
-    if(mode === 'FREI'){
+  if (hasRecordings) {
+    if (mode === 'FREI') {
       const targetLetters = LETTERS.slice(0, desiredFreeCount);
       const missingBase = targetLetters.filter(letter => !recordedSet.has(letter));
-      if(missingBase.length){
+      if (missingBase.length) {
         baseWarnings.push(desiredFreeCount === 26
           ? `Für alle 26 Buchstaben fehlen noch ${missingBase.length}.`
           : `Es fehlen Aufnahmen für: ${missingBase.join(', ')}`);
       }
-    } else if(mode === 'LERNWEG'){
+    } else if (mode === 'LERNWEG') {
       const requiredLetters = LETTERS.slice(0, unlockedForPath);
       const missingBase = requiredLetters.filter(letter => !recordedSet.has(letter));
-      if(missingBase.length){
+      if (missingBase.length) {
         baseWarnings.push(`Für den Lernweg fehlen Aufnahmen für: ${missingBase.join(', ')}`);
       }
     }
@@ -1038,8 +1045,8 @@ async function updateUIForRecordingState() {
   elBtnStart.style.cursor = canStart ? 'pointer' : 'not-allowed';
   elBtnStart.title = canStart ? '' : (hasRecordings ? 'Bitte nimm die fehlenden Buchstaben auf, bevor du startest.' : 'Bitte nimm zuerst mindestens eine Aufnahme auf.');
 
-  if(elModeHint){
-    if(warningMessage){
+  if (elModeHint) {
+    if (warningMessage) {
       elModeHint.textContent = `⚠️ ${warningMessage}`;
       elModeHint.classList.remove('hidden');
     } else {
@@ -1059,18 +1066,18 @@ async function updateUIForRecordingState() {
 const ACTIVE_SET_SELECTOR_IDS = ['setSelector', 'inGameSetSelector', 'practiceSetSelector'];
 
 // Hilfsfunktion: Set-Selectoren für Spiel/HUD/Üben befüllen
-async function populateSetSelector(){
+async function populateSetSelector() {
   const sets = await getAllSets();
   const activeSetId = await getActiveSet();
   const selectors = ACTIVE_SET_SELECTOR_IDS
     .map(id => document.getElementById(id))
     .filter(Boolean);
 
-  if(!selectors.length) return;
+  if (!selectors.length) return;
 
   selectors.forEach(select => {
     select.innerHTML = '';
-    if(!sets.length){
+    if (!sets.length) {
       const option = document.createElement('option');
       option.value = '';
       option.textContent = 'Keine Sets verfügbar';
@@ -1080,7 +1087,7 @@ async function populateSetSelector(){
     }
 
     select.disabled = false;
-    for(const set of sets){
+    for (const set of sets) {
       const option = document.createElement('option');
       option.value = set.id;
       option.textContent = `${set.emoji} ${set.name}`;
@@ -1091,15 +1098,15 @@ async function populateSetSelector(){
 }
 
 // Hilfsfunktion: Standard-Set-Selector in Einstellungen befüllen
-async function populateDefaultSetSelector(){
+async function populateDefaultSetSelector() {
   const sets = await getAllSets();
   const activeSetId = await getActiveSet();
   const selector = document.getElementById('defaultSetSelector');
 
-  if(!selector) return; // Element existiert nicht
+  if (!selector) return; // Element existiert nicht
 
   selector.innerHTML = '';
-  for(const set of sets) {
+  for (const set of sets) {
     const option = document.createElement('option');
     option.value = set.id;
     option.textContent = `${set.emoji} ${set.name}`;
@@ -1108,10 +1115,10 @@ async function populateDefaultSetSelector(){
   }
 }
 
-async function handleSetChange(newSetId, { refreshSetsList = false } = {}){
-  if(!newSetId) return;
+async function handleSetChange(newSetId, { refreshSetsList = false } = {}) {
+  if (!newSetId) return;
   const current = await getActiveSet();
-  if(current === newSetId && !refreshSetsList){
+  if (current === newSetId && !refreshSetsList) {
     return;
   }
 
@@ -1121,22 +1128,22 @@ async function handleSetChange(newSetId, { refreshSetsList = false } = {}){
   await populateSetSelector();
   await populateDefaultSetSelector();
 
-  if(refreshSetsList){
+  if (refreshSetsList) {
     await renderSetsList();
   }
 
-  if(game && game.target){
+  if (game && game.target) {
     await playCurrentPrompt({ suppressAlert: false });
   }
 }
 
-async function syncActiveGameWithSet(newSetId){
-  if(!game) return;
+async function syncActiveGameWithSet(newSetId) {
+  if (!game) return;
   const setData = await loadSetData(newSetId);
   const clips = setData && Array.isArray(setData.clips) ? setData.clips : [];
   const recordedSet = new Set(clips.map(clip => clip.letter));
 
-  if(recordedSet.size === 0){
+  if (recordedSet.size === 0) {
     alert('Für dieses Set gibt es noch keine Aufnahmen. Das laufende Spiel wurde beendet.');
     endGame();
     return;
@@ -1146,7 +1153,7 @@ async function syncActiveGameWithSet(newSetId){
   const mode = game.mode || progress?.mode || 'FREI';
   let pool = Array.from(recordedSet).sort();
 
-  if(mode === 'LERNWEG'){
+  if (mode === 'LERNWEG') {
     const unlockedCount = progress && progress.unlocked ? progress.unlocked : 4;
     const unlockedLetters = LETTERS.slice(0, unlockedCount);
     pool = unlockedLetters.filter(letter => recordedSet.has(letter));
@@ -1156,7 +1163,7 @@ async function syncActiveGameWithSet(newSetId){
     pool = targetLetters.filter(letter => recordedSet.has(letter));
   }
 
-  if(pool.length === 0){
+  if (pool.length === 0) {
     alert('In diesem Set fehlen die notwendigen Aufnahmen für den aktuellen Modus. Das Spiel wurde beendet.');
     endGame();
     return;
@@ -1188,13 +1195,13 @@ document.getElementById('defaultSetSelector').addEventListener('change', async (
   await handleSetChange(e.target.value, { refreshSetsList: true });
 });
 
-if(elInGameSetSelector){
+if (elInGameSetSelector) {
   elInGameSetSelector.addEventListener('change', async (e) => {
     await handleSetChange(e.target.value);
   });
 }
 
-if(elPracticeSetSelector){
+if (elPracticeSetSelector) {
   elPracticeSetSelector.addEventListener('change', async (e) => {
     await handleSetChange(e.target.value);
   });
@@ -1205,106 +1212,106 @@ if(elPracticeSetSelector){
 // ——————————————————————————————————————————
 // IndexedDB (Aufnahmen & Sets)
 // ——————————————————————————————————————————
-const DB_NAME='abc-abenteuer-db';
-const STORE='recordings';
+const DB_NAME = 'abc-abenteuer-db';
+const STORE = 'recordings';
 const DB_VERSION = 2;
 
-let dbPromise = new Promise((resolve,reject)=>{
+let dbPromise = new Promise((resolve, reject) => {
   const req = indexedDB.open(DB_NAME, DB_VERSION);
-  req.onupgradeneeded = (e)=> {
+  req.onupgradeneeded = (e) => {
     const db = req.result;
     const oldVersion = e.oldVersion;
 
     // Version 1: Recordings Store erstellen
-    if(!db.objectStoreNames.contains(STORE)) {
+    if (!db.objectStoreNames.contains(STORE)) {
       db.createObjectStore(STORE);
     }
 
     // Version 2: Migration für Multi-Sets (wird später bei Bedarf durchgeführt)
     // Alte "audio-X" Keys bleiben vorerst, werden bei erster Nutzung migriert
   };
-  req.onsuccess = ()=> resolve(req.result);
-  req.onerror = ()=> reject(req.error);
+  req.onsuccess = () => resolve(req.result);
+  req.onerror = () => reject(req.error);
 });
 
-function idbGet(key){
-  return dbPromise.then(db=> new Promise((res,rej)=>{
-    const tx = db.transaction(STORE,'readonly');
+function idbGet(key) {
+  return dbPromise.then(db => new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readonly');
     const st = tx.objectStore(STORE);
     const r = st.get(key);
-    r.onsuccess = ()=> {
+    r.onsuccess = () => {
       const value = typeof r.result === 'undefined' ? null : r.result;
       res(value);
     };
-    r.onerror = ()=> rej(r.error);
+    r.onerror = () => rej(r.error);
   }));
 }
-function idbSet(key,val){
-  return dbPromise.then(db=> new Promise((res,rej)=>{
-    const tx = db.transaction(STORE,'readwrite');
+function idbSet(key, val) {
+  return dbPromise.then(db => new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
     const st = tx.objectStore(STORE);
-    const r = st.put(val,key);
-    r.onsuccess = ()=> res(true);
-    r.onerror = ()=> rej(r.error);
+    const r = st.put(val, key);
+    r.onsuccess = () => res(true);
+    r.onerror = () => rej(r.error);
   }));
 }
-function idbDel(key){
-  return dbPromise.then(db=> new Promise((res,rej)=>{
-    const tx = db.transaction(STORE,'readwrite');
+function idbDel(key) {
+  return dbPromise.then(db => new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
     const st = tx.objectStore(STORE);
     const r = st.delete(key);
-    r.onsuccess = ()=> res(true);
-    r.onerror = ()=> rej(r.error);
+    r.onsuccess = () => res(true);
+    r.onerror = () => rej(r.error);
   }));
 }
-function idbKeys(){
-  return dbPromise.then(db=> new Promise((res,rej)=>{
-    const tx = db.transaction(STORE,'readonly');
+function idbKeys() {
+  return dbPromise.then(db => new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readonly');
     const st = tx.objectStore(STORE);
-    const keys=[];
-    if(st.getAllKeys){
+    const keys = [];
+    if (st.getAllKeys) {
       const r = st.getAllKeys();
-      r.onsuccess = ()=> res(r.result || []);
-      r.onerror = ()=> rej(r.error);
-    }else{
+      r.onsuccess = () => res(r.result || []);
+      r.onerror = () => rej(r.error);
+    } else {
       // Fallback über Cursor
-      st.openCursor().onsuccess = (e)=>{
+      st.openCursor().onsuccess = (e) => {
         const cursor = e.target.result;
-        if(cursor){ keys.push(cursor.key); cursor.continue(); }
+        if (cursor) { keys.push(cursor.key); cursor.continue(); }
         else res(keys);
       };
     }
   }));
 }
-function idbClear(){
-  return dbPromise.then(db=> new Promise((res,rej)=>{
-    const tx = db.transaction(STORE,'readwrite');
-    tx.objectStore(STORE).clear().onsuccess = ()=> res(true);
-    tx.onerror = ()=> rej(tx.error);
+function idbClear() {
+  return dbPromise.then(db => new Promise((res, rej) => {
+    const tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).clear().onsuccess = () => res(true);
+    tx.onerror = () => rej(tx.error);
   }));
 }
 
 const profileSetCache = new Map();
 
-function makeProfileScopedKey(base, profileId){
+function makeProfileScopedKey(base, profileId) {
   const id = profileId || getActiveProfileId();
   return id ? `profile-${id}-${base}` : base;
 }
 
-async function migrateProfileScopedData(profile){
-  if(!profile || wasProfileMigrated(profile.id)){
+async function migrateProfileScopedData(profile) {
+  if (!profile || wasProfileMigrated(profile.id)) {
     return;
   }
   const profileId = profile.id;
   const keysToMigrate = ['stars', 'collectedStickers', 'letterStats', 'activeSet'];
-  for(const key of keysToMigrate){
+  for (const key of keysToMigrate) {
     const scopedKey = makeProfileScopedKey(key, profileId);
     const existing = await idbGet(scopedKey);
-    if(existing !== null){
+    if (existing !== null) {
       continue;
     }
     const legacy = await idbGet(key);
-    if(legacy !== null){
+    if (legacy !== null) {
       await idbSet(scopedKey, legacy);
     }
   }
@@ -1316,7 +1323,7 @@ async function migrateProfileScopedData(profile){
 // ——————————————————————————————————————————
 
 // UUID generieren
-function generateUUID(){
+function generateUUID() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = Math.random() * 16 | 0;
     const v = c === 'x' ? r : (r & 0x3 | 0x8);
@@ -1327,39 +1334,39 @@ function generateUUID(){
 const AUDIO_DIFFICULTIES = ['LEICHT', 'MITTEL', 'SCHWER', 'AFFIG'];
 const AUDIO_FILE_EXT_PATTERN = /\.(webm|ogg|mp3|mp4|m4a|wav)$/i;
 
-function makeEmptyMedalMap(){
+function makeEmptyMedalMap() {
   const map = {};
   MEDAL_TYPES.forEach(type => { map[type] = []; });
   return map;
 }
 
-function isAudioFileLike(file){
-  if(!file) return false;
-  if(file.type && file.type.startsWith('audio/')) return true;
-  if(file.name && AUDIO_FILE_EXT_PATTERN.test(file.name)) return true;
+function isAudioFileLike(file) {
+  if (!file) return false;
+  if (file.type && file.type.startsWith('audio/')) return true;
+  if (file.name && AUDIO_FILE_EXT_PATTERN.test(file.name)) return true;
   return false;
 }
 
-function normaliseLetterInput(value){
-  if(typeof value !== 'string') return null;
+function normaliseLetterInput(value) {
+  if (typeof value !== 'string') return null;
   const trimmed = value.trim().toUpperCase();
   return trimmed && /^[A-ZÄÖÜ]$/.test(trimmed) ? trimmed : null;
 }
 
-function normaliseDifficultyInput(value){
+function normaliseDifficultyInput(value) {
   const fallback = 'LEICHT';
-  if(!value) return fallback;
+  if (!value) return fallback;
   const normalised = value.toString().trim().toUpperCase();
   return AUDIO_DIFFICULTIES.includes(normalised) ? normalised : fallback;
 }
 
-function sanitiseMotivationClips(list){
-  if(!Array.isArray(list)) return [];
+function sanitiseMotivationClips(list) {
+  if (!Array.isArray(list)) return [];
   const seen = new Set();
   return list
     .filter(entry => entry && typeof entry.id === 'string' && entry.id)
     .map(entry => {
-      if(seen.has(entry.id)) return null;
+      if (seen.has(entry.id)) return null;
       seen.add(entry.id);
       return {
         id: entry.id,
@@ -1369,12 +1376,12 @@ function sanitiseMotivationClips(list){
     .filter(Boolean);
 }
 
-function sanitiseMedalSounds(raw){
+function sanitiseMedalSounds(raw) {
   const result = makeEmptyMedalMap();
-  if(!raw || typeof raw !== 'object'){
+  if (!raw || typeof raw !== 'object') {
     return result;
   }
-  for(const type of MEDAL_TYPES){
+  for (const type of MEDAL_TYPES) {
     const source = raw[type];
     const list = Array.isArray(source) ? source : source && typeof source === 'object' ? [source] : [];
     result[type] = list
@@ -1387,11 +1394,11 @@ function sanitiseMedalSounds(raw){
   return result;
 }
 
-async function loadSetData(setId){
-  if(!setId) return null;
+async function loadSetData(setId) {
+  if (!setId) return null;
   const setKey = 'set-' + setId;
   const raw = await idbGet(setKey);
-  if(!raw){
+  if (!raw) {
     return null;
   }
 
@@ -1410,7 +1417,7 @@ async function loadSetData(setId){
     .filter(clip => clip && typeof clip.id === 'string' && clip.id)
     .map(clip => {
       const id = clip.id;
-      if(seen.has(id)) return null;
+      if (seen.has(id)) return null;
       seen.add(id);
       const letter = normaliseLetterInput(clip.letter) || 'A';
       const difficulty = normaliseDifficultyInput(clip.difficulty);
@@ -1423,20 +1430,20 @@ async function loadSetData(setId){
     })
     .filter(Boolean);
 
-  if(!Array.isArray(raw.clips) || raw.clips.length !== data.clips.length){
+  if (!Array.isArray(raw.clips) || raw.clips.length !== data.clips.length) {
     changed = true;
   }
-  if(!Array.isArray(raw.motivationClips) || raw.motivationClips.length !== data.motivationClips.length){
+  if (!Array.isArray(raw.motivationClips) || raw.motivationClips.length !== data.motivationClips.length) {
     changed = true;
   }
-  if(raw.medalSounds){
-    for(const type of MEDAL_TYPES){
+  if (raw.medalSounds) {
+    for (const type of MEDAL_TYPES) {
       const rawEntry = raw.medalSounds[type];
       const rawCount = Array.isArray(rawEntry)
         ? rawEntry.filter(entry => entry && typeof entry.id === 'string').length
         : (rawEntry && typeof rawEntry.id === 'string' ? 1 : 0);
       const sanitisedCount = Array.isArray(data.medalSounds[type]) ? data.medalSounds[type].length : 0;
-      if(rawCount !== sanitisedCount){
+      if (rawCount !== sanitisedCount) {
         changed = true;
         break;
       }
@@ -1446,30 +1453,30 @@ async function loadSetData(setId){
   const migrated = await migrateLegacyRecordingsForSet(setId, data);
   changed = changed || migrated;
 
-  if(changed){
+  if (changed) {
     await idbSet(setKey, data);
   }
 
   return data;
 }
 
-async function migrateLegacyRecordingsForSet(setId, setData){
+async function migrateLegacyRecordingsForSet(setId, setData) {
   const prefix = 'audio-' + setId + '-';
   const keys = await idbKeys();
   const knownIds = new Set(setData.clips.map(clip => clip.id));
   const legacyKeys = keys.filter(key => key.startsWith(prefix));
   let updated = false;
 
-  for(const key of legacyKeys){
+  for (const key of legacyKeys) {
     const suffix = key.slice(prefix.length);
-    if(knownIds.has(suffix)){
+    if (knownIds.has(suffix)) {
       continue;
     }
 
-    if(/^[A-ZÄÖÜ]$/.test(suffix)){
+    if (/^[A-ZÄÖÜ]$/.test(suffix)) {
       const letter = suffix;
       const blob = await idbGet(key);
-      if(!blob) continue;
+      if (!blob) continue;
       const clip = {
         id: generateUUID(),
         letter,
@@ -1487,7 +1494,7 @@ async function migrateLegacyRecordingsForSet(setId, setData){
   return updated;
 }
 
-async function createSet(name, emoji){
+async function createSet(name, emoji) {
   const setId = generateUUID();
   const setData = {
     name: name || 'Neues Set',
@@ -1502,22 +1509,22 @@ async function createSet(name, emoji){
 }
 
 // Alle Sets abrufen
-async function getAllSets(){
+async function getAllSets() {
   const keys = await idbKeys();
   const setKeys = keys.filter(k => k.startsWith('set-'));
   const sets = [];
-  for(const key of setKeys){
+  for (const key of setKeys) {
     const id = key.replace('set-', '');
     const data = await loadSetData(id);
-    if(data){
+    if (data) {
       sets.push({ id, ...data });
     }
   }
-  return sets.sort((a,b) => (a.created || 0) - (b.created || 0));
+  return sets.sort((a, b) => (a.created || 0) - (b.created || 0));
 }
 
 // Set löschen (inkl. aller Aufnahmen)
-async function deleteSet(setId){
+async function deleteSet(setId) {
   // Set-Metadaten löschen
   await idbDel('set-' + setId);
 
@@ -1529,15 +1536,15 @@ async function deleteSet(setId){
     'medal-' + setId + '-',
   ];
   const audioKeys = keys.filter(k => prefixes.some(prefix => k.startsWith(prefix)));
-  for(const key of audioKeys){
+  for (const key of audioKeys) {
     await idbDel(key);
   }
 }
 
 // Set umbenennen
-async function updateSet(setId, name, emoji){
+async function updateSet(setId, name, emoji) {
   const setData = await loadSetData(setId);
-  if(setData){
+  if (setData) {
     setData.name = name;
     setData.emoji = emoji;
     await idbSet('set-' + setId, setData);
@@ -1545,9 +1552,9 @@ async function updateSet(setId, name, emoji){
 }
 
 // Aktives Set setzen
-async function setActiveSet(setId){
+async function setActiveSet(setId) {
   const profileId = getActiveProfileId();
-  if(profileId){
+  if (profileId) {
     profileSetCache.set(profileId, setId);
     setProfileLastSet(profileId, setId);
   }
@@ -1558,39 +1565,39 @@ async function setActiveSet(setId){
 const DEFAULT_PLACEHOLDER_NAME = 'Meine Aufnahmen';
 const DEFAULT_PLACEHOLDER_EMOJI = '🎤';
 
-function isPlaceholderMeta(set){
+function isPlaceholderMeta(set) {
   return (set.name || '').trim() === DEFAULT_PLACEHOLDER_NAME && (set.emoji || '').trim() === DEFAULT_PLACEHOLDER_EMOJI;
 }
 
-async function isPlaceholderSet(set){
-  if(!set || !isPlaceholderMeta(set)){
+async function isPlaceholderSet(set) {
+  if (!set || !isPlaceholderMeta(set)) {
     return false;
   }
   const data = await loadSetData(set.id);
   return isSetCompletelyEmpty(data);
 }
 
-async function getActiveSet(){
+async function getActiveSet() {
   const profileId = getActiveProfileId();
-  if(profileId && profileSetCache.has(profileId)){
+  if (profileId && profileSetCache.has(profileId)) {
     return profileSetCache.get(profileId);
   }
   const saved = await idbGet(makeProfileScopedKey('activeSet', profileId));
-  if(saved){
-    if(profileId){
+  if (saved) {
+    if (profileId) {
       profileSetCache.set(profileId, saved);
     }
     return saved;
   }
-  if(profileId){
+  if (profileId) {
     const remembered = getProfileLastSet(profileId);
-    if(remembered){
+    if (remembered) {
       await setActiveSet(remembered);
       return remembered;
     }
   }
   const sets = await getAllSets();
-  if(sets.length > 0){
+  if (sets.length > 0) {
     await setActiveSet(sets[0].id);
     return sets[0].id;
   }
@@ -1600,84 +1607,84 @@ async function getActiveSet(){
 }
 
 // Anzahl Aufnahmen pro Set
-async function getSetRecordingCount(setId){
+async function getSetRecordingCount(setId) {
   const data = await loadSetData(setId);
-  if(!data) return 0;
+  if (!data) return 0;
   const uniqueLetters = new Set(data.clips.map(clip => clip.letter));
   return uniqueLetters.size;
 }
 
-function hasMedalSounds(map){
-  if(!map || typeof map !== 'object'){
+function hasMedalSounds(map) {
+  if (!map || typeof map !== 'object') {
     return false;
   }
   return MEDAL_TYPES.some(type => Array.isArray(map[type]) && map[type].length > 0);
 }
 
-function isSetCompletelyEmpty(data){
-  if(!data) return true;
+function isSetCompletelyEmpty(data) {
+  if (!data) return true;
   const hasClips = Array.isArray(data.clips) && data.clips.length > 0;
   const hasMotivations = Array.isArray(data.motivationClips) && data.motivationClips.length > 0;
   const hasMedals = hasMedalSounds(data.medalSounds);
   return !hasClips && !hasMotivations && !hasMedals;
 }
 
-async function cleanupPlaceholderSets(){
+async function cleanupPlaceholderSets() {
   const sets = await getAllSets();
-  if(!sets.length){
+  if (!sets.length) {
     return;
   }
 
   const placeholderIds = [];
-  for(const set of sets){
-    if(await isPlaceholderSet(set)){
+  for (const set of sets) {
+    if (await isPlaceholderSet(set)) {
       placeholderIds.push(set.id);
     }
   }
 
-  if(!placeholderIds.length){
+  if (!placeholderIds.length) {
     return;
   }
 
   const remainingCandidates = sets.filter(set => !placeholderIds.includes(set.id));
-  if(!remainingCandidates.length){
+  if (!remainingCandidates.length) {
     // Behalte mindestens ein Set, damit Aufnahmen weiterhin möglich sind.
     return;
   }
 
   const activeSetId = await getActiveSet();
   let activeRemoved = false;
-  for(const id of placeholderIds){
+  for (const id of placeholderIds) {
     await deleteSet(id);
-    if(id === activeSetId){
+    if (id === activeSetId) {
       activeRemoved = true;
     }
   }
 
-  if(activeRemoved){
+  if (activeRemoved) {
     const remainingSets = await getAllSets();
-    if(remainingSets.length){
+    if (remainingSets.length) {
       await setActiveSet(remainingSets[0].id);
     }
   }
 }
 
 // Migration: Alte Aufnahmen (audio-X) in neues Format (audio-SETID-X) migrieren
-async function migrateOldRecordings(){
+async function migrateOldRecordings() {
   const keys = await idbKeys();
 
   const oldKeys = keys.filter(k => k.startsWith('audio-') && /^[A-ZÄÖÜ]$/.test(k.replace('audio-', '')));
-  if(oldKeys.length === 0) return;
+  if (oldKeys.length === 0) return;
 
   console.log(`Migriere ${oldKeys.length} alte Aufnahmen...`);
 
   const migrationSetId = await createSet(DEFAULT_PLACEHOLDER_NAME, DEFAULT_PLACEHOLDER_EMOJI);
   const setData = await loadSetData(migrationSetId) || { clips: [] };
 
-  for(const oldKey of oldKeys){
+  for (const oldKey of oldKeys) {
     const letter = oldKey.replace('audio-', '');
     const blob = await idbGet(oldKey);
-    if(!blob) continue;
+    if (!blob) continue;
     const clip = {
       id: generateUUID(),
       letter,
@@ -1705,72 +1712,72 @@ const STICKER_CATALOG = {
     name: 'Tiere',
     emoji: '🦁',
     stickers: [
-      {id: 'a1', emoji: '🦁', name: 'Löwe'},
-      {id: 'a2', emoji: '🐘', name: 'Elefant'},
-      {id: 'a3', emoji: '🦒', name: 'Giraffe'},
-      {id: 'a4', emoji: '🦓', name: 'Zebra'},
-      {id: 'a5', emoji: '🐼', name: 'Panda'},
-      {id: 'a6', emoji: '🦊', name: 'Fuchs'},
-      {id: 'a7', emoji: '🐨', name: 'Koala'},
-      {id: 'a8', emoji: '🦘', name: 'Känguru'},
-      {id: 'a9', emoji: '🐯', name: 'Tiger'},
-      {id: 'a10', emoji: '🐻', name: 'Bär'},
-      {id: 'a11', emoji: '🐧', name: 'Pinguin'},
-      {id: 'a12', emoji: '🦉', name: 'Eule'}
+      { id: 'a1', emoji: '🦁', name: 'Löwe' },
+      { id: 'a2', emoji: '🐘', name: 'Elefant' },
+      { id: 'a3', emoji: '🦒', name: 'Giraffe' },
+      { id: 'a4', emoji: '🦓', name: 'Zebra' },
+      { id: 'a5', emoji: '🐼', name: 'Panda' },
+      { id: 'a6', emoji: '🦊', name: 'Fuchs' },
+      { id: 'a7', emoji: '🐨', name: 'Koala' },
+      { id: 'a8', emoji: '🦘', name: 'Känguru' },
+      { id: 'a9', emoji: '🐯', name: 'Tiger' },
+      { id: 'a10', emoji: '🐻', name: 'Bär' },
+      { id: 'a11', emoji: '🐧', name: 'Pinguin' },
+      { id: 'a12', emoji: '🦉', name: 'Eule' }
     ]
   },
   space: {
     name: 'Weltraum',
     emoji: '🚀',
     stickers: [
-      {id: 's1', emoji: '🚀', name: 'Rakete'},
-      {id: 's2', emoji: '🛸', name: 'UFO'},
-      {id: 's3', emoji: '🌙', name: 'Mond'},
-      {id: 's4', emoji: '⭐', name: 'Stern'},
-      {id: 's5', emoji: '🌟', name: 'Glitzerstern'},
-      {id: 's6', emoji: '🪐', name: 'Saturn'},
-      {id: 's7', emoji: '🌍', name: 'Erde'},
-      {id: 's8', emoji: '☄️', name: 'Komet'},
-      {id: 's9', emoji: '🌌', name: 'Galaxie'},
-      {id: 's10', emoji: '👾', name: 'Alien'},
-      {id: 's11', emoji: '🛰️', name: 'Satellit'},
-      {id: 's12', emoji: '🔭', name: 'Teleskop'}
+      { id: 's1', emoji: '🚀', name: 'Rakete' },
+      { id: 's2', emoji: '🛸', name: 'UFO' },
+      { id: 's3', emoji: '🌙', name: 'Mond' },
+      { id: 's4', emoji: '⭐', name: 'Stern' },
+      { id: 's5', emoji: '🌟', name: 'Glitzerstern' },
+      { id: 's6', emoji: '🪐', name: 'Saturn' },
+      { id: 's7', emoji: '🌍', name: 'Erde' },
+      { id: 's8', emoji: '☄️', name: 'Komet' },
+      { id: 's9', emoji: '🌌', name: 'Galaxie' },
+      { id: 's10', emoji: '👾', name: 'Alien' },
+      { id: 's11', emoji: '🛰️', name: 'Satellit' },
+      { id: 's12', emoji: '🔭', name: 'Teleskop' }
     ]
   },
   ocean: {
     name: 'Unterwasser',
     emoji: '🐠',
     stickers: [
-      {id: 'o1', emoji: '🐠', name: 'Fisch'},
-      {id: 'o2', emoji: '🐡', name: 'Kugelfisch'},
-      {id: 'o3', emoji: '🐟', name: 'Goldfisch'},
-      {id: 'o4', emoji: '🐬', name: 'Delfin'},
-      {id: 'o5', emoji: '🐳', name: 'Wal'},
-      {id: 'o6', emoji: '🦈', name: 'Hai'},
-      {id: 'o7', emoji: '🐙', name: 'Oktopus'},
-      {id: 'o8', emoji: '🦀', name: 'Krabbe'},
-      {id: 'o9', emoji: '🦞', name: 'Hummer'},
-      {id: 'o10', emoji: '🐚', name: 'Muschel'},
-      {id: 'o11', emoji: '⭐', name: 'Seestern'},
-      {id: 'o12', emoji: '🪸', name: 'Koralle'}
+      { id: 'o1', emoji: '🐠', name: 'Fisch' },
+      { id: 'o2', emoji: '🐡', name: 'Kugelfisch' },
+      { id: 'o3', emoji: '🐟', name: 'Goldfisch' },
+      { id: 'o4', emoji: '🐬', name: 'Delfin' },
+      { id: 'o5', emoji: '🐳', name: 'Wal' },
+      { id: 'o6', emoji: '🦈', name: 'Hai' },
+      { id: 'o7', emoji: '🐙', name: 'Oktopus' },
+      { id: 'o8', emoji: '🦀', name: 'Krabbe' },
+      { id: 'o9', emoji: '🦞', name: 'Hummer' },
+      { id: 'o10', emoji: '🐚', name: 'Muschel' },
+      { id: 'o11', emoji: '⭐', name: 'Seestern' },
+      { id: 'o12', emoji: '🪸', name: 'Koralle' }
     ]
   },
   fairy: {
     name: 'Märchen',
     emoji: '🏰',
     stickers: [
-      {id: 'f1', emoji: '🏰', name: 'Schloss'},
-      {id: 'f2', emoji: '👑', name: 'Krone'},
-      {id: 'f3', emoji: '🧙', name: 'Zauberer'},
-      {id: 'f4', emoji: '🧚', name: 'Fee'},
-      {id: 'f5', emoji: '🐉', name: 'Drache'},
-      {id: 'f6', emoji: '🦄', name: 'Einhorn'},
-      {id: 'f7', emoji: '🗡️', name: 'Schwert'},
-      {id: 'f8', emoji: '🛡️', name: 'Schild'},
-      {id: 'f9', emoji: '💎', name: 'Diamant'},
-      {id: 'f10', emoji: '🔮', name: 'Kristallkugel'},
-      {id: 'f11', emoji: '📜', name: 'Schriftrolle'},
-      {id: 'f12', emoji: '🪄', name: 'Zauberstab'}
+      { id: 'f1', emoji: '🏰', name: 'Schloss' },
+      { id: 'f2', emoji: '👑', name: 'Krone' },
+      { id: 'f3', emoji: '🧙', name: 'Zauberer' },
+      { id: 'f4', emoji: '🧚', name: 'Fee' },
+      { id: 'f5', emoji: '🐉', name: 'Drache' },
+      { id: 'f6', emoji: '🦄', name: 'Einhorn' },
+      { id: 'f7', emoji: '🗡️', name: 'Schwert' },
+      { id: 'f8', emoji: '🛡️', name: 'Schild' },
+      { id: 'f9', emoji: '💎', name: 'Diamant' },
+      { id: 'f10', emoji: '🔮', name: 'Kristallkugel' },
+      { id: 'f11', emoji: '📜', name: 'Schriftrolle' },
+      { id: 'f12', emoji: '🪄', name: 'Zauberstab' }
     ]
   }
 };
@@ -1780,17 +1787,17 @@ const ALL_STICKER_IDS = Object.values(STICKER_CATALOG)
   .flatMap(theme => theme.stickers.map(s => s.id));
 
 // Sticker finden nach ID
-function getStickerById(stickerId){
-  for(const theme of Object.values(STICKER_CATALOG)){
+function getStickerById(stickerId) {
+  for (const theme of Object.values(STICKER_CATALOG)) {
     const sticker = theme.stickers.find(s => s.id === stickerId);
-    if(sticker) return sticker;
+    if (sticker) return sticker;
   }
   return null;
 }
 
-function getStickerThemeKey(stickerId){
-  for(const [key, theme] of Object.entries(STICKER_CATALOG)){
-    if(theme.stickers.some(s => s.id === stickerId)){
+function getStickerThemeKey(stickerId) {
+  for (const [key, theme] of Object.entries(STICKER_CATALOG)) {
+    if (theme.stickers.some(s => s.id === stickerId)) {
       return key;
     }
   }
@@ -1800,33 +1807,33 @@ function getStickerThemeKey(stickerId){
 const STARS_PER_PACK = 10;
 
 // Sterne abrufen
-async function getStars(profileId){
+async function getStars(profileId) {
   const stars = await idbGet(makeProfileScopedKey('stars', profileId));
   return typeof stars === 'number' ? stars : 0;
 }
 
 // Sterne setzen
-async function setStars(count){
+async function setStars(count) {
   await idbSet(makeProfileScopedKey('stars'), count);
 }
 
 // Sterne hinzufügen
-async function addStars(count){
+async function addStars(count) {
   const current = await getStars();
   await setStars(current + count);
   return current + count;
 }
 
 // Gesammelte Sticker abrufen
-async function getCollectedStickers(profileId){
+async function getCollectedStickers(profileId) {
   const stickers = await idbGet(makeProfileScopedKey('collectedStickers', profileId));
   return Array.isArray(stickers) ? stickers : [];
 }
 
 // Sticker hinzufügen
-async function addSticker(stickerId){
+async function addSticker(stickerId) {
   const collected = await getCollectedStickers();
-  if(!collected.includes(stickerId)){
+  if (!collected.includes(stickerId)) {
     collected.push(stickerId);
     await idbSet(makeProfileScopedKey('collectedStickers'), collected);
     return true; // Neu gesammelt
@@ -1844,45 +1851,45 @@ let prefersReducedMotion = reduceMotionQuery.matches;
 const handleReduceMotionChange = (event) => {
   prefersReducedMotion = event.matches;
 };
-if(typeof reduceMotionQuery.addEventListener === 'function'){
+if (typeof reduceMotionQuery.addEventListener === 'function') {
   reduceMotionQuery.addEventListener('change', handleReduceMotionChange);
-} else if(typeof reduceMotionQuery.addListener === 'function'){
+} else if (typeof reduceMotionQuery.addListener === 'function') {
   reduceMotionQuery.addListener(handleReduceMotionChange);
 }
 
 // Buchstaben-Statistik abrufen
-async function getLetterStats(profileId){
+async function getLetterStats(profileId) {
   const stats = await idbGet(makeProfileScopedKey('letterStats', profileId));
   return stats && typeof stats === 'object' ? stats : {}; // {A: 5, B: 3, ...}
 }
 
 // Buchstaben-Statistik inkrementieren
-async function incrementLetterStat(letter){
+async function incrementLetterStat(letter) {
   const stats = await getLetterStats();
   stats[letter] = (stats[letter] || 0) + 1;
   await idbSet(makeProfileScopedKey('letterStats'), stats);
   return stats[letter];
 }
 
-function shouldReduceMotion(){
+function shouldReduceMotion() {
   return prefersReducedMotion;
 }
 
 // Badge-Level für Buchstabe berechnen (Bronze: 3, Silber: 10, Gold: 25)
-function getLetterBadge(count){
-  if(count >= 25) return {level: 'gold', emoji: '🥇', name: 'Gold'};
-  if(count >= 10) return {level: 'silver', emoji: '🥈', name: 'Silber'};
-  if(count >= 3) return {level: 'bronze', emoji: '🥉', name: 'Bronze'};
+function getLetterBadge(count) {
+  if (count >= 25) return { level: 'gold', emoji: '🥇', name: 'Gold' };
+  if (count >= 10) return { level: 'silver', emoji: '🥈', name: 'Silber' };
+  if (count >= 3) return { level: 'bronze', emoji: '🥉', name: 'Bronze' };
   return null;
 }
 
 // Zufälliges Sticker-Pack öffnen (3 zufällige Sticker, keine Duplikate im Pack)
-function openStickerPack(){
+function openStickerPack() {
   const available = [...ALL_STICKER_IDS];
   const pack = [];
 
   // 3 zufällige Sticker ziehen
-  for(let i = 0; i < 3 && available.length > 0; i++){
+  for (let i = 0; i < 3 && available.length > 0; i++) {
     const randomIndex = Math.floor(Math.random() * available.length);
     const stickerId = available.splice(randomIndex, 1)[0];
     pack.push(stickerId);
@@ -1891,25 +1898,25 @@ function openStickerPack(){
   return pack;
 }
 
-function updateMissionStatus(completed = 0, total = 0){
-  if(!elMissionText) return;
-  if(!total){
+function updateMissionStatus(completed = 0, total = 0) {
+  if (!elMissionText) return;
+  if (!total) {
     elMissionText.textContent = 'Starte ein Abenteuer!';
     return;
   }
   const clamped = Math.max(0, Math.min(completed, total));
-  if(clamped >= total){
+  if (clamped >= total) {
     elMissionText.textContent = 'Mission erfüllt! 🎉';
     return;
   }
   elMissionText.textContent = `${clamped} von ${total} Buchstaben entdeckt`;
 }
 
-function initStarTrack(){
-  if(!elStarTrackStars) return;
+function initStarTrack() {
+  if (!elStarTrackStars) return;
   elStarTrackStars.innerHTML = '';
   starTrackNodes = [];
-  for(let i = 0; i < STAR_TRACK_SIZE; i += 1){
+  for (let i = 0; i < STAR_TRACK_SIZE; i += 1) {
     const star = document.createElement('span');
     star.className = 'star-track__star';
     star.setAttribute('aria-hidden', 'true');
@@ -1919,36 +1926,36 @@ function initStarTrack(){
   updateStarTrackDisplay();
 }
 
-function updateStarTrackDisplay(){
-  if(!starTrackNodes.length) return;
+function updateStarTrackDisplay() {
+  if (!starTrackNodes.length) return;
   const combined = totalStarBank;
   const ready = combined >= STARS_PER_PACK;
   const progress = ready ? STARS_PER_PACK : (combined % STARS_PER_PACK);
   starTrackNodes.forEach((node, index) => {
     node.classList.toggle('filled', index < progress);
   });
-  if(elStarTrackProgressText){
+  if (elStarTrackProgressText) {
     elStarTrackProgressText.textContent = `${progress}/${STARS_PER_PACK}`;
   }
 }
 
-async function refreshStoredStars(){
+async function refreshStoredStars() {
   totalStarBank = await getStars();
   updateStarTrackDisplay();
 }
 
-function updateStarSummary(count){
-  if(!elStarSummaryText) return;
+function updateStarSummary(count) {
+  if (!elStarSummaryText) return;
   const safe = Math.max(0, Math.min(MAX_RUN_STARS, count));
   elStarSummaryText.textContent = `${safe} von ${MAX_RUN_STARS} Sternen`;
 }
 
-function getStarRevealWidget(){
-  if(!elStarCanvas) return null;
-  if(!starRevealWidget){
+function getStarRevealWidget() {
+  if (!elStarCanvas) return null;
+  if (!starRevealWidget) {
     starRevealWidget = new StarReveal(elStarCanvas, {
       onReveal: () => {
-        if(shouldReduceMotion()) return;
+        if (shouldReduceMotion()) return;
         playStarRevealSound();
       },
       revealDelay: 1000,
@@ -1957,21 +1964,21 @@ function getStarRevealWidget(){
   return starRevealWidget;
 }
 
-async function animateResultStars(count){
+async function animateResultStars(count) {
   updateStarSummary(count);
   const widget = getStarRevealWidget();
-  if(!widget){
+  if (!widget) {
     return;
   }
   await widget.setStars(0);
   await widget.setStars(count);
 }
 
-function ensureGiftLottie(){
-  if(!elResultGiftLottie || typeof lottie === 'undefined'){
+function ensureGiftLottie() {
+  if (!elResultGiftLottie || typeof lottie === 'undefined') {
     return null;
   }
-  if(!giftLottieAnimation){
+  if (!giftLottieAnimation) {
     giftLottieAnimation = lottie.loadAnimation({
       container: elResultGiftLottie,
       renderer: 'svg',
@@ -1983,20 +1990,20 @@ function ensureGiftLottie(){
   return giftLottieAnimation;
 }
 
-function toggleResultGift(show){
-  if(!elResultGift) return;
-  if(show){
-    if(elResultGift.classList.contains('hidden')){
+function toggleResultGift(show) {
+  if (!elResultGift) return;
+  if (show) {
+    if (elResultGift.classList.contains('hidden')) {
       playGiftPopSound();
     }
     elResultGift.classList.remove('hidden');
     const anim = ensureGiftLottie();
-    if(anim){
+    if (anim) {
       anim.goToAndPlay(0, true);
     }
   } else {
     elResultGift.classList.add('hidden');
-    if(giftLottieAnimation){
+    if (giftLottieAnimation) {
       giftLottieAnimation.stop();
     }
   }
@@ -2009,13 +2016,13 @@ const elSetsList = document.getElementById('setsList');
 const elBtnCreateSet = document.getElementById('btnCreateSet');
 
 // Sets-Liste rendern
-async function renderSetsList(){
+async function renderSetsList() {
   const sets = await getAllSets();
   const activeSetId = await getActiveSet();
 
   elSetsList.innerHTML = '';
 
-  for(const set of sets){
+  for (const set of sets) {
     const count = await getSetRecordingCount(set.id);
     const isActive = set.id === activeSetId;
 
@@ -2034,7 +2041,7 @@ async function renderSetsList(){
     // Klick auf Karte: Set aktivieren
     card.addEventListener('click', async (e) => {
       // Nicht aktivieren wenn auf Buttons geklickt wurde
-      if(e.target.closest('.set-btn')) return;
+      if (e.target.closest('.set-btn')) return;
       await handleSetChange(set.id, { refreshSetsList: true });
     });
 
@@ -2045,10 +2052,10 @@ async function renderSetsList(){
 // Set erstellen Dialog
 elBtnCreateSet.addEventListener('click', async () => {
   const name = prompt('Name des Sets:', 'Neues Set');
-  if(!name) return;
+  if (!name) return;
 
   const emoji = prompt('Emoji für das Set (z.B. 🍎, 🔤, 👶):', '🎤');
-  if(emoji === null) return;
+  if (emoji === null) return;
 
   const setId = await createSet(name, emoji || '🎤');
   await handleSetChange(setId, { refreshSetsList: true });
@@ -2057,28 +2064,28 @@ elBtnCreateSet.addEventListener('click', async () => {
 // Set-Aktionen (Bearbeiten/Löschen)
 elSetsList.addEventListener('click', async (e) => {
   const btn = e.target.closest('.set-btn');
-  if(!btn) return;
+  if (!btn) return;
 
   e.stopPropagation();
 
   const action = btn.dataset.action;
   const setId = btn.dataset.id;
 
-  if(action === 'delete'){
+  if (action === 'delete') {
     const sets = await getAllSets();
-    if(sets.length <= 1){
+    if (sets.length <= 1) {
       alert('Du musst mindestens ein Set behalten!');
       return;
     }
 
-    if(confirm('Set wirklich löschen? Alle Aufnahmen gehen verloren!')){
+    if (confirm('Set wirklich löschen? Alle Aufnahmen gehen verloren!')) {
       const wasActive = (await getActiveSet()) === setId;
       await deleteSet(setId);
 
       // Wenn das aktive Set gelöscht wurde, erstes verfügbares Set aktivieren
-      if(wasActive){
+      if (wasActive) {
         const remainingSets = await getAllSets();
-        if(remainingSets.length > 0){
+        if (remainingSets.length > 0) {
           await setActiveSet(remainingSets[0].id);
         }
       }
@@ -2090,15 +2097,15 @@ elSetsList.addEventListener('click', async (e) => {
     }
   }
 
-  if(action === 'edit'){
+  if (action === 'edit') {
     const setData = await loadSetData(setId);
-    if(!setData) return;
+    if (!setData) return;
 
     const name = prompt('Name des Sets:', setData.name);
-    if(name === null) return;
+    if (name === null) return;
 
     const emoji = prompt('Emoji für das Set:', setData.emoji);
-    if(emoji === null) return;
+    if (emoji === null) return;
 
     await updateSet(setId, name || setData.name, emoji || setData.emoji);
     await renderSetsList();
@@ -2108,15 +2115,15 @@ elSetsList.addEventListener('click', async (e) => {
 });
 
 // Hilfsfunktion: Komplettes UI der Aufnahmen aktualisieren
-async function updateRecordingUI(){
+async function updateRecordingUI() {
   await updateStatusGridFromDB();
   await updateUIForRecordingState();
   await updatePracticeLetterButtons();
-  if(currentLetter) await selectLetter(currentLetter);
+  if (currentLetter) await selectLetter(currentLetter);
   await refreshSupportAudioUI();
 }
 
-async function refreshSupportAudioUI(){
+async function refreshSupportAudioUI() {
   const setId = await getActiveSet();
   const setData = await loadSetData(setId);
   renderMotivationList(setData && Array.isArray(setData.motivationClips) ? setData.motivationClips : []);
@@ -2128,7 +2135,7 @@ async function refreshSupportAudioUI(){
 // ——————————————————————————————————————————
 let currentAlbumTheme = 'animals';
 
-async function renderAlbum(){
+async function renderAlbum() {
   const stars = await getStars();
   totalStarBank = stars;
   updateStarTrackDisplay();
@@ -2145,11 +2152,11 @@ async function renderAlbum(){
   // Themen-Tabs rendern
   const albumTabs = document.getElementById('albumTabs');
   albumTabs.innerHTML = '';
-  for(const [key, theme] of Object.entries(STICKER_CATALOG)){
+  for (const [key, theme] of Object.entries(STICKER_CATALOG)) {
     const btn = document.createElement('button');
     btn.className = 'btn secondary album-tab-btn';
     btn.dataset.albumTheme = key;
-    if(key === currentAlbumTheme) btn.classList.add('active');
+    if (key === currentAlbumTheme) btn.classList.add('active');
     btn.textContent = `${theme.emoji} ${theme.name}`;
     btn.onclick = () => { currentAlbumTheme = key; renderAlbum(); };
     albumTabs.appendChild(btn);
@@ -2161,12 +2168,12 @@ async function renderAlbum(){
   albumContent.innerHTML = `<div class="album-grid"></div>`;
   const grid = albumContent.querySelector('.album-grid');
 
-  for(const sticker of theme.stickers){
+  for (const sticker of theme.stickers) {
     const slot = document.createElement('div');
     slot.className = 'sticker-slot';
     slot.dataset.stickerId = sticker.id;
     const hasSticker = collectedSet.has(sticker.id);
-    if(hasSticker){
+    if (hasSticker) {
       slot.classList.add('collected');
       slot.textContent = sticker.emoji;
       slot.title = sticker.name;
@@ -2187,29 +2194,29 @@ async function renderAlbum(){
   albumContent.appendChild(progress);
 }
 
-async function animateStickerUnlock(stickers){
-  if(!Array.isArray(stickers) || !stickers.length){
+async function animateStickerUnlock(stickers) {
+  if (!Array.isArray(stickers) || !stickers.length) {
     return;
   }
   const albumSection = document.getElementById('album');
-  if(albumSection && albumSection.classList.contains('hidden')){
+  if (albumSection && albumSection.classList.contains('hidden')) {
     switchToTab('album');
     await sleep(150);
   }
-  for(const sticker of stickers){
+  for (const sticker of stickers) {
     const themeKey = getStickerThemeKey(sticker.id);
-    if(themeKey){
+    if (themeKey) {
       currentAlbumTheme = themeKey;
     }
     await renderAlbum();
     const tabBtn = document.querySelector(`[data-album-theme="${currentAlbumTheme}"]`);
-    if(tabBtn){
+    if (tabBtn) {
       tabBtn.classList.add('album-tab-highlight');
       setTimeout(() => tabBtn.classList.remove('album-tab-highlight'), 1200);
     }
     await sleep(60);
     const slot = document.querySelector(`[data-sticker-id=\"${sticker.id}\"]`);
-    if(slot){
+    if (slot) {
       slot.classList.add('reveal');
       playStickerPopSound();
       await sleep(1100);
@@ -2224,7 +2231,7 @@ async function animateStickerUnlock(stickers){
 // Pack öffnen
 document.getElementById('btnOpenPack').addEventListener('click', async () => {
   const stars = await getStars();
-  if(stars < STARS_PER_PACK) return;
+  if (stars < STARS_PER_PACK) return;
 
   // 10 Sterne abziehen
   await setStars(stars - STARS_PER_PACK);
@@ -2235,14 +2242,14 @@ document.getElementById('btnOpenPack').addEventListener('click', async () => {
   const pack = openStickerPack();
   const newStickers = [];
 
-  for(const stickerId of pack){
+  for (const stickerId of pack) {
     const isNew = await addSticker(stickerId);
-    if(isNew){
+    if (isNew) {
       newStickers.push(getStickerById(stickerId));
     }
   }
 
-  if(newStickers.length > 0){
+  if (newStickers.length > 0) {
     await animateStickerUnlock(newStickers);
   } else {
     alert('🎁 Pack geöffnet!\n\nLeider nur Duplikate. Versuche es erneut!');
@@ -2256,7 +2263,7 @@ async function onPracticeLetterClick(e) {
 
   // Buchstaben-Animation beim Klick
   btn.classList.add('letter-bounce');
-  setTimeout(()=> btn.classList.remove('letter-bounce'), 500);
+  setTimeout(() => btn.classList.remove('letter-bounce'), 500);
 
   // Klick-Sound
   playClickSound();
@@ -2267,7 +2274,7 @@ async function onPracticeLetterClick(e) {
   const setData = await loadSetData(setId);
   const historyKey = makeClipHistoryKey('practice', setId, letter, difficulty);
   const clipData = await fetchClipForLetter({ setId, letter, difficulty, setData, historyKey });
-  if(!clipData){
+  if (!clipData) {
     alert('Keine Aufnahme für diese Schwierigkeit gefunden.');
     return;
   }
@@ -2275,46 +2282,46 @@ async function onPracticeLetterClick(e) {
   const audio = new Audio(url);
   audio.addEventListener('ended', () => URL.revokeObjectURL(url));
   audio.addEventListener('error', () => URL.revokeObjectURL(url));
-  await audio.play().catch(()=>{});
+  await audio.play().catch(() => { });
 }
 
 async function updatePracticeLetterButtons() {
-    const setId = await getActiveSet();
-    const setData = await loadSetData(setId);
-    if (!setData || !setData.clips) return;
-    const hasSet = new Set(setData.clips.map(clip => clip.letter));
-    document.querySelectorAll('#practiceLetters .btn-letter').forEach(btn => {
-        const letter = btn.getAttribute('data-letter');
-        btn.disabled = !hasSet.has(letter);
-    });
+  const setId = await getActiveSet();
+  const setData = await loadSetData(setId);
+  if (!setData || !setData.clips) return;
+  const hasSet = new Set(setData.clips.map(clip => clip.letter));
+  document.querySelectorAll('#practiceLetters .btn-letter').forEach(btn => {
+    const letter = btn.getAttribute('data-letter');
+    btn.disabled = !hasSet.has(letter);
+  });
 }
 
 function renderPracticeGrid() {
-    const elPracticeLetters = document.getElementById('practiceLetters');
-    if (!elPracticeLetters) return;
-    elPracticeLetters.innerHTML = '';
-    LETTERS.forEach(ch => {
-        const b = document.createElement('button');
-        b.className = 'btn-letter';
-        b.textContent = ch;
-        b.setAttribute('data-letter', ch);
-        b.setAttribute('aria-label', 'Buchstabe ' + ch);
-        b.addEventListener('click', onPracticeLetterClick);
-        elPracticeLetters.appendChild(b);
-    });
-    updatePracticeLetterButtons();
+  const elPracticeLetters = document.getElementById('practiceLetters');
+  if (!elPracticeLetters) return;
+  elPracticeLetters.innerHTML = '';
+  LETTERS.forEach(ch => {
+    const b = document.createElement('button');
+    b.className = 'btn-letter';
+    b.textContent = ch;
+    b.setAttribute('data-letter', ch);
+    b.setAttribute('aria-label', 'Buchstabe ' + ch);
+    b.addEventListener('click', onPracticeLetterClick);
+    elPracticeLetters.appendChild(b);
+  });
+  updatePracticeLetterButtons();
 }
 
 // ——————————————————————————————————————————
 // UI – Buchstabenraster
 // ——————————————————————————————————————————
-function renderLetterGrid(){
-  elLetters.innerHTML='';
-  LETTERS.forEach(ch=>{
-    const b=document.createElement('button');
-    b.className='btn-letter';
-    b.textContent=ch;
-    b.setAttribute('data-letter',ch);
+function renderLetterGrid() {
+  elLetters.innerHTML = '';
+  LETTERS.forEach(ch => {
+    const b = document.createElement('button');
+    b.className = 'btn-letter';
+    b.textContent = ch;
+    b.setAttribute('data-letter', ch);
     b.setAttribute('aria-label', 'Buchstabe ' + ch);
     b.addEventListener('click', onLetterClick);
     elLetters.appendChild(b);
@@ -2323,7 +2330,7 @@ function renderLetterGrid(){
 renderLetterGrid();
 
 // Buchstaben-Buttons basierend auf verfügbaren Aufnahmen aktivieren/deaktivieren
-async function updateLetterButtons(){
+async function updateLetterButtons() {
   const setId = await getActiveSet();
   const setData = await loadSetData(setId);
   const hasSet = new Set((setData && setData.clips ? setData.clips : []).map(clip => clip.letter));
@@ -2339,11 +2346,11 @@ async function updateLetterButtons(){
   document.querySelectorAll('.btn-letter').forEach(btn => {
     const letter = btn.getAttribute('data-letter');
     let disabled = !hasSet.has(letter);
-    if(!disabled && allowedSet && !allowedSet.has(letter)){
+    if (!disabled && allowedSet && !allowedSet.has(letter)) {
       disabled = true;
     }
     btn.disabled = disabled;
-    if(allowedSet){
+    if (allowedSet) {
       btn.classList.toggle('locked', !allowedSet.has(letter));
     } else {
       btn.classList.remove('locked');
@@ -2351,34 +2358,34 @@ async function updateLetterButtons(){
   });
 }
 
-function setActiveChip(group, predicate){
-  if(!group) return;
+function setActiveChip(group, predicate) {
+  if (!group) return;
   let matched = false;
   group.querySelectorAll('.chip').forEach(chip => {
     const active = predicate(chip);
     chip.classList.toggle('active', active);
-    if(active) matched = true;
+    if (active) matched = true;
   });
-  if(!matched){
+  if (!matched) {
     const first = group.querySelector('.chip');
-    if(first) first.classList.add('active');
+    if (first) first.classList.add('active');
   }
 }
 
-function applyModeToUI(progress){
+function applyModeToUI(progress) {
   const mode = (progress && progress.mode) || 'FREI';
   const diff = (progress && progress.difficulty) || 'LEICHT';
 
 
-  if(elModeControls){
+  if (elModeControls) {
     elModeControls.classList.toggle('hidden', mode !== 'FREI');
   }
 
-  if(elInGameDifficulty){
+  if (elInGameDifficulty) {
     elInGameDifficulty.value = diff;
   }
 
-  if(mode === 'FREI'){
+  if (mode === 'FREI') {
     const desiredCount = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
 
     setActiveChip(elFreeCountGroup, chip => Number(chip.dataset.freeLetterCount || 0) === desiredCount);
@@ -2405,7 +2412,7 @@ const DIFFICULTY_DESCRIPTIONS = {
 
 const LERNWEG_STEPS = [4, 8, 12, 16, 20, 24, 26]; // Defined LERNWEG_STEPS
 
-function deriveLernwegMeta(progress){
+function deriveLernwegMeta(progress) {
   const unlockedRaw = progress && Number.isFinite(progress.unlocked) ? progress.unlocked : 4;
   const unlocked = LERNWEG_STEPS.includes(unlockedRaw)
     ? unlockedRaw
@@ -2431,12 +2438,12 @@ function deriveLernwegMeta(progress){
   };
 }
 
-function updateLernwegProgress(progress){
-  if(!elLernwegTrack || !elLernwegDetail || !elLernwegFill || !elLernwegNext){
+function updateLernwegProgress(progress) {
+  if (!elLernwegTrack || !elLernwegDetail || !elLernwegFill || !elLernwegNext) {
     return;
   }
 
-  if(!progress || progress.mode !== 'LERNWEG'){
+  if (!progress || progress.mode !== 'LERNWEG') {
     elLernwegTrack.classList.add('hidden');
     return;
   }
@@ -2447,15 +2454,15 @@ function updateLernwegProgress(progress){
   elLernwegDetail.textContent = `Stufe ${meta.step} von ${meta.stepTotal}`;
   elLernwegFill.style.width = `${meta.percent}%`;
   const progressBar = elLernwegTrack.querySelector('.lernweg-bar');
-  if(progressBar){
+  if (progressBar) {
     progressBar.setAttribute('aria-valuenow', String(meta.percent));
     progressBar.setAttribute('aria-valuetext', `Fortschritt ${meta.percent} Prozent`);
   }
 
-  if(meta.atFinalStage){
+  if (meta.atFinalStage) {
     elLernwegNext.textContent = 'Du hast den gesamten Lernweg gemeistert! 🎉';
-  }else{
-    if(meta.roundsRemaining > 0){
+  } else {
+    if (meta.roundsRemaining > 0) {
       const suffix = meta.roundsRemaining === 1 ? 'fehlerfreie Runde' : 'fehlerfreie Runden';
       elLernwegNext.textContent = `Noch ${meta.roundsRemaining} ${suffix} bis Stufe ${meta.step + 1}.`;
     } else {
@@ -2464,12 +2471,12 @@ function updateLernwegProgress(progress){
   }
 }
 
-function updateStartButtonLabel(progress){
-  if(!elBtnStart) return;
+function updateStartButtonLabel(progress) {
+  if (!elBtnStart) return;
   const mode = progress && progress.mode ? progress.mode : 'FREI';
   const difficulty = progress && progress.difficulty ? progress.difficulty : 'LEICHT';
   const desc = formatDifficultyLabel(difficulty);
-  if(mode === 'LERNWEG'){
+  if (mode === 'LERNWEG') {
     elBtnStart.textContent = `Spiel starten – Lernweg (${desc})`;
   } else {
     const count = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
@@ -2477,7 +2484,7 @@ function updateStartButtonLabel(progress){
   }
 }
 
-function extractSelectionFromProgress(progress){
+function extractSelectionFromProgress(progress) {
   const difficulty = progress && progress.difficulty ? progress.difficulty : 'LEICHT';
   return {
     mode: progress && progress.mode ? progress.mode : 'FREI',
@@ -2486,13 +2493,13 @@ function extractSelectionFromProgress(progress){
   };
 }
 
-function toggleIndividualPanel(forceOpen){
-  if(!elIndividualPanel) return;
+function toggleIndividualPanel(forceOpen) {
+  if (!elIndividualPanel) return;
   const shouldOpen = typeof forceOpen === 'boolean'
     ? forceOpen
     : elIndividualPanel.classList.contains('hidden');
 
-  if(shouldOpen){
+  if (shouldOpen) {
     elIndividualPanel.classList.remove('hidden');
     pendingModeSelection = extractSelectionFromProgress(getProgress());
     pendingModeSelection.mode = 'FREI';
@@ -2502,7 +2509,7 @@ function toggleIndividualPanel(forceOpen){
     setActiveChip(elDifficultyGroup, chip => (chip.dataset.difficulty || '') === diff);
 
     updateModeDialogCards(pendingModeSelection);
-    if(elModeDialogStart){
+    if (elModeDialogStart) {
       elModeDialogStart.disabled = false;
     }
   } else {
@@ -2512,16 +2519,16 @@ function toggleIndividualPanel(forceOpen){
 
 let pendingModeSelection = null;
 
-function updateModeDialogCards(selection){
-  if(!selection) return;
+function updateModeDialogCards(selection) {
+  if (!selection) return;
   dialogModeCards.forEach(card => {
     const cardMode = card.dataset.mode || 'FREI';
     const cardCount = Number(card.dataset.count || NaN);
     let active = false;
-    if(selection.mode === 'LERNWEG'){
+    if (selection.mode === 'LERNWEG') {
       active = cardMode === 'LERNWEG';
-    } else if(cardMode === 'FREI' && selection.mode === 'FREI'){
-      if(!Number.isNaN(cardCount)){
+    } else if (cardMode === 'FREI' && selection.mode === 'FREI') {
+      if (!Number.isNaN(cardCount)) {
         active = selection.freeLetterCount === cardCount;
       } else {
         active = true;
@@ -2529,14 +2536,14 @@ function updateModeDialogCards(selection){
     }
     card.classList.toggle('active', active);
   });
-  if(elModeDialogStart){
+  if (elModeDialogStart) {
     elModeDialogStart.disabled = !selection;
   }
 }
 
 
 
-function openModeDialog(){
+function openModeDialog() {
   const currentProgress = getProgress();
   pendingModeSelection = extractSelectionFromProgress(currentProgress);
 
@@ -2545,29 +2552,29 @@ function openModeDialog(){
   elModeDialog.classList.remove('hidden');
 }
 
-function closeModeDialog(){
+function closeModeDialog() {
   elModeDialog.classList.add('hidden');
   toggleIndividualPanel(false);
   pendingModeSelection = null;
 }
 
-function saveAndApply(partial){
+function saveAndApply(partial) {
   const current = getProgress();
   const updates = { ...partial };
-  if(updates.difficulty){
+  if (updates.difficulty) {
     updates.difficulty = updates.difficulty.toUpperCase();
   }
   const saved = saveProgress(updates);
   applyModeToUI(saved);
   updateUIForRecordingState();
-  if(pendingModeSelection){
+  if (pendingModeSelection) {
     pendingModeSelection = extractSelectionFromProgress(saved);
   }
   return saved;
 }
 
-function formatDifficultyLabel(difficulty){
-  switch(difficulty){
+function formatDifficultyLabel(difficulty) {
+  switch (difficulty) {
     case 'MITTEL': return 'Mittel';
     case 'SCHWER': return 'Schwer';
     case 'AFFIG': return 'Affig';
@@ -2575,7 +2582,7 @@ function formatDifficultyLabel(difficulty){
   }
 }
 
-function formatClipTimestamp(created){
+function formatClipTimestamp(created) {
   const date = new Date(created || Date.now());
   return date.toLocaleDateString(undefined, {
     day: '2-digit', month: '2-digit', year: 'numeric',
@@ -2583,50 +2590,50 @@ function formatClipTimestamp(created){
   });
 }
 
-function renderStatusGrid(hasSet=new Set(), byDifficulty=new Map()){
-  elStatusGrid.innerHTML='';
-  LETTERS.forEach(ch=>{
-    const t=document.createElement('div');
+function renderStatusGrid(hasSet = new Set(), byDifficulty = new Map()) {
+  elStatusGrid.innerHTML = '';
+  LETTERS.forEach(ch => {
+    const t = document.createElement('div');
     const hasLetter = hasSet.has(ch);
     const isActive = currentLetter === ch;
     const classes = ['status-tile'];
-    if(hasLetter) classes.push('has');
-    if(isActive) classes.push('active');
+    if (hasLetter) classes.push('has');
+    if (isActive) classes.push('active');
     t.className = classes.join(' ');
     const diffCounts = byDifficulty.get(ch);
     let badges = '';
-    if(diffCounts){
+    if (diffCounts) {
       badges = '<div class="status-diffs">' + AUDIO_DIFFICULTIES.map(diff => {
         const count = diffCounts[diff] || 0;
         return `<span class="status-pill${count ? ' filled' : ''}" data-diff="${diff}">${count || ''}</span>`;
       }).join('') + '</div>';
     }
-    t.innerHTML=`${ch}<i class="status-dot"></i>${badges}`;
+    t.innerHTML = `${ch}<i class="status-dot"></i>${badges}`;
     const summary = diffCounts ? AUDIO_DIFFICULTIES
       .filter(diff => (diffCounts[diff] || 0) > 0)
       .map(diff => `${formatDifficultyLabel(diff)} (${diffCounts[diff]})`) : [];
-    if(isActive){
+    if (isActive) {
       t.setAttribute('aria-current', 'true');
     }
     const title = hasLetter ? (summary.length ? 'Aufnahmen: ' + summary.join(', ') : 'Aufnahme vorhanden') : 'Keine Aufnahme';
     t.title = title;
-    t.addEventListener('click', ()=> selectLetter(ch));
+    t.addEventListener('click', () => selectLetter(ch));
     elStatusGrid.appendChild(t);
   });
 }
 
-function highlightClipSelection(){
-  if(!elClipList) return;
+function highlightClipSelection() {
+  if (!elClipList) return;
   Array.from(elClipList.querySelectorAll('.clip-item')).forEach(item => {
     item.classList.toggle('active', item.dataset.clipId === currentClipId);
   });
 }
 
-function setCurrentClip(clipId){
+function setCurrentClip(clipId) {
   currentClipId = clipId;
   highlightClipSelection();
   const clip = currentLetterClips.find(c => c.id === clipId) || null;
-  if(clip){
+  if (clip) {
     elRecStatus.textContent = `${formatDifficultyLabel(clip.difficulty)} · ${formatClipTimestamp(clip.created)}`;
   } else {
     const count = currentLetterClips.length;
@@ -2636,18 +2643,18 @@ function setCurrentClip(clipId){
   elBtnDelete.disabled = !clip;
 }
 
-function renderClipList(clips){
+function renderClipList(clips) {
   currentLetterClips = clips.slice();
   const difficultyOrder = new Map(AUDIO_DIFFICULTIES.map((diff, index) => [diff, index]));
-  currentLetterClips.sort((a,b) => {
+  currentLetterClips.sort((a, b) => {
     const diffCompare = (difficultyOrder.get(a.difficulty) || 0) - (difficultyOrder.get(b.difficulty) || 0);
-    if(diffCompare !== 0) return diffCompare;
+    if (diffCompare !== 0) return diffCompare;
     return (b.created || 0) - (a.created || 0);
   });
 
-  if(elClipList){
+  if (elClipList) {
     elClipList.innerHTML = '';
-    if(!currentLetterClips.length){
+    if (!currentLetterClips.length) {
       const empty = document.createElement('div');
       empty.className = 'muted';
       empty.textContent = 'Noch keine Aufnahmen für diesen Buchstaben.';
@@ -2678,15 +2685,15 @@ function renderClipList(clips){
   highlightClipSelection();
 }
 
-function renderMotivationList(clips){
+function renderMotivationList(clips) {
   motivationClipsCache = clips.slice().sort((a, b) => (b.created || 0) - (a.created || 0));
-  if(elMotivationStatus){
+  if (elMotivationStatus) {
     const count = motivationClipsCache.length;
     elMotivationStatus.textContent = count ? `${count} Clip${count === 1 ? '' : 's'}` : 'Keine Clips';
   }
-  if(!elMotivationList) return;
+  if (!elMotivationList) return;
   elMotivationList.innerHTML = '';
-  if(!motivationClipsCache.length){
+  if (!motivationClipsCache.length) {
     const empty = document.createElement('div');
     empty.className = 'muted';
     empty.textContent = 'Noch keine Motivationssounds.';
@@ -2709,12 +2716,12 @@ function renderMotivationList(clips){
   });
 }
 
-function renderMedalList(type, clips){
+function renderMedalList(type, clips) {
   const controls = medalControls[type];
-  if(!controls || !controls.listEl) return;
+  if (!controls || !controls.listEl) return;
   const listEl = controls.listEl;
   listEl.innerHTML = '';
-  if(!clips || !clips.length){
+  if (!clips || !clips.length) {
     const empty = document.createElement('div');
     empty.className = 'muted';
     empty.textContent = 'Noch keine Sounds.';
@@ -2738,10 +2745,10 @@ function renderMedalList(type, clips){
   });
 }
 
-function updateMedalUI(medalSounds = {}){
+function updateMedalUI(medalSounds = {}) {
   const map = makeEmptyMedalMap();
-  if(medalSounds && typeof medalSounds === 'object'){
-    for(const type of MEDAL_TYPES){
+  if (medalSounds && typeof medalSounds === 'object') {
+    for (const type of MEDAL_TYPES) {
       const list = medalSounds[type];
       map[type] = Array.isArray(list)
         ? list.slice().sort((a, b) => (b.created || 0) - (a.created || 0))
@@ -2749,11 +2756,11 @@ function updateMedalUI(medalSounds = {}){
     }
   }
   medalSoundsCache = map;
-  for(const type of MEDAL_TYPES){
+  for (const type of MEDAL_TYPES) {
     const controls = medalControls[type];
-    if(!controls) continue;
+    if (!controls) continue;
     const list = medalSoundsCache[type] || [];
-    if(controls.statusEl){
+    if (controls.statusEl) {
       controls.statusEl.textContent = list.length
         ? `${list.length} Clip${list.length === 1 ? '' : 's'}`
         : 'Standard-Sound aktiv';
@@ -2762,16 +2769,16 @@ function updateMedalUI(medalSounds = {}){
   }
 }
 
-function setRecordDifficulty(difficulty, options = {}){
+function setRecordDifficulty(difficulty, options = {}) {
   currentDifficulty = difficulty;
-  if(elRecordDifficultyGroup){
+  if (elRecordDifficultyGroup) {
     Array.from(elRecordDifficultyGroup.querySelectorAll('[data-record-difficulty]')).forEach(btn => {
       btn.classList.toggle('active', btn.dataset.recordDifficulty === difficulty);
     });
   }
 
-  if(options.preserveSelection){
-    if(options.clipId && currentLetterClips.some(clip => clip.id === options.clipId)){
+  if (options.preserveSelection) {
+    if (options.clipId && currentLetterClips.some(clip => clip.id === options.clipId)) {
       setCurrentClip(options.clipId);
     } else {
       highlightClipSelection();
@@ -2779,26 +2786,26 @@ function setRecordDifficulty(difficulty, options = {}){
     return;
   }
 
-  if(options.clipId && currentLetterClips.some(clip => clip.id === options.clipId)){
+  if (options.clipId && currentLetterClips.some(clip => clip.id === options.clipId)) {
     setCurrentClip(options.clipId);
     return;
   }
 
   const matching = currentLetterClips.find(clip => clip.difficulty === difficulty);
-  if(matching){
+  if (matching) {
     setCurrentClip(matching.id);
-  } else if(currentClipId && currentLetterClips.some(c => c.id === currentClipId)){
+  } else if (currentClipId && currentLetterClips.some(c => c.id === currentClipId)) {
     highlightClipSelection();
   } else {
     setCurrentClip(currentLetterClips[0] ? currentLetterClips[0].id : null);
   }
 }
 
-function aggregateClipsByLetter(clips){
+function aggregateClipsByLetter(clips) {
   const map = new Map();
   clips.forEach(clip => {
     const letter = clip.letter;
-    if(!map.has(letter)){
+    if (!map.has(letter)) {
       map.set(letter, {});
     }
     const entry = map.get(letter);
@@ -2807,7 +2814,7 @@ function aggregateClipsByLetter(clips){
   return map;
 }
 
-async function refreshCurrentLetterClips(){
+async function refreshCurrentLetterClips() {
   const setId = await getActiveSet();
   const setData = await loadSetData(setId);
   const clips = (setData && setData.clips ? setData.clips : []).filter(clip => clip.letter === currentLetter);
@@ -2841,23 +2848,23 @@ async function persistClip(setId, letter, difficulty, blob) {
   await idbSet(setKey, setData);
 }
 
-async function importLetterAudioFile(file){
-  if(!file){
+async function importLetterAudioFile(file) {
+  if (!file) {
     return;
   }
   const letter = normaliseLetterInput(currentLetter);
-  if(!letter){
+  if (!letter) {
     alert('Bitte wähle zuerst einen Buchstaben aus.');
     return;
   }
-  if(!isAudioFileLike(file)){
+  if (!isAudioFileLike(file)) {
     alert('Bitte wähle eine gültige Audiodatei (mp3, wav, ogg …).');
     return;
   }
   const difficulty = normaliseDifficultyInput(currentDifficulty);
   const setId = await getActiveSet();
   let setData = await loadSetData(setId);
-  if(!setData){
+  if (!setData) {
     setData = {
       name: 'Meine Aufnahmen',
       emoji: '🎤',
@@ -2867,7 +2874,7 @@ async function importLetterAudioFile(file){
       medalSounds: makeEmptyMedalMap(),
     };
   }
-  if(!Array.isArray(setData.clips)){
+  if (!Array.isArray(setData.clips)) {
     setData.clips = [];
   }
 
@@ -2890,7 +2897,7 @@ async function importLetterAudioFile(file){
   alert(`✅ Neue Aufnahme für ${letter} (${difficulty}) hinzugefügt. Alte Versionen bleiben erhalten, du kannst sie bei Bedarf löschen.`);
 }
 
-async function persistMotivationClip(setId, blob){
+async function persistMotivationClip(setId, blob) {
   const clipId = generateUUID();
   const clipKey = `motivation-${setId}-${clipId}`;
   await idbSet(clipKey, blob);
@@ -2904,7 +2911,7 @@ async function persistMotivationClip(setId, blob){
     medalSounds: makeEmptyMedalMap(),
   };
 
-  if(!Array.isArray(setData.motivationClips)){
+  if (!Array.isArray(setData.motivationClips)) {
     setData.motivationClips = [];
   }
   setData.motivationClips.push({ id: clipId, created: Date.now() });
@@ -2912,15 +2919,15 @@ async function persistMotivationClip(setId, blob){
   return clipId;
 }
 
-async function importMotivationFiles(files){
+async function importMotivationFiles(files) {
   const valid = files.filter(isValidAudioFile);
-  if(!valid.length){
+  if (!valid.length) {
     alert('Keine gültigen Audiodateien ausgewählt.');
     return;
   }
   const setId = await getActiveSet();
   let imported = 0;
-  for(const file of valid){
+  for (const file of valid) {
     await persistMotivationClip(setId, file);
     imported++;
   }
@@ -2928,20 +2935,20 @@ async function importMotivationFiles(files){
   alert(`✅ ${imported} Motivationssound${imported === 1 ? '' : 's'} importiert!`);
 }
 
-async function removeMotivationClip(setId, clipId){
+async function removeMotivationClip(setId, clipId) {
   const setData = await loadSetData(setId);
-  if(!setData || !Array.isArray(setData.motivationClips)) return;
+  if (!setData || !Array.isArray(setData.motivationClips)) return;
   setData.motivationClips = setData.motivationClips.filter(entry => entry.id !== clipId);
   await idbSet('set-' + setId, setData);
   await idbDel(`motivation-${setId}-${clipId}`);
 }
 
-async function getMotivationClipBlob(setId, clipId){
+async function getMotivationClipBlob(setId, clipId) {
   return idbGet(`motivation-${setId}-${clipId}`);
 }
 
-async function saveMedalSound(setId, type, blob){
-  if(!MEDAL_TYPES.includes(type)) return null;
+async function saveMedalSound(setId, type, blob) {
+  if (!MEDAL_TYPES.includes(type)) return null;
   const clipId = generateUUID();
   await idbSet(`medal-${setId}-${clipId}`, blob);
 
@@ -2954,10 +2961,10 @@ async function saveMedalSound(setId, type, blob){
     medalSounds: makeEmptyMedalMap(),
   };
 
-  if(!setData.medalSounds || typeof setData.medalSounds !== 'object'){
+  if (!setData.medalSounds || typeof setData.medalSounds !== 'object') {
     setData.medalSounds = makeEmptyMedalMap();
   }
-  if(!Array.isArray(setData.medalSounds[type])){
+  if (!Array.isArray(setData.medalSounds[type])) {
     setData.medalSounds[type] = [];
   }
   setData.medalSounds[type].push({ id: clipId, created: Date.now() });
@@ -2965,16 +2972,16 @@ async function saveMedalSound(setId, type, blob){
   return clipId;
 }
 
-async function importMedalFiles(type, files){
-  if(!MEDAL_TYPES.includes(type)) return;
+async function importMedalFiles(type, files) {
+  if (!MEDAL_TYPES.includes(type)) return;
   const valid = files.filter(isValidAudioFile);
-  if(!valid.length){
+  if (!valid.length) {
     alert('Keine gültigen Audiodateien ausgewählt.');
     return;
   }
   const setId = await getActiveSet();
   let imported = 0;
-  for(const file of valid){
+  for (const file of valid) {
     await saveMedalSound(setId, type, file);
     imported++;
   }
@@ -2983,16 +2990,16 @@ async function importMedalFiles(type, files){
   alert(`✅ ${imported} ${label}-Sound${imported === 1 ? '' : 's'} importiert!`);
 }
 
-async function deleteMedalSound(setId, type, clipId){
-  if(!MEDAL_TYPES.includes(type)) return;
+async function deleteMedalSound(setId, type, clipId) {
+  if (!MEDAL_TYPES.includes(type)) return;
   const setData = await loadSetData(setId);
-  if(!setData || !setData.medalSounds || !Array.isArray(setData.medalSounds[type])) return;
+  if (!setData || !setData.medalSounds || !Array.isArray(setData.medalSounds[type])) return;
   setData.medalSounds[type] = setData.medalSounds[type].filter(entry => entry.id !== clipId);
   await idbSet('set-' + setId, setData);
   await idbDel(`medal-${setId}-${clipId}`);
 }
 
-async function getMedalClipBlob(setId, clipId){
+async function getMedalClipBlob(setId, clipId) {
   return idbGet(`medal-${setId}-${clipId}`);
 }
 
@@ -3006,19 +3013,19 @@ function pickClip(clips, difficulty, options = {}) {
   const requestedDifficultyIndex = difficulties.indexOf(difficulty);
 
   const chooseFromPool = (pool) => {
-    if(!pool.length) return null;
-    if(historyKey && pool.length > 0){
+    if (!pool.length) return null;
+    if (historyKey && pool.length > 0) {
       const availableIds = pool.map(c => c.id);
       const availableSet = new Set(availableIds);
       let queue = clipHistoryQueues.get(historyKey) || [];
       queue = queue.filter(id => availableSet.has(id));
-      if(queue.length === 0){
+      if (queue.length === 0) {
         queue = shuffleArray(availableIds);
       }
       const nextId = queue.shift();
       clipHistoryQueues.set(historyKey, queue);
       const chosen = pool.find(c => c.id === nextId);
-      if(chosen){
+      if (chosen) {
         return chosen;
       }
     }
@@ -3044,18 +3051,18 @@ function pickClip(clips, difficulty, options = {}) {
   return null;
 }
 
-function pickFromHistoryPool(pool, historyKey){
-  if(!pool || pool.length === 0){
+function pickFromHistoryPool(pool, historyKey) {
+  if (!pool || pool.length === 0) {
     return null;
   }
-  if(!historyKey){
+  if (!historyKey) {
     return pool[Math.floor(Math.random() * pool.length)];
   }
   const availableIds = pool.map(item => item.id);
   const availableSet = new Set(availableIds);
   let queue = clipHistoryQueues.get(historyKey) || [];
   queue = queue.filter(id => availableSet.has(id));
-  if(queue.length === 0){
+  if (queue.length === 0) {
     queue = shuffleArray(availableIds);
   }
   const nextId = queue.shift();
@@ -3080,32 +3087,32 @@ async function getAudio(letter, difficulty = 'LEICHT') {
   return null;
 }
 
-async function removeClip(setId, clipId){
+async function removeClip(setId, clipId) {
   const setData = await loadSetData(setId);
-  if(!setData) return null;
+  if (!setData) return null;
   const idx = setData.clips.findIndex(clip => clip.id === clipId);
-  if(idx === -1) return null;
+  if (idx === -1) return null;
   const [clip] = setData.clips.splice(idx, 1);
   await idbSet('set-' + setId, setData);
   await idbDel('audio-' + setId + '-' + clipId);
   return clip;
 }
 
-async function getClipBlob(setId, clipId){
+async function getClipBlob(setId, clipId) {
   return idbGet('audio-' + setId + '-' + clipId);
 }
 
-function difficultySearchOrder(difficulty){
+function difficultySearchOrder(difficulty) {
   const normalised = normaliseDifficultyInput(difficulty);
   const idx = AUDIO_DIFFICULTIES.indexOf(normalised);
   const order = [];
-  if(idx >= 0){
-    for(let i = idx; i >= 0; i--){
+  if (idx >= 0) {
+    for (let i = idx; i >= 0; i--) {
       const diff = AUDIO_DIFFICULTIES[i];
-      if(!order.includes(diff)) order.push(diff);
+      if (!order.includes(diff)) order.push(diff);
     }
   }
-  if(!order.includes('LEICHT')){
+  if (!order.includes('LEICHT')) {
     order.push('LEICHT');
   }
   return order;
@@ -3113,31 +3120,31 @@ function difficultySearchOrder(difficulty){
 
 
 
-async function fetchClipForLetter({ setId, letter, difficulty, setData, historyKey }){
+async function fetchClipForLetter({ setId, letter, difficulty, setData, historyKey }) {
   const clips = setData.clips.filter(c => c.letter === letter);
   const clip = pickClip(clips, difficulty, { historyKey });
-  if(!clip) return null;
+  if (!clip) return null;
   const blob = await getClipBlob(setId, clip.id);
-  if(!blob) return null;
+  if (!blob) return null;
   return { clip, blob };
 }
 
-async function fetchMotivationClip({ setId, setData, historyKey }){
+async function fetchMotivationClip({ setId, setData, historyKey }) {
   const clips = setData && Array.isArray(setData.motivationClips) ? setData.motivationClips : [];
-  if(!clips.length){
+  if (!clips.length) {
     return null;
   }
   const clip = pickFromHistoryPool(clips, historyKey);
-  if(!clip) return null;
+  if (!clip) return null;
   const blob = await getMotivationClipBlob(setId, clip.id);
-  if(!blob) return null;
+  if (!blob) return null;
   return { clip, blob };
 }
 
-async function playClipById(clipId){
+async function playClipById(clipId) {
   const setId = await getActiveSet();
   const blob = await getClipBlob(setId, clipId);
-  if(!blob){
+  if (!blob) {
     alert('Keine Aufnahme gefunden.');
     return;
   }
@@ -3146,35 +3153,35 @@ async function playClipById(clipId){
   audio.addEventListener('ended', () => URL.revokeObjectURL(url));
   audio.addEventListener('error', () => URL.revokeObjectURL(url));
   lastPlayed = audio;
-  await audio.play().catch(()=>{});
+  await audio.play().catch(() => { });
 }
 
-function hasPendingMotivation(letter){
-  if(!game || !letter) return false;
-  if(!game.pendingMotivations){
+function hasPendingMotivation(letter) {
+  if (!game || !letter) return false;
+  if (!game.pendingMotivations) {
     game.pendingMotivations = new Set();
   }
   return game.pendingMotivations.has(letter);
 }
 
-function clearMotivationChain(){
-  if(motivationChainSource && motivationChainHandler){
+function clearMotivationChain() {
+  if (motivationChainSource && motivationChainHandler) {
     try {
       motivationChainSource.removeEventListener('ended', motivationChainHandler);
-    }catch(_){ /* ignore */ }
+    } catch (_) { /* ignore */ }
   }
   motivationChainSource = null;
   motivationChainHandler = null;
 }
 
-function queueMotivationPlayback(primaryAudio, clipData){
-  if(!primaryAudio || !clipData || !clipData.blob){
+function queueMotivationPlayback(primaryAudio, clipData) {
+  if (!primaryAudio || !clipData || !clipData.blob) {
     return;
   }
   clearMotivationChain();
   motivationChainSource = primaryAudio;
   motivationChainHandler = () => {
-    if(motivationChainSource && motivationChainHandler){
+    if (motivationChainSource && motivationChainHandler) {
       motivationChainSource.removeEventListener('ended', motivationChainHandler);
     }
     motivationChainSource = null;
@@ -3191,23 +3198,23 @@ function queueMotivationPlayback(primaryAudio, clipData){
   primaryAudio.addEventListener('ended', motivationChainHandler);
 }
 
-async function playMedalCelebration(medalType){
-  if(!medalType) return false;
+async function playMedalCelebration(medalType) {
+  if (!medalType) return false;
   const setId = game && game.setId ? game.setId : await getActiveSet();
   const setData = await loadSetData(setId);
   const list = setData && setData.medalSounds && Array.isArray(setData.medalSounds[medalType])
     ? setData.medalSounds[medalType]
     : [];
-  if(!list.length){
+  if (!list.length) {
     return false;
   }
   const historyKey = makeClipHistoryKey('medal', setId, medalType.toUpperCase(), 'CUSTOM');
   const clip = pickFromHistoryPool(list, historyKey);
-  if(!clip){
+  if (!clip) {
     return false;
   }
   const blob = await getMedalClipBlob(setId, clip.id);
-  if(!blob){
+  if (!blob) {
     return false;
   }
   const url = URL.createObjectURL(blob);
@@ -3223,10 +3230,10 @@ async function playMedalCelebration(medalType){
   });
 }
 
-async function playMotivationClip(clipId){
+async function playMotivationClip(clipId) {
   const setId = await getActiveSet();
   const blob = await getMotivationClipBlob(setId, clipId);
-  if(!blob){
+  if (!blob) {
     alert('Keine Aufnahme gefunden.');
     return;
   }
@@ -3235,17 +3242,17 @@ async function playMotivationClip(clipId){
   audio.addEventListener('ended', () => URL.revokeObjectURL(url));
   audio.addEventListener('error', () => URL.revokeObjectURL(url));
   lastPlayed = audio;
-  await audio.play().catch(()=>{});
+  await audio.play().catch(() => { });
 }
 
-async function deleteClipById(clipId){
+async function deleteClipById(clipId) {
   const setId = await getActiveSet();
   const removed = await removeClip(setId, clipId);
-  if(!removed){
+  if (!removed) {
     alert('Aufnahme nicht gefunden.');
     return;
   }
-  if(currentClipId === clipId){
+  if (currentClipId === clipId) {
     currentClipId = null;
   }
   await refreshCurrentLetterClips();
@@ -3254,17 +3261,17 @@ async function deleteClipById(clipId){
   await renderSetsList();
 }
 
-async function deleteMotivationClip(clipId){
+async function deleteMotivationClip(clipId) {
   const setId = await getActiveSet();
   await removeMotivationClip(setId, clipId);
   await refreshSupportAudioUI();
 }
 
-async function playMedalClip(type, clipId){
-  if(!MEDAL_TYPES.includes(type)) return;
+async function playMedalClip(type, clipId) {
+  if (!MEDAL_TYPES.includes(type)) return;
   const setId = await getActiveSet();
   const blob = await getMedalClipBlob(setId, clipId);
-  if(!blob){
+  if (!blob) {
     alert('Keine Aufnahme gefunden.');
     return;
   }
@@ -3272,36 +3279,36 @@ async function playMedalClip(type, clipId){
   const audio = new Audio(url);
   audio.addEventListener('ended', () => URL.revokeObjectURL(url));
   audio.addEventListener('error', () => URL.revokeObjectURL(url));
-  await audio.play().catch(()=>{});
+  await audio.play().catch(() => { });
 }
 
-async function deleteMedalClip(type, clipId){
-  if(!MEDAL_TYPES.includes(type)) return;
+async function deleteMedalClip(type, clipId) {
+  if (!MEDAL_TYPES.includes(type)) return;
   const setId = await getActiveSet();
   await deleteMedalSound(setId, type, clipId);
   await refreshSupportAudioUI();
 }
 
-async function editClipDifficulty(clipId){
+async function editClipDifficulty(clipId) {
   const setId = await getActiveSet();
   const setData = await loadSetData(setId);
-  if(!setData || !Array.isArray(setData.clips)){
+  if (!setData || !Array.isArray(setData.clips)) {
     alert('Set-Daten konnten nicht geladen werden.');
     return;
   }
 
   const clip = setData.clips.find(c => c.id === clipId);
-  if(!clip){
+  if (!clip) {
     alert('Aufnahme nicht gefunden.');
     return;
   }
 
   const item = elClipList?.querySelector(`[data-clip-id="${clipId}"]`);
-  if(!item){
+  if (!item) {
     alert('Clip-Element nicht gefunden.');
     return;
   }
-  if(item.classList.contains('editing')){
+  if (item.classList.contains('editing')) {
     return;
   }
   item.classList.add('editing');
@@ -3334,7 +3341,7 @@ async function editClipDifficulty(clipId){
   controls.appendChild(cancelBtn);
 
   const info = item.querySelector('.clip-info');
-  if(!info){
+  if (!info) {
     item.classList.remove('editing');
     return;
   }
@@ -3343,14 +3350,14 @@ async function editClipDifficulty(clipId){
 
   let cleaned = false;
   const cleanup = () => {
-    if(cleaned) return;
+    if (cleaned) return;
     cleaned = true;
     item.classList.remove('editing');
-    if(controls.isConnected){
+    if (controls.isConnected) {
       try {
         controls.remove();
-      } catch(err) {
-        if(!(err && err.name === 'NotFoundError')){
+      } catch (err) {
+        if (!(err && err.name === 'NotFoundError')) {
           throw err;
         }
       }
@@ -3361,16 +3368,16 @@ async function editClipDifficulty(clipId){
 
   controls.addEventListener('focusout', (event) => {
     const next = event.relatedTarget;
-    if(!controls.contains(next)){
+    if (!controls.contains(next)) {
       cleanup();
     }
   });
 
   select.addEventListener('keydown', (event) => {
-    if(event.key === 'Escape'){
+    if (event.key === 'Escape') {
       event.stopPropagation();
       cleanup();
-    } else if(event.key === 'Enter'){
+    } else if (event.key === 'Enter') {
       event.preventDefault();
       saveBtn.click();
     }
@@ -3378,7 +3385,7 @@ async function editClipDifficulty(clipId){
 
   saveBtn.addEventListener('click', async () => {
     const candidate = select.value;
-    if(candidate === clip.difficulty){
+    if (candidate === clip.difficulty) {
       cleanup();
       return;
     }
@@ -3392,10 +3399,10 @@ async function editClipDifficulty(clipId){
   });
 }
 
-async function selectNextLetter(fromLetter){
+async function selectNextLetter(fromLetter) {
   const letter = fromLetter || currentLetter;
   const idx = LETTERS.indexOf(letter);
-  if(idx === -1){
+  if (idx === -1) {
     await selectLetter(currentLetter || 'A');
     return;
   }
@@ -3406,11 +3413,11 @@ async function selectNextLetter(fromLetter){
 // ——————————————————————————————————————————
 // Recorder
 // ——————————————————————————————————————————
-let mediaStream=null, recorder=null, recChunks=[];
-let currentLetter='A', timerInt=null, timerStart=0, lastPlayed=null;
-let currentDifficulty='LEICHT';
-let currentClipId=null;
-let currentLetterClips=[];
+let mediaStream = null, recorder = null, recChunks = [];
+let currentLetter = 'A', timerInt = null, timerStart = 0, lastPlayed = null;
+let currentDifficulty = 'LEICHT';
+let currentClipId = null;
+let currentLetterClips = [];
 let motivationClipsCache = [];
 let medalSoundsCache = makeEmptyMedalMap();
 let motivationChainSource = null;
@@ -3419,68 +3426,68 @@ let activeRecordMode = null;
 let autoAdvancePlanned = false;
 let recordingSession = null;
 
-function resetPrimaryRecorderButton(){
-  if(elBtnRecord){
+function resetPrimaryRecorderButton() {
+  if (elBtnRecord) {
     elBtnRecord.disabled = false;
     elBtnRecord.textContent = '🎙️ Aufnehmen';
     elBtnRecord.classList.remove('danger');
     elBtnRecord.removeAttribute('data-mode');
   }
-  if(elSeriesToggle){
+  if (elSeriesToggle) {
     elSeriesToggle.disabled = false;
   }
 }
 
-function markRecordingButton(mode){
-  if(!elBtnRecord) return;
+function markRecordingButton(mode) {
+  if (!elBtnRecord) return;
   const isSeries = mode === RECORD_MODES.SERIES;
   elBtnRecord.textContent = isSeries ? '⏹️ Serie stoppen' : '⏹️ Stoppen';
   elBtnRecord.classList.add('danger');
   elBtnRecord.disabled = false;
   elBtnRecord.dataset.mode = isSeries ? 'series' : 'single';
-  if(elSeriesToggle){
+  if (elSeriesToggle) {
     elSeriesToggle.disabled = true;
   }
 }
 
-function resetPrimaryRecorderUI(){
+function resetPrimaryRecorderUI() {
   resetPrimaryRecorderButton();
-  if(timerInt){
+  if (timerInt) {
     clearInterval(timerInt);
     timerInt = null;
   }
-  if(elTimer){
+  if (elTimer) {
     elTimer.classList.remove('blink');
     elTimer.textContent = '00:00';
   }
   setCurrentClip(currentClipId);
 }
 
-function stopActiveRecording({ skipAutoAdvance = false } = {}){
-  if(skipAutoAdvance){
+function stopActiveRecording({ skipAutoAdvance = false } = {}) {
+  if (skipAutoAdvance) {
     autoAdvancePlanned = false;
   }
-  if(recorder && recorder.state === 'recording'){
+  if (recorder && recorder.state === 'recording') {
     resetPrimaryRecorderUI();
-    try{
+    try {
       recorder.stop();
-    }catch(err){
+    } catch (err) {
       console.warn('Recorder konnte nicht gestoppt werden', err);
     }
   }
 }
 
-async function startPrimaryRecording(mode){
-  if(!mode){
+async function startPrimaryRecording(mode) {
+  if (!mode) {
     return;
   }
-  try{
+  try {
     await ensureRecordingStream();
-    if(typeof MediaRecorder === 'undefined'){
+    if (typeof MediaRecorder === 'undefined') {
       alert('MediaRecorder wird in diesem Browser nicht unterstützt.');
       return;
     }
-  }catch(err){
+  } catch (err) {
     alert('Mikrofonzugriff fehlgeschlagen. Bitte Browserberechtigungen prüfen.');
     return;
   }
@@ -3496,7 +3503,7 @@ async function startPrimaryRecording(mode){
   autoAdvancePlanned = mode === RECORD_MODES.SERIES;
 
   recorder.ondataavailable = (event) => {
-    if(event.data){
+    if (event.data) {
       recChunks.push(event.data);
     }
   };
@@ -3514,21 +3521,21 @@ async function startPrimaryRecording(mode){
     activeRecordMode = null;
     resetPrimaryRecorderUI();
 
-    try{
+    try {
       const setId = await getActiveSet();
       await persistClip(setId, recordedLetter, recordedDifficulty, blob);
-      if(currentLetter === recordedLetter){
+      if (currentLetter === recordedLetter) {
         await refreshCurrentLetterClips();
       }
       await updateStatusGridFromDB();
       await updateUIForRecordingState();
       await renderSetsList();
-      if(shouldAdvance){
+      if (shouldAdvance) {
         requestAnimationFrame(() => {
           selectNextLetter(recordedLetter).catch(err => console.error('Auto-advance failed', err));
         });
       }
-    }catch(err){
+    } catch (err) {
       console.error('Aufnahme konnte nicht gespeichert werden:', err);
       alert('Die Aufnahme konnte nicht gespeichert werden.');
     }
@@ -3545,8 +3552,8 @@ async function startPrimaryRecording(mode){
   recorder.start();
 }
 
-async function handlePrimaryRecordClick(){
-  if(recorder && recorder.state === 'recording'){
+async function handlePrimaryRecordClick() {
+  if (recorder && recorder.state === 'recording') {
     stopActiveRecording();
     return;
   }
@@ -3554,17 +3561,17 @@ async function handlePrimaryRecordClick(){
   await startPrimaryRecording(mode);
 }
 
-if(elRecordDifficultyGroup){
+if (elRecordDifficultyGroup) {
   elRecordDifficultyGroup.addEventListener('click', (event) => {
     const btn = event.target.closest('[data-record-difficulty]');
-    if(!btn) return;
+    if (!btn) return;
     event.preventDefault();
     const diff = btn.dataset.recordDifficulty || 'LEICHT';
     setRecordDifficulty(diff);
   });
 }
 
-if(elBtnRecord){
+if (elBtnRecord) {
   elBtnRecord.addEventListener('click', () => {
     handlePrimaryRecordClick().catch(err => {
       console.error('Aufnahme fehlgeschlagen', err);
@@ -3572,9 +3579,9 @@ if(elBtnRecord){
   });
 }
 
-if(elLetterImport && elLetterImportFile){
+if (elLetterImport && elLetterImportFile) {
   elLetterImport.addEventListener('click', () => {
-    if(!normaliseLetterInput(currentLetter)){
+    if (!normaliseLetterInput(currentLetter)) {
       alert('Bitte wähle zuerst einen Buchstaben aus.');
       return;
     }
@@ -3584,33 +3591,33 @@ if(elLetterImport && elLetterImportFile){
 
   elLetterImportFile.addEventListener('change', async (event) => {
     const file = event.target.files && event.target.files[0];
-    if(!file) return;
-    try{
+    if (!file) return;
+    try {
       await importLetterAudioFile(file);
-    }catch(err){
+    } catch (err) {
       console.error('Buchstaben-Import fehlgeschlagen', err);
       alert('❌ Die Datei konnte nicht importiert werden.');
-    }finally{
+    } finally {
       event.target.value = '';
     }
   });
 }
 
-if(elClipList){
+if (elClipList) {
   elClipList.addEventListener('click', async (event) => {
     const item = event.target.closest('.clip-item');
-    if(!item) return;
+    if (!item) return;
     const clipId = item.dataset.clipId;
-    if(!clipId) return;
+    if (!clipId) return;
     const actionBtn = event.target.closest('[data-action]');
-    if(actionBtn){
+    if (actionBtn) {
       const action = actionBtn.dataset.action;
-      if(action === 'play'){
+      if (action === 'play') {
         await playClipById(clipId);
-      } else if(action === 'edit'){
+      } else if (action === 'edit') {
         await editClipDifficulty(clipId);
-      } else if(action === 'delete'){
-        if(confirm('Aufnahme wirklich löschen?')){
+      } else if (action === 'delete') {
+        if (confirm('Aufnahme wirklich löschen?')) {
           await deleteClipById(clipId);
         }
       }
@@ -3618,44 +3625,44 @@ if(elClipList){
     }
     setCurrentClip(clipId);
     const diff = item.dataset.clipDifficulty;
-    if(diff){
+    if (diff) {
       setRecordDifficulty(diff, { preserveSelection: true, clipId });
     }
   });
 }
 
-if(elMotivationList){
+if (elMotivationList) {
   elMotivationList.addEventListener('click', async (event) => {
     const item = event.target.closest('.clip-item');
-    if(!item) return;
+    if (!item) return;
     const clipId = item.dataset.clipId;
-    if(!clipId) return;
+    if (!clipId) return;
     const actionBtn = event.target.closest('[data-action]');
-    if(!actionBtn) return;
-    if(actionBtn.dataset.action === 'play'){
+    if (!actionBtn) return;
+    if (actionBtn.dataset.action === 'play') {
       await playMotivationClip(clipId);
-    } else if(actionBtn.dataset.action === 'delete'){
-      if(confirm('Motivationssound wirklich löschen?')){
+    } else if (actionBtn.dataset.action === 'delete') {
+      if (confirm('Motivationssound wirklich löschen?')) {
         await deleteMotivationClip(clipId);
       }
     }
   });
 }
 
-for(const type of MEDAL_TYPES){
+for (const type of MEDAL_TYPES) {
   const controls = medalControls[type];
-  if(controls && controls.listEl){
+  if (controls && controls.listEl) {
     controls.listEl.addEventListener('click', async (event) => {
       const item = event.target.closest('.clip-item');
-      if(!item) return;
+      if (!item) return;
       const clipId = item.dataset.clipId;
-      if(!clipId) return;
+      if (!clipId) return;
       const actionBtn = event.target.closest('[data-action]');
-      if(!actionBtn) return;
-      if(actionBtn.dataset.action === 'play'){
+      if (!actionBtn) return;
+      if (actionBtn.dataset.action === 'play') {
         await playMedalClip(type, clipId);
-      } else if(actionBtn.dataset.action === 'delete'){
-        if(confirm('Sound wirklich löschen?')){
+      } else if (actionBtn.dataset.action === 'delete') {
+        if (confirm('Sound wirklich löschen?')) {
           await deleteMedalClip(type, clipId);
         }
       }
@@ -3670,9 +3677,9 @@ initStarTrack();
 refreshStoredStars();
 updateMissionStatus();
 
-async function selectLetter(ch){
+async function selectLetter(ch) {
   // Laufende Aufnahme stoppen, falls eine aktiv ist
-  if(recorder && recorder.state === 'recording') {
+  if (recorder && recorder.state === 'recording') {
     stopActiveRecording({ skipAutoAdvance: true });
   }
 
@@ -3687,7 +3694,7 @@ async function selectLetter(ch){
   updateStatusGridFromDB();
 }
 
-async function updateStatusGridFromDB(){
+async function updateStatusGridFromDB() {
   const setId = await getActiveSet();
   const data = await loadSetData(setId);
   const clips = data && data.clips ? data.clips : [];
@@ -3696,49 +3703,49 @@ async function updateStatusGridFromDB(){
   renderStatusGrid(hasSet, byDifficulty);
 }
 
-function fmt(t){
-  const s=Math.floor(t/1000);
-  const mm=String(Math.floor(s/60)).padStart(2,'0');
-  const ss=String(s%60).padStart(2,'0');
+function fmt(t) {
+  const s = Math.floor(t / 1000);
+  const mm = String(Math.floor(s / 60)).padStart(2, '0');
+  const ss = String(s % 60).padStart(2, '0');
   return `${mm}:${ss}`;
 }
 
-const RECORDER_MIME_CANDIDATES = ['audio/webm;codecs=opus','audio/ogg;codecs=opus','audio/mp4'];
+const RECORDER_MIME_CANDIDATES = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4'];
 
-function selectRecordingMimeType(){
-  if(typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported){
+function selectRecordingMimeType() {
+  if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) {
     return '';
   }
-  for(const type of RECORDER_MIME_CANDIDATES){
-    if(MediaRecorder.isTypeSupported(type)){
+  for (const type of RECORDER_MIME_CANDIDATES) {
+    if (MediaRecorder.isTypeSupported(type)) {
       return type;
     }
   }
   return '';
 }
 
-function isValidAudioFile(file){
-  if(!file) return false;
-  if(file.type && file.type.startsWith('audio/')){
+function isValidAudioFile(file) {
+  if (!file) return false;
+  if (file.type && file.type.startsWith('audio/')) {
     return true;
   }
   const name = typeof file.name === 'string' ? file.name : '';
   return /\.(mp3|ogg|webm|wav|m4a|mp4)$/i.test(name);
 }
 
-async function ensureRecordingStream(){
-  if(mediaStream){
+async function ensureRecordingStream() {
+  if (mediaStream) {
     return mediaStream;
   }
-  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw new Error('Mikrofonzugriff nicht verfügbar.');
   }
   mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
   return mediaStream;
 }
 
-function createAuxRecorder({ button, timerEl, onSave }){
-  if(!button) return null;
+function createAuxRecorder({ button, timerEl, onSave }) {
+  if (!button) return null;
   let localRecorder = null;
   let localChunks = [];
   let localTimer = null;
@@ -3747,39 +3754,39 @@ function createAuxRecorder({ button, timerEl, onSave }){
   const resetUI = () => {
     button.textContent = '🎙️ Aufnehmen';
     button.classList.remove('danger');
-    if(localTimer){
+    if (localTimer) {
       clearInterval(localTimer);
       localTimer = null;
     }
-    if(timerEl){
+    if (timerEl) {
       timerEl.classList.remove('blink');
       timerEl.textContent = '00:00';
     }
   };
 
   const stopRecording = () => {
-    if(localRecorder && localRecorder.state === 'recording'){
+    if (localRecorder && localRecorder.state === 'recording') {
       localRecorder.stop();
     }
   };
 
   const startRecording = async () => {
-    try{
+    try {
       await ensureRecordingStream();
-      if(typeof MediaRecorder === 'undefined'){
+      if (typeof MediaRecorder === 'undefined') {
         alert('MediaRecorder wird in diesem Browser nicht unterstützt.');
         return;
       }
       const mimeType = selectRecordingMimeType();
       localRecorder = new MediaRecorder(mediaStream, mimeType ? { mimeType } : undefined);
-    }catch(err){
+    } catch (err) {
       alert('Mikrofonzugriff fehlgeschlagen. Bitte Browserberechtigungen prüfen.');
       return;
     }
 
     localChunks = [];
     localRecorder.ondataavailable = (event) => {
-      if(event.data){
+      if (event.data) {
         localChunks.push(event.data);
       }
     };
@@ -3788,10 +3795,10 @@ function createAuxRecorder({ button, timerEl, onSave }){
       localRecorder = null;
       localChunks = [];
       resetUI();
-      if(onSave){
+      if (onSave) {
         try {
           await onSave(blob);
-        }catch(err){
+        } catch (err) {
           console.error('Aufnahme konnte nicht gespeichert werden:', err);
           alert('Die Aufnahme konnte nicht gespeichert werden.');
         }
@@ -3801,7 +3808,7 @@ function createAuxRecorder({ button, timerEl, onSave }){
     localRecorder.start();
     button.textContent = '⏹️ Stoppen';
     button.classList.add('danger');
-    if(timerEl){
+    if (timerEl) {
       localTimerStart = performance.now();
       timerEl.classList.add('blink');
       localTimer = setInterval(() => {
@@ -3811,7 +3818,7 @@ function createAuxRecorder({ button, timerEl, onSave }){
   };
 
   button.addEventListener('click', () => {
-    if(localRecorder && localRecorder.state === 'recording'){
+    if (localRecorder && localRecorder.state === 'recording') {
       stopRecording();
     } else {
       startRecording();
@@ -3824,25 +3831,25 @@ function createAuxRecorder({ button, timerEl, onSave }){
   };
 }
 
-elBtnPlay.addEventListener('click', async ()=>{
-  if(!currentClipId){
+elBtnPlay.addEventListener('click', async () => {
+  if (!currentClipId) {
     alert('Bitte zuerst eine Aufnahme auswählen oder erstellen.');
     return;
   }
   await playClipById(currentClipId);
 });
 
-elBtnDelete.addEventListener('click', async ()=>{
-  if(!currentClipId){
+elBtnDelete.addEventListener('click', async () => {
+  if (!currentClipId) {
     alert('Bitte zuerst eine Aufnahme auswählen.');
     return;
   }
-  if(confirm('Ausgewählte Aufnahme löschen?')){
+  if (confirm('Ausgewählte Aufnahme löschen?')) {
     await deleteClipById(currentClipId);
   }
 });
 
-if(elBtnMotivationRecord){
+if (elBtnMotivationRecord) {
   createAuxRecorder({
     button: elBtnMotivationRecord,
     timerEl: elMotivationTimer,
@@ -3854,20 +3861,20 @@ if(elBtnMotivationRecord){
   });
 }
 
-if(elBtnMotivationUpload && elMotivationFile){
+if (elBtnMotivationUpload && elMotivationFile) {
   elBtnMotivationUpload.addEventListener('click', () => elMotivationFile.click());
   elMotivationFile.addEventListener('change', async (event) => {
     const files = Array.from(event.target.files || []);
-    if(files.length){
+    if (files.length) {
       await importMotivationFiles(files);
     }
     event.target.value = '';
   });
 }
 
-for(const type of MEDAL_TYPES){
+for (const type of MEDAL_TYPES) {
   const controls = medalControls[type];
-  if(!controls || !controls.recordBtn) continue;
+  if (!controls || !controls.recordBtn) continue;
   createAuxRecorder({
     button: controls.recordBtn,
     timerEl: controls.timerEl,
@@ -3878,11 +3885,11 @@ for(const type of MEDAL_TYPES){
     },
   });
 
-  if(controls.uploadBtn && controls.fileInput){
+  if (controls.uploadBtn && controls.fileInput) {
     controls.uploadBtn.addEventListener('click', () => controls.fileInput.click());
     controls.fileInput.addEventListener('change', async (event) => {
       const files = Array.from(event.target.files || []);
-      if(files.length){
+      if (files.length) {
         await importMedalFiles(type, files);
       }
       event.target.value = '';
@@ -3890,12 +3897,12 @@ for(const type of MEDAL_TYPES){
   }
 }
 
-document.getElementById('clearAll').addEventListener('click', async ()=>{
-  if(confirm('Wirklich ALLE Aufnahmen löschen?')){
+document.getElementById('clearAll').addEventListener('click', async () => {
+  if (confirm('Wirklich ALLE Aufnahmen löschen?')) {
     await idbClear();
     updateStatusGridFromDB();
     updateUIForRecordingState();
-    if(currentLetter) selectLetter(currentLetter);
+    if (currentLetter) selectLetter(currentLetter);
     await refreshSupportAudioUI();
   }
 });
@@ -3903,11 +3910,11 @@ document.getElementById('clearAll').addEventListener('click', async ()=>{
 // ——————————————————————————————————————————
 // Export/Import
 // ——————————————————————————————————————————
-document.getElementById('exportBtn').addEventListener('click', async ()=>{
-  try{
+document.getElementById('exportBtn').addEventListener('click', async () => {
+  try {
     const sets = await getAllSets();
 
-    if(sets.length === 0){
+    if (sets.length === 0) {
       alert('Keine Sets zum Exportieren vorhanden.');
       return;
     }
@@ -3918,28 +3925,28 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     const setsMetadata = [];
     let totalAudio = 0;
 
-    for(const set of sets){
+    for (const set of sets) {
       const setFolder = zip.folder(set.id);
       const clipEntries = [];
       const motivationEntries = [];
       const medalEntries = makeEmptyMedalMap();
 
-      if(Array.isArray(set.clips)){
-        for(const clip of set.clips){
+      if (Array.isArray(set.clips)) {
+        for (const clip of set.clips) {
           const blob = await getClipBlob(set.id, clip.id);
-          if(!blob){
+          if (!blob) {
             console.warn('Clip ohne Audiodatei, wird übersprungen:', set.id, clip.id);
             continue;
           }
           const extension = blob.type.includes('webm') ? 'webm'
             : blob.type.includes('ogg') ? 'ogg'
-            : blob.type.includes('mp3') ? 'mp3'
-            : blob.type.includes('m4a') ? 'm4a'
-            : blob.type.includes('wav') ? 'wav'
-            : blob.type.includes('mp4') ? 'mp4'
-            : 'audio';
+              : blob.type.includes('mp3') ? 'mp3'
+                : blob.type.includes('m4a') ? 'm4a'
+                  : blob.type.includes('wav') ? 'wav'
+                    : blob.type.includes('mp4') ? 'mp4'
+                      : 'audio';
           const fileName = `${clip.letter}-${clip.id}.${extension}`;
-          if(setFolder){
+          if (setFolder) {
             setFolder.file(fileName, blob);
           }
           clipEntries.push({
@@ -3953,22 +3960,22 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
         }
       }
 
-      if(Array.isArray(set.motivationClips)){
-        for(const clip of set.motivationClips){
+      if (Array.isArray(set.motivationClips)) {
+        for (const clip of set.motivationClips) {
           const blob = await getMotivationClipBlob(set.id, clip.id);
-          if(!blob){
+          if (!blob) {
             console.warn('Motivationsclip ohne Audiodatei, wird übersprungen:', set.id, clip.id);
             continue;
           }
           const extension = blob.type.includes('webm') ? 'webm'
             : blob.type.includes('ogg') ? 'ogg'
-            : blob.type.includes('mp3') ? 'mp3'
-            : blob.type.includes('m4a') ? 'm4a'
-            : blob.type.includes('wav') ? 'wav'
-            : blob.type.includes('mp4') ? 'mp4'
-            : 'audio';
+              : blob.type.includes('mp3') ? 'mp3'
+                : blob.type.includes('m4a') ? 'm4a'
+                  : blob.type.includes('wav') ? 'wav'
+                    : blob.type.includes('mp4') ? 'mp4'
+                      : 'audio';
           const fileName = `motivation/${clip.id}.${extension}`;
-          if(setFolder){
+          if (setFolder) {
             setFolder.file(fileName, blob);
           }
           motivationEntries.push({
@@ -3980,25 +3987,25 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
         }
       }
 
-      if(set.medalSounds && typeof set.medalSounds === 'object'){
-        for(const type of MEDAL_TYPES){
+      if (set.medalSounds && typeof set.medalSounds === 'object') {
+        for (const type of MEDAL_TYPES) {
           const entries = Array.isArray(set.medalSounds[type]) ? set.medalSounds[type] : [];
-          for(const meta of entries){
-            if(!meta || !meta.id) continue;
+          for (const meta of entries) {
+            if (!meta || !meta.id) continue;
             const blob = await idbGet(`medal-${set.id}-${meta.id}`);
-            if(!blob){
+            if (!blob) {
               console.warn('Medaillen-Sound ohne Audiodatei, wird übersprungen:', set.id, type);
               continue;
             }
             const extension = blob.type.includes('webm') ? 'webm'
               : blob.type.includes('ogg') ? 'ogg'
-              : blob.type.includes('mp3') ? 'mp3'
-              : blob.type.includes('m4a') ? 'm4a'
-              : blob.type.includes('wav') ? 'wav'
-              : blob.type.includes('mp4') ? 'mp4'
-              : 'audio';
+                : blob.type.includes('mp3') ? 'mp3'
+                  : blob.type.includes('m4a') ? 'm4a'
+                    : blob.type.includes('wav') ? 'wav'
+                      : blob.type.includes('mp4') ? 'mp4'
+                        : 'audio';
             const fileName = `medals/${type}-${meta.id}.${extension}`;
-            if(setFolder){
+            if (setFolder) {
               setFolder.file(fileName, blob);
             }
             medalEntries[type].push({
@@ -4026,7 +4033,7 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     zip.file('sets.json', JSON.stringify(setsMetadata, null, 2));
 
     // ZIP generieren und herunterladen
-    const content = await zip.generateAsync({type: 'blob'});
+    const content = await zip.generateAsync({ type: 'blob' });
     const url = URL.createObjectURL(content);
     const a = document.createElement('a');
     a.href = url;
@@ -4037,13 +4044,13 @@ document.getElementById('exportBtn').addEventListener('click', async ()=>{
     URL.revokeObjectURL(url);
 
     alert(`✅ ${sets.length} Set(s) mit insgesamt ${totalAudio} Aufnahmen exportiert!`);
-  }catch(e){
+  } catch (e) {
     console.error('Export fehlgeschlagen:', e);
     alert('❌ Export fehlgeschlagen: ' + e.message);
   }
 });
 
-async function importSetsZipBlob(blob, { showAlerts = true } = {}){
+async function importSetsZipBlob(blob, { showAlerts = true } = {}) {
   const zip = new JSZip();
   const contents = await zip.loadAsync(blob);
 
@@ -4053,12 +4060,12 @@ async function importSetsZipBlob(blob, { showAlerts = true } = {}){
 
   const setsJsonFile = contents.files['sets.json'];
 
-  if(setsJsonFile){
+  if (setsJsonFile) {
     const setsJsonText = await setsJsonFile.async('text');
     const setsMetadata = JSON.parse(setsJsonText);
 
-    for(const setMeta of setsMetadata){
-      if(!setMeta || !setMeta.id){
+    for (const setMeta of setsMetadata) {
+      if (!setMeta || !setMeta.id) {
         errorCount++;
         continue;
       }
@@ -4068,39 +4075,39 @@ async function importSetsZipBlob(blob, { showAlerts = true } = {}){
       const medalMap = makeEmptyMedalMap();
       const setPrefix = `${setMeta.id}/`;
 
-      if(Array.isArray(setMeta.clips) && setMeta.clips.length){
-        for(const clipMeta of setMeta.clips){
+      if (Array.isArray(setMeta.clips) && setMeta.clips.length) {
+        for (const clipMeta of setMeta.clips) {
           const clipId = clipMeta && clipMeta.id ? clipMeta.id : generateUUID();
           const letter = normaliseLetterInput(clipMeta && clipMeta.letter ? clipMeta.letter : null) || 'A';
           const difficulty = normaliseDifficultyInput(clipMeta && clipMeta.difficulty ? clipMeta.difficulty : 'LEICHT');
           let fileName = clipMeta && clipMeta.file ? clipMeta.file : '';
 
           let zipEntry = null;
-          if(fileName){
+          if (fileName) {
             const normalizedFile = fileName.replace(/^\/+/, '');
             zipEntry = contents.files[setPrefix + normalizedFile];
-            if(!zipEntry){
+            if (!zipEntry) {
               zipEntry = contents.files[normalizedFile];
             }
           }
-          if(!zipEntry){
+          if (!zipEntry) {
             zipEntry = Object.entries(contents.files).find(([name]) => {
               return !name.endsWith('/') && name.startsWith(setPrefix) && name.includes(clipId);
             });
-            if(zipEntry){
+            if (zipEntry) {
               fileName = zipEntry[0].replace(setPrefix, '');
               zipEntry = zipEntry[1];
             }
           }
 
-          if(!zipEntry || zipEntry.dir){
+          if (!zipEntry || zipEntry.dir) {
             console.warn('Audio-Datei für Clip nicht gefunden:', setMeta.id, clipId);
             errorCount++;
             continue;
           }
 
           const audioBlob = await zipEntry.async('blob');
-          if(!audioBlob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
+          if (!audioBlob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)) {
             errorCount++;
             continue;
           }
@@ -4115,13 +4122,13 @@ async function importSetsZipBlob(blob, { showAlerts = true } = {}){
           importedAudio++;
         }
       } else {
-        for(const [filename, zipEntry] of Object.entries(contents.files)){
-          if(zipEntry.dir || !filename.startsWith(setPrefix)) continue;
+        for (const [filename, zipEntry] of Object.entries(contents.files)) {
+          if (zipEntry.dir || !filename.startsWith(setPrefix)) continue;
           const rawName = filename.replace(setPrefix, '');
-          if(!rawName) continue;
+          if (!rawName) continue;
           const letter = normaliseLetterInput(rawName.split('.')[0]) || 'A';
           const audioBlob = await zipEntry.async('blob');
-          if(!audioBlob.type.startsWith('audio/') && !rawName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
+          if (!audioBlob.type.startsWith('audio/') && !rawName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)) {
             errorCount++;
             continue;
           }
@@ -4137,37 +4144,37 @@ async function importSetsZipBlob(blob, { showAlerts = true } = {}){
         }
       }
 
-      if(Array.isArray(setMeta.motivationClips) && setMeta.motivationClips.length){
-        for(const clipMeta of setMeta.motivationClips){
+      if (Array.isArray(setMeta.motivationClips) && setMeta.motivationClips.length) {
+        for (const clipMeta of setMeta.motivationClips) {
           const clipId = clipMeta && clipMeta.id ? clipMeta.id : generateUUID();
           let fileName = clipMeta && clipMeta.file ? clipMeta.file : '';
 
           let zipEntry = null;
-          if(fileName){
+          if (fileName) {
             const normalizedFile = fileName.replace(/^\/+/, '');
             zipEntry = contents.files[setPrefix + normalizedFile];
-            if(!zipEntry){
+            if (!zipEntry) {
               zipEntry = contents.files[normalizedFile];
             }
           }
-          if(!zipEntry){
+          if (!zipEntry) {
             zipEntry = Object.entries(contents.files).find(([name]) => {
               return !name.endsWith('/') && name.startsWith(setPrefix + 'motivation/') && name.includes(clipId);
             });
-            if(zipEntry){
+            if (zipEntry) {
               fileName = zipEntry[0].replace(setPrefix, '');
               zipEntry = zipEntry[1];
             }
           }
 
-          if(!zipEntry || zipEntry.dir){
+          if (!zipEntry || zipEntry.dir) {
             console.warn('Audio-Datei für Motivationsclip nicht gefunden:', setMeta.id, clipId);
             errorCount++;
             continue;
           }
 
           const audioBlob = await zipEntry.async('blob');
-          if(!audioBlob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
+          if (!audioBlob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)) {
             errorCount++;
             continue;
           }
@@ -4181,40 +4188,40 @@ async function importSetsZipBlob(blob, { showAlerts = true } = {}){
         }
       }
 
-      if(setMeta.medals && typeof setMeta.medals === 'object'){
-        for(const type of MEDAL_TYPES){
+      if (setMeta.medals && typeof setMeta.medals === 'object') {
+        for (const type of MEDAL_TYPES) {
           const entries = setMeta.medals[type];
           const list = Array.isArray(entries) ? entries : entries ? [entries] : [];
-          for(const medalMeta of list){
+          for (const medalMeta of list) {
             const clipId = medalMeta && medalMeta.id ? medalMeta.id : generateUUID();
             let fileName = medalMeta && medalMeta.file ? medalMeta.file : '';
 
             let zipEntry = null;
-            if(fileName){
+            if (fileName) {
               const normalizedFile = fileName.replace(/^\/+/, '');
               zipEntry = contents.files[setPrefix + normalizedFile];
-              if(!zipEntry){
+              if (!zipEntry) {
                 zipEntry = contents.files[normalizedFile];
               }
             }
-            if(!zipEntry){
+            if (!zipEntry) {
               zipEntry = Object.entries(contents.files).find(([name]) => {
                 return !name.endsWith('/') && name.startsWith(setPrefix + 'medals/') && name.includes(clipId);
               });
-              if(zipEntry){
+              if (zipEntry) {
                 fileName = zipEntry[0].replace(setPrefix, '');
                 zipEntry = zipEntry[1];
               }
             }
 
-            if(!zipEntry || zipEntry.dir){
+            if (!zipEntry || zipEntry.dir) {
               console.warn('Audio-Datei für Medaillen-Sound nicht gefunden:', setMeta.id, type);
               errorCount++;
               continue;
             }
 
             const audioBlob = await zipEntry.async('blob');
-            if(!audioBlob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)){
+            if (!audioBlob.type.startsWith('audio/') && !fileName.match(/\.(webm|ogg|mp3|mp4|m4a|wav|audio)$/i)) {
               errorCount++;
               continue;
             }
@@ -4241,23 +4248,23 @@ async function importSetsZipBlob(blob, { showAlerts = true } = {}){
       importedSets++;
     }
 
-    if(showAlerts){
+    if (showAlerts) {
       alert(`✅ ${importedSets} Set(s) mit ${importedAudio} Aufnahmen importiert!${errorCount > 0 ? `\n⚠️ ${errorCount} Dateien übersprungen.` : ''}`);
     }
   } else {
     const currentSetId = await getActiveSet();
 
-    for(const [filename, zipEntry] of Object.entries(contents.files)){
-      if(zipEntry.dir || filename.startsWith('__MACOSX') || filename.startsWith('.')) continue;
+    for (const [filename, zipEntry] of Object.entries(contents.files)) {
+      if (zipEntry.dir || filename.startsWith('__MACOSX') || filename.startsWith('.')) continue;
 
       const letter = normaliseLetterInput(filename.split('.')[0]) || '';
-      if(!/^[A-ZÄÖÜ]$/.test(letter)){
+      if (!/^[A-ZÄÖÜ]$/.test(letter)) {
         errorCount++;
         continue;
       }
 
       const audioBlob = await zipEntry.async('blob');
-      if(!audioBlob.type.startsWith('audio/') && !filename.match(/\.(webm|ogg|mp3|mp4|m4a|wav)$/i)){
+      if (!audioBlob.type.startsWith('audio/') && !filename.match(/\.(webm|ogg|mp3|mp4|m4a|wav)$/i)) {
         errorCount++;
         continue;
       }
@@ -4275,8 +4282,8 @@ async function importSetsZipBlob(blob, { showAlerts = true } = {}){
       importedAudio++;
     }
 
-    if(showAlerts){
-      if(importedAudio > 0){
+    if (showAlerts) {
+      if (importedAudio > 0) {
         alert(`✅ ${importedAudio} Aufnahmen in aktuelles Set importiert!${errorCount > 0 ? `\n⚠️ ${errorCount} Dateien übersprungen.` : ''}`);
       } else {
         alert('❌ Keine gültigen Aufnahmen gefunden.');
@@ -4291,109 +4298,109 @@ async function importSetsZipBlob(blob, { showAlerts = true } = {}){
   };
 }
 
-function wasBundledSetsImportCompleted(){
-  if(!BUNDLED_SETS_CONFIG.storageKey) return false;
-  try{
+function wasBundledSetsImportCompleted() {
+  if (!BUNDLED_SETS_CONFIG.storageKey) return false;
+  try {
     return typeof localStorage !== 'undefined' && localStorage.getItem(BUNDLED_SETS_CONFIG.storageKey) === '1';
-  }catch(_){
+  } catch (_) {
     return false;
   }
 }
 
-function markBundledSetsImported(){
-  if(!BUNDLED_SETS_CONFIG.storageKey) return;
-  try{
-    if(typeof localStorage !== 'undefined'){
+function markBundledSetsImported() {
+  if (!BUNDLED_SETS_CONFIG.storageKey) return;
+  try {
+    if (typeof localStorage !== 'undefined') {
       localStorage.setItem(BUNDLED_SETS_CONFIG.storageKey, '1');
     }
-  }catch(_){}
+  } catch (_) { }
 }
 
-async function importBundledSetsIfNeeded(){
-  if(!BUNDLED_SETS_CONFIG.url || wasBundledSetsImportCompleted()){
+async function importBundledSetsIfNeeded() {
+  if (!BUNDLED_SETS_CONFIG.url || wasBundledSetsImportCompleted()) {
     return false;
   }
-  try{
+  try {
     await cleanupPlaceholderSets();
     const existingSets = await getAllSets();
     let hasRealSets = false;
-    for(const set of existingSets){
-      if(!(await isPlaceholderSet(set))){
+    for (const set of existingSets) {
+      if (!(await isPlaceholderSet(set))) {
         hasRealSets = true;
         break;
       }
     }
-    if(hasRealSets){
+    if (hasRealSets) {
       markBundledSetsImported();
       return false;
     }
     const response = await fetch(BUNDLED_SETS_CONFIG.url);
-    if(!response.ok){
+    if (!response.ok) {
       console.warn('Standardsets konnten nicht geladen werden:', response.status, response.statusText);
       return false;
     }
     const bundledBlob = await response.blob();
     const summary = await importSetsZipBlob(bundledBlob, { showAlerts: false });
-    if(summary.importedSets > 0){
+    if (summary.importedSets > 0) {
       markBundledSetsImported();
       console.info(`[Sets] ${summary.importedSets} vorinstallierte Set(s) importiert.`);
       return true;
     }
-  }catch(err){
+  } catch (err) {
     console.warn('Automatischer Set-Import fehlgeschlagen:', err);
   }
   return false;
 }
 
-document.getElementById('importBtn').addEventListener('click', ()=>{
+document.getElementById('importBtn').addEventListener('click', () => {
   document.getElementById('importFile').click();
 });
 
-document.getElementById('importFile').addEventListener('change', async (e)=>{
+document.getElementById('importFile').addEventListener('change', async (e) => {
   const file = e.target.files[0];
-  if(!file){
+  if (!file) {
     return;
   }
 
-  try{
+  try {
     await importSetsZipBlob(file);
     await renderSetsList();
     await updateStatusGridFromDB();
     await updateUIForRecordingState();
-    if(currentLetter) await selectLetter(currentLetter);
+    if (currentLetter) await selectLetter(currentLetter);
     await refreshSupportAudioUI();
-  }catch(err){
+  } catch (err) {
     console.error('Import fehlgeschlagen:', err);
     alert('❌ Import fehlgeschlagen: ' + err.message);
-  }finally{
+  } finally {
     e.target.value = '';
   }
 });
 
 const elBtnLoadDefaultSets = document.getElementById('btnLoadDefaultSets');
-if(elBtnLoadDefaultSets){
+if (elBtnLoadDefaultSets) {
   elBtnLoadDefaultSets.addEventListener('click', async () => {
-    if(!BUNDLED_SETS_CONFIG.url){
+    if (!BUNDLED_SETS_CONFIG.url) {
       alert('Keine Standard-Sets verfügbar.');
       return;
     }
     elBtnLoadDefaultSets.disabled = true;
     const prevLabel = elBtnLoadDefaultSets.textContent;
     elBtnLoadDefaultSets.textContent = 'Lade...';
-    try{
+    try {
       const response = await fetch(BUNDLED_SETS_CONFIG.url);
-      if(!response.ok){
+      if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
       const blob = await response.blob();
       const summary = await importSetsZipBlob(blob);
-      if(summary.importedSets > 0){
+      if (summary.importedSets > 0) {
         markBundledSetsImported();
         await hydrateProfileState();
       }
-    }catch(err){
+    } catch (err) {
       alert('❌ Standard-Sets konnten nicht geladen werden: ' + err.message);
-    }finally{
+    } finally {
       elBtnLoadDefaultSets.disabled = false;
       elBtnLoadDefaultSets.textContent = prevLabel;
     }
@@ -4407,25 +4414,25 @@ let game = null;
 let currentAudio = null;
 
 elBtnTestAudio.addEventListener('click', async () => {
-  if(game && game.target){
+  if (game && game.target) {
     await playCurrentPrompt({ suppressAlert: true });
     return;
   }
-  if(lastPlayed){
-    try { lastPlayed.currentTime = 0; } catch(e) {}
-    await lastPlayed.play().catch(()=>{});
+  if (lastPlayed) {
+    try { lastPlayed.currentTime = 0; } catch (e) { }
+    await lastPlayed.play().catch(() => { });
   }
 });
 document.getElementById('closeModal').addEventListener('click', closeModal);
 
-if(elResultGiftButton){
+if (elResultGiftButton) {
   elResultGiftButton.addEventListener('click', () => {
     playRewardSound();
     closeModal();
     switchToTab('album');
     requestAnimationFrame(() => {
       const btnOpenPack = document.getElementById('btnOpenPack');
-      if(btnOpenPack){
+      if (btnOpenPack) {
         btnOpenPack.classList.add('pulse-hint');
         setTimeout(() => btnOpenPack.classList.remove('pulse-hint'), 2000);
         btnOpenPack.focus({ preventScroll: false });
@@ -4434,7 +4441,7 @@ if(elResultGiftButton){
   });
 }
 
-function closeModal(){
+function closeModal() {
   elModal.classList.add('hidden');
   toggleResultGift(false);
 }
@@ -4450,9 +4457,9 @@ function confirmEndGame() {
 
 function endGame() {
   clearMotivationChain();
-  if(lastPlayed){
-    try { lastPlayed.pause(); } catch(_){ /* ignore */ }
-    try { lastPlayed.currentTime = 0; } catch(_){ /* ignore */ }
+  if (lastPlayed) {
+    try { lastPlayed.pause(); } catch (_) { /* ignore */ }
+    try { lastPlayed.currentTime = 0; } catch (_) { /* ignore */ }
   }
   // Hide game view
   elHud.classList.add('hidden');
@@ -4472,7 +4479,7 @@ function endGame() {
   updateUIForRecordingState();
 }
 
-async function startGame(){
+async function startGame() {
   const progress = getProgress();
   const mode = progress && progress.mode ? progress.mode : 'FREI';
   const unlockedCount = progress && progress.unlocked ? progress.unlocked : 4;
@@ -4483,7 +4490,7 @@ async function startGame(){
   const clips = setData && setData.clips ? setData.clips : [];
   const recordedSet = new Set(clips.map(clip => clip.letter));
 
-  if(recordedSet.size === 0){
+  if (recordedSet.size === 0) {
     alert('Bitte nimm zuerst Buchstaben auf (mindestens 1).');
     return;
   }
@@ -4491,10 +4498,10 @@ async function startGame(){
   const recorded = Array.from(recordedSet).sort();
   let pool = recorded.slice();
 
-  if(mode === 'LERNWEG'){
+  if (mode === 'LERNWEG') {
     const unlockedLetters = LETTERS.slice(0, unlockedCount);
     pool = unlockedLetters.filter(letter => recordedSet.has(letter));
-    if(pool.length === 0){
+    if (pool.length === 0) {
       alert('Für den Lernweg brauchst du Aufnahmen der freigeschalteten Buchstaben. Bitte nimm zuerst diese Buchstaben auf.');
       return;
     }
@@ -4502,13 +4509,13 @@ async function startGame(){
     const desiredCount = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
     const targetLetters = LETTERS.slice(0, desiredCount);
     pool = targetLetters.filter(letter => recordedSet.has(letter));
-    if(pool.length === 0){
+    if (pool.length === 0) {
       alert('Für die gewählte Buchstabenmenge fehlen Aufnahmen. Bitte passe die Auswahl an oder nimm die Buchstaben auf.');
       return;
     }
   }
 
-  const rounds = parseInt(elRounds.value,10);
+  const rounds = parseInt(elRounds.value, 10);
   game = {
     setId,
     recorded: pool.slice(),
@@ -4529,16 +4536,16 @@ async function startGame(){
   };
   game.pendingMotivations = new Set();
   elRoundMax.textContent = rounds;
-  elOk.textContent=0; elBad.textContent=0;
-  elBar.style.width='0%';
+  elOk.textContent = 0; elBad.textContent = 0;
+  elBar.style.width = '0%';
   updateStarTrackDisplay();
   updateMissionStatus(0, rounds);
   document.getElementById('setup').classList.add('hidden');
   elHud.classList.remove('hidden');
   elLetters.classList.remove('hidden');
   // sichere Tab: gehe auf "Spiel"
-  document.querySelectorAll('.tabs button').forEach(b=>{
-    const active = b.dataset.tab==='spiel';
+  document.querySelectorAll('.tabs button').forEach(b => {
+    const active = b.dataset.tab === 'spiel';
     b.classList.toggle('active', active);
   });
   document.getElementById('spiel').classList.remove('hidden');
@@ -4549,15 +4556,15 @@ async function startGame(){
   await nextRound();
 }
 
-async function nextRound(){
-  if(!game) return;
+async function nextRound() {
+  if (!game) return;
   game.round++;
-  if(game.round > game.rounds){ return finishGame(); }
+  if (game.round > game.rounds) { return finishGame(); }
   elRoundNow.textContent = game.round;
   updateMissionStatus(game.round - 1, game.rounds);
 
   let pool = Array.isArray(game.pool) && game.pool.length ? game.pool : game.recorded;
-  if(!pool || pool.length === 0){
+  if (!pool || pool.length === 0) {
     pool = game.recorded;
   }
 
@@ -4572,12 +4579,12 @@ async function nextRound(){
       recent: game.recent || [],
       recentErrors: game.errorHistory || [],
     });
-  } catch(err){
+  } catch (err) {
     console.warn('PickNext fehlgeschlagen, fallback auf erstes Element', err);
     pick = pool[0];
   }
 
-  if(!pick){
+  if (!pick) {
     return finishGame();
   }
 
@@ -4586,37 +4593,37 @@ async function nextRound(){
   game.recent = [pick, ...(game.recent || [])].slice(0, 3);
 
   const setData = await loadSetData(game.setId);
-  if(game.introPromptDelay){
+  if (game.introPromptDelay) {
     await sleep(game.introPromptDelay);
     game.introPromptDelay = 0;
   }
   const clipPlayable = await playCurrentPrompt({ setData, suppressAlert: true });
-  if(!clipPlayable){
+  if (!clipPlayable) {
     // Aufnahme fehlt unerwartet → Buchstabe aus Pool entfernen und weiter
     console.warn('Keine passende Aufnahme gefunden für', pick, 'in Schwierigkeit', game.difficulty);
-    if(Array.isArray(game.pool)){
+    if (Array.isArray(game.pool)) {
       game.pool = game.pool.filter(letter => letter !== pick);
     }
-    if(!game.pool.length){
+    if (!game.pool.length) {
       return finishGame();
     }
     return nextRound();
   }
   // Eingaben erlauben
-  game.busy=false;
+  game.busy = false;
   // visuelles Reset
-  document.querySelectorAll('.btn-letter').forEach(b=> b.disabled=false);
+  document.querySelectorAll('.btn-letter').forEach(b => b.disabled = false);
 }
 
-async function playCurrentPrompt({ setData = null, suppressAlert = false } = {}){
-  if(!game || !game.target){
+async function playCurrentPrompt({ setData = null, suppressAlert = false } = {}) {
+  if (!game || !game.target) {
     return false;
   }
 
   const desiredDifficulty = game.difficulty || 'LEICHT';
   const dataset = setData || await loadSetData(game.setId);
-  if(!dataset || !Array.isArray(dataset.clips)){
-    if(!suppressAlert){
+  if (!dataset || !Array.isArray(dataset.clips)) {
+    if (!suppressAlert) {
       alert('Für dieses Set gibt es noch keine Aufnahmen.');
     }
     return false;
@@ -4631,8 +4638,8 @@ async function playCurrentPrompt({ setData = null, suppressAlert = false } = {})
     historyKey,
   });
 
-  if(!clipData){
-    if(!suppressAlert){
+  if (!clipData) {
+    if (!suppressAlert) {
       alert('Für diesen Buchstaben gibt es keine Aufnahme in der gewählten Schwierigkeit.');
     }
     return false;
@@ -4640,58 +4647,58 @@ async function playCurrentPrompt({ setData = null, suppressAlert = false } = {})
 
   let motivationClipData = null;
   let shouldChainMotivation = hasPendingMotivation(game.target);
-  if(shouldChainMotivation){
+  if (shouldChainMotivation) {
     const motivationHistoryKey = makeClipHistoryKey('motivation', game.setId, 'ALL', desiredDifficulty);
     motivationClipData = await fetchMotivationClip({ setId: game.setId, setData: dataset, historyKey: motivationHistoryKey });
-    if(!motivationClipData){
+    if (!motivationClipData) {
       shouldChainMotivation = false;
     }
   }
 
   clearMotivationChain();
-  if(lastPlayed){
-    try { lastPlayed.pause(); } catch(e) {}
-    try { lastPlayed.currentTime = 0; } catch(e) {}
+  if (lastPlayed) {
+    try { lastPlayed.pause(); } catch (e) { }
+    try { lastPlayed.currentTime = 0; } catch (e) { }
   }
 
   const url = URL.createObjectURL(clipData.blob);
   lastPlayed = new Audio(url);
   lastPlayed.addEventListener('ended', () => URL.revokeObjectURL(url));
   lastPlayed.addEventListener('error', () => URL.revokeObjectURL(url));
-  if(shouldChainMotivation && motivationClipData){
+  if (shouldChainMotivation && motivationClipData) {
     queueMotivationPlayback(lastPlayed, motivationClipData);
   }
-  if(elBtnTestAudio){
+  if (elBtnTestAudio) {
     elBtnTestAudio.disabled = false;
   }
-  await lastPlayed.play().catch(()=>{});
+  await lastPlayed.play().catch(() => { });
   return true;
 }
 
 // Haupt-Handler für Buchstaben-Klick
-async function onLetterClick(e){
+async function onLetterClick(e) {
   const letter = e.currentTarget.getAttribute('data-letter');
   const btn = e.currentTarget;
 
   // Preview-Modus: Kein Spiel läuft, Sound abspielen
-  if(!game){
+  if (!game) {
     // Buchstaben-Animation beim Klick
     btn.classList.add('letter-bounce');
-    setTimeout(()=> btn.classList.remove('letter-bounce'), 500);
+    setTimeout(() => btn.classList.remove('letter-bounce'), 500);
 
     // Klick-Sound
     playClickSound();
 
     // Audio abspielen
     const setId = await getActiveSet();
-    if(currentLetter === letter && currentClipId){ // currentLetter, currentClipId are for recorder
+    if (currentLetter === letter && currentClipId) { // currentLetter, currentClipId are for recorder
       await playClipById(currentClipId);
       return;
     }
     const setData = await loadSetData(setId);
     const historyKey = makeClipHistoryKey('preview', setId, letter, currentDifficulty);
     const clipData = await fetchClipForLetter({ setId, letter, difficulty: currentDifficulty, setData, historyKey });
-    if(!clipData){
+    if (!clipData) {
       alert('Keine Aufnahme gefunden.');
       return;
     }
@@ -4699,19 +4706,19 @@ async function onLetterClick(e){
     const audio = new Audio(url);
     audio.addEventListener('ended', () => URL.revokeObjectURL(url));
     audio.addEventListener('error', () => URL.revokeObjectURL(url));
-    await audio.play().catch(()=>{});
+    await audio.play().catch(() => { });
     return;
   }
 
   // Spiel-Modus: Normale Guess-Logik
-  if(game.busy) return;
+  if (game.busy) return;
 
   // Klick-Sperre für die Dauer der Animation
-  game.busy=true;
+  game.busy = true;
 
   // Buchstaben-Animation beim Klick
   btn.classList.add('letter-bounce');
-  setTimeout(()=> btn.classList.remove('letter-bounce'), 500);
+  setTimeout(() => btn.classList.remove('letter-bounce'), 500);
 
   // Klick-Sound
   playClickSound();
@@ -4720,10 +4727,10 @@ async function onLetterClick(e){
   const wrongCountsBefore = game.progress && game.progress.wrongCounts ? game.progress.wrongCounts : {};
   const wasErrorPick = (wrongCountsBefore[targetLetter] || 0) > 0;
   const correct = letter === targetLetter;
-  if(correct){
+  if (correct) {
     game.ok++;
     game.progress = markCorrect(targetLetter, letter);
-    if(game.pendingMotivations){
+    if (game.pendingMotivations) {
       game.pendingMotivations.delete(targetLetter);
     }
     // Buchstaben-Statistik für Belohnungssystem tracken
@@ -4731,7 +4738,7 @@ async function onLetterClick(e){
   } else {
     game.bad++;
     game.progress = markWrong(targetLetter, letter);
-    if(!game.pendingMotivations){
+    if (!game.pendingMotivations) {
       game.pendingMotivations = new Set();
     }
     game.pendingMotivations.add(targetLetter);
@@ -4739,13 +4746,13 @@ async function onLetterClick(e){
 
   game.errorHistory = [wasErrorPick, ...(game.errorHistory || [])].slice(0, 3);
   elOk.textContent = game.ok; elBad.textContent = game.bad;
-  const progress = Math.min(100, Math.round(((game.round) / game.rounds)*100));
+  const progress = Math.min(100, Math.round(((game.round) / game.rounds) * 100));
   elBar.style.width = progress + '%';
 
   // Soundeffekte für richtig/falsch
-  if(correct){
+  if (correct) {
     playSuccessSound();
-  }else{
+  } else {
     playErrorSound();
   }
 
@@ -4756,37 +4763,37 @@ async function onLetterClick(e){
   await nextRound();
 }
 
-function showUnlockBanner(message){
-  if(!elUnlockBanner) return;
-  if(unlockBannerTimer){
+function showUnlockBanner(message) {
+  if (!elUnlockBanner) return;
+  if (unlockBannerTimer) {
     clearTimeout(unlockBannerTimer);
     unlockBannerTimer = null;
   }
   elUnlockBannerText.textContent = message;
   elUnlockBanner.classList.remove('hidden');
-  requestAnimationFrame(()=>{
+  requestAnimationFrame(() => {
     elUnlockBanner.classList.add('visible');
   });
   playUnlockSound();
-  unlockBannerTimer = setTimeout(()=>{
+  unlockBannerTimer = setTimeout(() => {
     elUnlockBanner.classList.remove('visible');
-    unlockBannerTimer = setTimeout(()=>{
+    unlockBannerTimer = setTimeout(() => {
       elUnlockBanner.classList.add('hidden');
       unlockBannerTimer = null;
     }, 320);
   }, 2800);
 }
 
-function show(el, autoHide = true){
+function show(el, autoHide = true) {
   el.classList.remove('hidden');
-  if(autoHide){
+  if (autoHide) {
     el.style.pointerEvents = 'none';
-    return new Promise(res=> setTimeout(()=> { el.classList.add('hidden'); res(); }, 1200));
+    return new Promise(res => setTimeout(() => { el.classList.add('hidden'); res(); }, 1200));
   } else {
     // Click-to-dismiss
     el.style.pointerEvents = 'auto';
     el.style.cursor = 'pointer';
-    return new Promise(res=> {
+    return new Promise(res => {
       const dismiss = () => {
         el.classList.add('hidden');
         el.style.pointerEvents = 'none';
@@ -4798,39 +4805,39 @@ function show(el, autoHide = true){
     });
   }
 }
-function showFeedback(ok, correctLetter){
-  if(ok) return show(elOverlayGood, true); // Auto-hide bei Erfolg
+function showFeedback(ok, correctLetter) {
+  if (ok) return show(elOverlayGood, true); // Auto-hide bei Erfolg
   // Bei Fehler: Korrekten Buchstaben anzeigen + Click-to-dismiss
   elCorrectLetter.textContent = correctLetter;
   return show(elOverlayBad, false); // Muss weggeklickt werden
 }
 
-async function finishGame(){
-  if(!game) return;
+async function finishGame() {
+  if (!game) return;
   toggleResultGift(false);
   const total = game.rounds;
   const ok = game.ok;
-  const pct = Math.round((ok/total)*100);
+  const pct = Math.round((ok / total) * 100);
   const msg = `${ok} von ${total} richtig (${pct} %)`;
   let animationPath;
   let medalTier = 'bronze';
-  if(game.bad === 0){
+  if (game.bad === 0) {
     animationPath = 'app/assets/animations/Trophy.json';
-    elResultTitle.textContent='Gold! Fantastisch ✨';
+    elResultTitle.textContent = 'Gold! Fantastisch ✨';
     medalTier = 'gold';
-  } else if(pct >= 50){
+  } else if (pct >= 50) {
     animationPath = 'app/assets/animations/Silver.json';
-    elResultTitle.textContent='Silber! Super gemacht 🥈';
+    elResultTitle.textContent = 'Silber! Super gemacht 🥈';
     medalTier = 'silver';
   } else {
     animationPath = 'app/assets/animations/bronze.json';
-    elResultTitle.textContent='Bronze! Weiter so 🥉';
+    elResultTitle.textContent = 'Bronze! Weiter so 🥉';
     medalTier = 'bronze';
   }
   playTrophyAnimation(animationPath);
   const medalIntroPromise = playMedalIntroSound();
   const progressBefore = game && game.progress ? game.progress : null;
-  if(progressBefore && progressBefore.mode === 'LERNWEG'){
+  if (progressBefore && progressBefore.mode === 'LERNWEG') {
     const beforeUnlocked = progressBefore.unlocked || 0;
     const advanced = advanceAfterRun({
       result: { mistakes: game.bad },
@@ -4838,9 +4845,9 @@ async function finishGame(){
     });
     const saved = saveProgress(advanced);
     const unlockedIncreased = saved.unlocked > beforeUnlocked;
-    if(unlockedIncreased){
+    if (unlockedIncreased) {
       const parts = [];
-      if(unlockedIncreased){
+      if (unlockedIncreased) {
         parts.push(`${saved.unlocked} Buchstaben aktiv.`);
       }
       showUnlockBanner(parts.join(' '));
@@ -4851,7 +4858,7 @@ async function finishGame(){
   const runStars = computeRunStars(ok, total);
   updateStarSummary(runStars);
   const existingWidget = getStarRevealWidget();
-  if(existingWidget){
+  if (existingWidget) {
     existingWidget.setStars(0);
   }
   updateMissionStatus(game.rounds, game.rounds);
@@ -4861,20 +4868,20 @@ async function finishGame(){
   elHud.classList.add('hidden');
   elModal.classList.remove('hidden');
   // Re-attach event listener for 'again' button to ensure it's active after game finish
-  document.getElementById('again').addEventListener('click', ()=> { closeModal(); startGame(); });
-  game=null;
+  document.getElementById('again').addEventListener('click', () => { closeModal(); startGame(); });
+  game = null;
 
   // Zurück in Preview-Modus: Buttons basierend auf Aufnahmen aktivieren
   updateLetterButtons();
 
   await medalIntroPromise;
   const customPlayed = await playMedalCelebration(medalTier);
-  if(!customPlayed && runStars > 0){
+  if (!customPlayed && runStars > 0) {
     playRewardSound();
   }
   await animateResultStars(runStars);
   let totalStars = totalStarBank;
-  if(runStars > 0){
+  if (runStars > 0) {
     totalStars = await addStars(runStars);
   } else {
     totalStars = await getStars();
@@ -4884,7 +4891,7 @@ async function finishGame(){
   const canOpenPack = totalStars >= STARS_PER_PACK;
   const packsToOpen = canOpenPack ? Math.floor(totalStars / STARS_PER_PACK) : 0;
   let fullMsg = msg;
-  if(runStars > 0){
+  if (runStars > 0) {
     fullMsg += `\n⭐ +${runStars} Stern${runStars === 1 ? '' : 'e'}! (${totalStars} gesamt)`;
   } else {
     fullMsg += `\n⭐ Dieses Mal gab es keine Sterne – probiere es gleich nochmal!`;
@@ -4942,16 +4949,16 @@ async function startPracticeGame(letters) {
 // Zugänglichkeit / Kleinigkeiten
 // ——————————————————————————————————————————
 // Tastatursteuerung: Enter/Space hören, Fokus
-elLetters.addEventListener('keydown', (e)=>{
+elLetters.addEventListener('keydown', (e) => {
   const btn = e.target.closest('button');
-  if(!btn) return;
-  if(e.key==='Enter' || e.key===' '){
+  if (!btn) return;
+  if (e.key === 'Enter' || e.key === ' ') {
     e.preventDefault(); btn.click();
   }
 });
 
 // Inhalte initial
-(async function init(){
+(async function init() {
   const { profile } = ensureProfileSetup();
   await migrateProfileScopedData(profile);
   // Migration alter Aufnahmen (falls vorhanden)
@@ -4960,5 +4967,79 @@ elLetters.addEventListener('keydown', (e)=>{
   await cleanupPlaceholderSets();
 
   // Default-Set sicherstellen und UI initialisieren
+  // Default-Set sicherstellen und UI initialisieren
   await hydrateProfileState();
+
+  // Start flow: Profile -> Welcome
+  openProfileModal();
 })();
+
+// ——————————————————————————————————————————
+// Welcome Dialog Logic
+// ——————————————————————————————————————————
+const elWelcomeDialog = document.getElementById('welcomeDialog');
+const elWelcomeLernpfad = document.getElementById('welcomeLernpfad');
+const elWelcomeIndividuell = document.getElementById('welcomeIndividuell');
+const elWelcomeUeben = document.getElementById('welcomeUeben');
+const elWelcomeClose = document.getElementById('welcomeClose');
+
+function showWelcomeDialog() {
+  if (elWelcomeDialog) {
+    elWelcomeDialog.classList.remove('hidden');
+  }
+}
+
+function closeWelcomeDialog() {
+  if (elWelcomeDialog) {
+    elWelcomeDialog.classList.add('hidden');
+  }
+}
+
+if (elWelcomeLernpfad) {
+  elWelcomeLernpfad.addEventListener('click', () => {
+    closeWelcomeDialog();
+    // Simulate selecting LERNWEG and starting
+    const lernwegCard = document.querySelector('[data-mode="LERNWEG"]');
+    if (lernwegCard) {
+      lernwegCard.click();
+      // We need to wait a tick for the state to update if necessary, 
+      // but the click handler is synchronous usually.
+      // However, we want to start immediately.
+      if (elModeDialogStart && !elModeDialogStart.disabled) {
+        elModeDialogStart.click();
+      } else {
+        // Fallback if for some reason start is disabled (e.g. missing recordings)
+        // Open the mode dialog so user sees the issue
+        openModeDialog();
+      }
+    }
+  });
+}
+
+if (elWelcomeIndividuell) {
+  elWelcomeIndividuell.addEventListener('click', () => {
+    closeWelcomeDialog();
+    openModeDialog();
+    // Pre-select FREI
+    const freiCard = document.querySelector('[data-mode="FREI"]');
+    if (freiCard) freiCard.click();
+  });
+}
+
+if (elWelcomeUeben) {
+  elWelcomeUeben.addEventListener('click', () => {
+    closeWelcomeDialog();
+    switchToTab('ueben');
+  });
+}
+
+if (elWelcomeClose) {
+  elWelcomeClose.addEventListener('click', () => {
+    closeWelcomeDialog();
+  });
+}
+
+// Show welcome dialog on startup
+// Show welcome dialog on startup - REMOVED in favor of Profile -> Welcome flow
+// setTimeout(showWelcomeDialog, 500);
+

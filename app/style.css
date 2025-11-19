@@ -1461,3 +1461,58 @@ html[data-theme='nebula'] .album-tab-highlight{
   color:var(--overlay-info-color);
   opacity:.9;
 }
+
+/* Welcome Dialog */
+.welcome-dialog .dialog {
+  max-width: 600px;
+  padding: 32px;
+}
+.welcome-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+.welcome-card {
+  border: 0;
+  background: linear-gradient(145deg, #faf5ff, #ede9fe);
+  border-radius: 24px;
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.15);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  color: var(--ink);
+}
+.welcome-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(124, 58, 237, 0.25);
+}
+.welcome-card:active {
+  transform: scale(0.98);
+}
+.welcome-card .emoji {
+  font-size: 48px;
+  line-height: 1;
+}
+.welcome-card strong {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+/* Dark mode for welcome dialog */
+html[data-theme='nebula'] .welcome-card {
+  background: linear-gradient(160deg, #1f1f3d, #16162b);
+  box-shadow: 0 16px 30px rgba(0, 0, 0, 0.55), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  color: #f7f5ff;
+}
+html[data-theme='nebula'] .welcome-card:hover {
+  box-shadow: 0 20px 34px rgba(0, 0, 0, 0.65);
+}
+html[data-theme='nebula'] .welcome-card strong {
+  color: #fff;
+}
+
