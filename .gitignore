@@ -13,3 +13,9 @@ dist/
 .idea/
 coverage/
 tmp/
+Screenshots/
+SPECS/
+.gemini
+.claude
+.kiro
+
