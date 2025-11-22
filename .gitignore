@@ -1,8 +1,10 @@
+ProjectData/
 node_modules/
 .DS_Store
 *.log
 .env
 journal.md
+mcp.json
 TASKS.md
 android/
 scripts/

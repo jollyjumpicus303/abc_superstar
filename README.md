@@ -1,29 +1,64 @@
-# Buchstabenspiel – Audio Generator
+# Buchstabenspiel – Audio Generator & Web‑App
 
-Dieses Repo enthält die Web‑App *ABC Abenteuer* und ein CLI, das komplette Audio‑Sets per TTS erzeugt. Nachfolgend findest du die wichtigsten Schritte, um eigene Sets mit OpenAI oder ElevenLabs zu bauen und für den Import aufzubereiten.
+Dieses Repo enthält die Web‑App *ABC Abenteuer* und ein CLI, das komplette Audio‑Sets per TTS erzeugt.
 
-## 1. Vorbereitung
+Die Web‑App liegt in zwei UI‑Varianten vor (**Monorepo**):
+
+- **Classic** – bestehende Oberfläche, aktuell Standard  
+  - Code am Root (`index.html`, `app/` …)  
+  - Zusätzlich gespiegelt unter `apps/classic/`
+- **Island** – neue Clay‑Insel‑Variante (Work‑in‑Progress)  
+  - Code unter `apps/island/` (eigene `index.html` + `app/`)
+
+---
+
+## 1. Vorbereitung (CLI & App)
 
 1. **Dependencies installieren**
    ```bash
    npm install
    ```
-2. **Konfiguration anlegen**
-   - `generator.config.json` enthält Varianten/Voices und optionale Wort-Overrides. Eine Vorlage findest du in `generator.config.example.json`.
-   - Jeder Eintrag unter `variants` beschreibt eine Stimme samt Provider (`openai` oder `elevenlabs`), Voice-ID, Modell und optional Stilhinweisen.
-   - OpenAI akzeptiert aktuell nur eine feste Liste an Voice-IDs (z. B. `alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`, `coral`, `verse`, `ballad`, `ash`, `sage`, `marin`, `cedar`). Bitte nur diese Werte bei `voice` verwenden.
-   - Über `defaultSpeechSpeed` (nur OpenAI) lässt sich das Standard-Tempo, z. B. `0.8`, global bremsen. `letterPronunciations` akzeptiert Strings oder Objekte mit `text` + optional `ssml` (z. B. `<phoneme alphabet="ipa" ph="eː">E</phoneme>`), sogar Provider-spezifisch (`providers.openai`). Mit `useSsml: true` pro Variante wird der Text automatisch in `<speak>…</speak>` eingebettet und `{{LETTER}}` nutzt die SSML-Lautschrift.
-3. **API-Keys setzen**
+2. **Konfiguration für TTS anlegen**
+   - `generator.config.json` enthält Varianten/Voices und optionale Wort‑Overrides. Eine Vorlage findest du in `generator.config.example.json`.
+   - Jeder Eintrag unter `variants` beschreibt eine Stimme samt Provider (`openai` oder `elevenlabs`), Voice‑ID, Modell und optional Stilhinweisen.
+   - OpenAI akzeptiert aktuell nur eine feste Liste an Voice‑IDs (z. B. `alloy`, `echo`, `fable`, `onyx`, `nova`, `shimmer`, `coral`, `verse`, `ballad`, `ash`, `sage`, `marin`, `cedar`). Bitte nur diese Werte bei `voice` verwenden.
+   - Über `defaultSpeechSpeed` (nur OpenAI) lässt sich das Standard‑Tempo, z. B. `0.8`, global bremsen. `letterPronunciations` akzeptiert Strings oder Objekte mit `text` + optional `ssml` (z. B. `<phoneme alphabet="ipa" ph="eː">E</phoneme>`), sogar Provider‑spezifisch (`providers.openai`). Mit `useSsml: true` pro Variante wird der Text automatisch in `<speak>…</speak>` eingebettet und `{{LETTER}}` nutzt die SSML‑Lautschrift.
+3. **API‑Keys setzen**
    - `cp .env.example .env`
    - In `.env` `OPENAI_API_KEY` und/oder `ELEVENLABS_API_KEY` eintragen. Die CLI lädt diese Werte automatisch via `dotenv`.
 
-## 2. Audio erzeugen
+---
 
-Das Hauptskript heißt `generateLetters`. Mit dem `--` Trenner erhält es alle Parameter (auch unter PowerShell).
+## 2. Web‑App & UI‑Doku
+
+### App starten
+
+Standard‑Variante (Classic):
+
+```bash
+npm start
+```
+
+anschließend im Browser:
+
+- `http://localhost:8080/index.html` → Classic‑UI
+- `http://localhost:8080/apps/island/index.html` → Island‑UI (neues Design)
+
+### UI‑Anforderungen & Spezifikation
+
+- Technische Spezifikation & Architektur: `ProjectData/SPECS/README.md`
+- Neues Insel‑UI (Design‑System, Screens, Assets):  
+  `ProjectData/Requirements new UI/`
+
+---
+
+## 3. Audio erzeugen (CLI)
+
+Das Hauptskript heißt `generateLetters`. Mit dem `--`‑Trenner erhält es alle Parameter (auch unter PowerShell).
 
 ### Basisbeispiele
 
-- **Dry-Run / Vorschau ohne API-Calls**
+- **Dry‑Run / Vorschau ohne API‑Calls**
   ```bash
   npm run generate:letters -- --variants eleven_playful --letters A,B --difficulties LEICHT --dry-run --log-text
   ```
@@ -42,7 +77,7 @@ Das Hauptskript heißt `generateLetters`. Mit dem `--` Trenner erhält es alle P
 - `--group-by-variant` erzeugt pro Variante ein eigenes Set innerhalb des ZIPs.
 - `--use-ssml` aktiviert SSML für Ad-hoc-Varianten (falls der Provider es unterstützt, z. B. OpenAI).
 - `--set-name`, `--emoji`, `--format`, `--concurrency`, `--max` usw. siehe `npm run generate:letters -- --help`.
-- Ohne `--variants` wird die erste Variante aus `generator.config.json` verwendet. Alternativ kann man Ad-hoc arbeiten: `--provider elevenlabs --voice <VOICE_ID>`.
+- Ohne `--variants` wird die erste Variante aus `generator.config.json` verwendet. Alternativ kann man Ad‑hoc arbeiten: `--provider elevenlabs --voice <VOICE_ID>`.
 - `--split-variants-out dist/by-variant` erzeugt nach dem Lauf automatisch je Stimme ein separates ZIP; optional `--split-variants-base-name`, `--split-variants-emoji`, `--split-variants-overwrite`.
 
 ### Lauf in Portionen
@@ -52,7 +87,9 @@ npm run generate:letters -- --letters A-M --variants eleven_playful,eleven_story
 npm run generate:letters -- --letters N-Z --variants eleven_playful,eleven_storytime --out dist/part2.zip
 ```
 
-## 3. Varianten trennen
+---
+
+## 4. Varianten trennen
 
 Wenn du noch während des Generierens einzelne ZIPs pro Stimme brauchst, nutze `--split-variants-out ...`. Alternativ steht weiterhin das Skript `splitVariantSets` bereit, um bestehende ZIPs aufzuteilen.
 
@@ -66,15 +103,19 @@ npm run split:variants -- \
 - Für jede gefundene Stimme entsteht im `out-dir` ein ZIP mit eigenem `sets.json`. Diese Dateien lassen sich direkt in der App importieren.
 - Mit `--overwrite` werden vorhandene Dateien im Zielordner ersetzt.
 
-## 4. Import in die App
+---
+
+## 5. Import in die App
 
 1. App starten (z. B. `npm start` → http://localhost:8080).
 2. In der UI auf **Importieren** klicken und das erzeugte ZIP auswählen.
-3. Die App legt pro ZIP ein Set an; bei den Voice-ZIPs aus `split:variants` also eines je Stimme.
+3. Die App legt pro ZIP ein Set an; bei den Voice‑ZIPs aus `split:variants` also eines je Stimme.
 
-## 5. Troubleshooting
+---
 
-- **HTTP 400/401/429** → stammen vom TTS-Anbieter. Meist Voice-ID, Berechtigung oder Quota prüfen.
+## 6. Troubleshooting
+
+- **HTTP 400/401/429** → stammen vom TTS‑Anbieter. Meist Voice‑ID, Berechtigung oder Quota prüfen.
 - **Abbruch in der Mitte** → erneut laufen lassen (ggf. Buchstabenbereich einschränken) und danach `split:variants` nutzen.
 - **Texte anpassen** → `scripts/lib/contentLibrary.js` für Wortlisten/Templates, Overrides per `generator.config.json` → `contentOverrides`. `{{LETTER}}` wird automatisch mit Lautschrift ersetzt (inkl. SSML, wenn aktiv); mit `{{LETTER_RAW}}` bleibt das eigentliche Zeichen verfügbar.
 
