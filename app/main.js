@@ -2491,19 +2491,26 @@ async function renderAlbum() {
   // Sterne anzeigen
   document.getElementById('starCount').textContent = stars;
 
+  const albumSection = document.getElementById('album');
+  if (albumSection) {
+    albumSection.setAttribute('data-album-theme', currentAlbumTheme);
+  }
+
   // Pack-Button aktivieren/deaktivieren
   const btnOpenPack = document.getElementById('btnOpenPack');
   btnOpenPack.disabled = stars < STARS_PER_PACK;
 
   // Themen-Tabs rendern
   const albumTabs = document.getElementById('albumTabs');
+  albumTabs.className = 'album-tabs';
   albumTabs.innerHTML = '';
   for (const [key, theme] of Object.entries(STICKER_CATALOG)) {
     const btn = document.createElement('button');
-    btn.className = 'btn secondary album-tab-btn';
+    btn.className = 'album-tab-btn';
     btn.dataset.albumTheme = key;
+    btn.dataset.theme = key;
     if (key === currentAlbumTheme) btn.classList.add('active');
-    btn.textContent = `${theme.emoji} ${theme.name}`;
+    btn.innerHTML = `<span class="album-tab-emoji">${theme.emoji}</span><span>${theme.name}</span>`;
     btn.onclick = () => { currentAlbumTheme = key; renderAlbum(); };
     albumTabs.appendChild(btn);
   }
@@ -2511,8 +2518,9 @@ async function renderAlbum() {
   // Sticker-Grid rendern
   const theme = STICKER_CATALOG[currentAlbumTheme];
   const albumContent = document.getElementById('albumContent');
-  albumContent.innerHTML = `<div class="album-grid"></div>`;
+  albumContent.innerHTML = `<div class="album-sheet"><div class="album-grid"></div><p class="muted album-progress"></p></div>`;
   const grid = albumContent.querySelector('.album-grid');
+  const progressEl = albumContent.querySelector('.album-progress');
 
   for (const sticker of theme.stickers) {
     const slot = document.createElement('div');
@@ -2533,11 +2541,9 @@ async function renderAlbum() {
 
   // Fortschritt anzeigen
   const themeCollected = theme.stickers.filter(s => collectedSet.has(s.id)).length;
-  const progress = document.createElement('p');
-  progress.className = 'muted';
-  progress.style.marginTop = '16px';
-  progress.textContent = `${themeCollected} von ${theme.stickers.length} Stickern gesammelt`;
-  albumContent.appendChild(progress);
+  if (progressEl) {
+    progressEl.textContent = `${themeCollected} von ${theme.stickers.length} Stickern gesammelt`;
+  }
 }
 
 async function animateStickerUnlock(stickers) {

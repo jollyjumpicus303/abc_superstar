@@ -1198,19 +1198,67 @@ footer{max-width:1100px; margin:-52px auto 32px; padding:0 16px; color:#6b7280; 
 .set-card.active .set-btn:hover{background:rgba(255,255,255,.4)}
 
 /* Sticker-Album */
+#album{
+  --album-sheet-bg: linear-gradient(145deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  --album-sheet-border: rgba(255,255,255,0.08);
+  --album-slot-bg: linear-gradient(145deg,#faf5ff,#f3e8ff);
+  --album-slot-shadow: rgba(124,58,237,.1);
+  --album-slot-locked: rgba(255,255,255,0.04);
+  --album-tab-bg: rgba(255,255,255,0.06);
+  --album-tab-active: rgba(255,255,255,0.12);
+  --album-tab-text: #e9e9ff;
+  --album-tab-ink: #ffffff;
+}
+.album-tabs{
+  display:flex; gap:10px; margin-bottom:10px; overflow-x:auto; padding:6px 2px 10px;
+}
+.album-tab-btn{
+  border:0;
+  padding:10px 14px;
+  border-radius:12px 12px 10px 10px;
+  background:var(--tab-bg, var(--album-tab-bg));
+  color:var(--tab-text, var(--album-tab-text));
+  font-weight:800;
+  font-size:15px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  cursor:pointer;
+  box-shadow:0 8px 16px rgba(0,0,0,.18);
+  transition:all .2s ease;
+  border-bottom:3px solid transparent;
+  position:relative;
+}
+.album-tab-btn.active{
+  background:var(--tab-active, var(--album-tab-active));
+  color:var(--tab-ink, var(--album-tab-ink));
+  transform:translateY(-2px);
+  box-shadow:0 12px 24px rgba(0,0,0,.25);
+  border-bottom-color:var(--tab-ink, var(--album-tab-ink));
+}
+.album-tab-btn .album-tab-emoji{font-size:18px;}
+.album-sheet{
+  background:var(--album-sheet-bg);
+  border:1px solid var(--album-sheet-border);
+  border-radius:18px;
+  padding:14px;
+  box-shadow:0 12px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter:blur(2px);
+}
+.album-progress{margin:16px 0 4px; font-weight:700;}
 .sticker-slot{
-  aspect-ratio:1; border-radius:12px; background:linear-gradient(145deg,#faf5ff,#f3e8ff);
+  aspect-ratio:1; border-radius:12px; background:var(--album-slot-bg);
   display:grid; place-items:center; font-size:48px; cursor:pointer;
-  box-shadow:0 2px 8px rgba(124,58,237,.1), inset 0 0 0 2px #e9d5ff;
+  box-shadow:0 2px 8px var(--album-slot-shadow), inset 0 0 0 2px rgba(255,255,255,.08);
   transition:all .2s; position:relative;
 }
-.sticker-slot:hover{transform:translateY(-2px); box-shadow:0 4px 12px rgba(124,58,237,.2)}
-.sticker-slot.locked{opacity:.3; background:#f0f0f0; cursor:default}
+.sticker-slot:hover{transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,.24)}
+.sticker-slot.locked{opacity:.35; background:var(--album-slot-locked); cursor:default}
 .sticker-slot.locked:hover{transform:none}
 .sticker-slot.collected{animation:popIn .3s ease}
 .sticker-slot.reveal{
   animation:stickerReveal .7s ease;
-  box-shadow:0 0 0 0 rgba(255,255,255,0.8), 0 12px 24px rgba(124,58,237,.3);
+  box-shadow:0 0 0 0 rgba(255,255,255,0.8), 0 12px 24px rgba(124,58,237,.25);
 }
 @keyframes stickerReveal{
   0%{transform:scale(.1) rotate(-10deg); opacity:0;}
@@ -1219,8 +1267,6 @@ footer{max-width:1100px; margin:-52px auto 32px; padding:0 16px; color:#6b7280; 
 }
 @keyframes popIn{ 0%{transform:scale(.8)} 50%{transform:scale(1.1)} 100%{transform:scale(1)} }
 .album-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(80px,1fr)); gap:12px}
-.album-tab-btn{transition:transform .18s ease, box-shadow .18s ease;}
-.album-tab-btn.active{box-shadow:0 10px 20px rgba(124,58,237,.25);}
 .album-tab-highlight{
   animation:albumTabPulse .9s ease;
 }
@@ -1228,6 +1274,75 @@ footer{max-width:1100px; margin:-52px auto 32px; padding:0 16px; color:#6b7280; 
   0%{transform:scale(1);}
   40%{transform:scale(1.08); box-shadow:0 12px 26px rgba(250,204,21,.35);}
   100%{transform:scale(1);}
+}
+
+#album[data-album-theme='animals']{
+  --album-sheet-bg: radial-gradient(circle at 30% 20%, rgba(255,233,186,0.12), transparent 40%), linear-gradient(160deg, rgba(254,244,222,0.35), rgba(245,214,168,0.24));
+  --album-sheet-border: rgba(244,197,131,0.35);
+  --album-slot-bg: linear-gradient(145deg,#fff6e3,#f8e4c6);
+  --album-slot-shadow: rgba(174,117,44,.18);
+  --album-tab-bg: linear-gradient(180deg,#f8e9cf,#f3d9b2);
+  --album-tab-active: linear-gradient(180deg,#f6d7a3,#ecbe7b);
+  --album-tab-text: #8a4b0f;
+  --album-tab-ink: #4a2b0a;
+  --album-slot-locked: rgba(255,232,201,0.2);
+}
+#album[data-album-theme='space']{
+  --album-sheet-bg: radial-gradient(circle at 75% 20%, rgba(121,199,255,0.18), transparent 40%), linear-gradient(180deg, rgba(228,240,255,0.4), rgba(205,223,255,0.28));
+  --album-sheet-border: rgba(122,167,255,0.35);
+  --album-slot-bg: linear-gradient(145deg,#eaf2ff,#dce8ff);
+  --album-slot-shadow: rgba(40,95,186,.16);
+  --album-tab-bg: linear-gradient(180deg,#e6eeff,#d8e5ff);
+  --album-tab-active: linear-gradient(180deg,#c9d9ff,#afc8ff);
+  --album-tab-text: #1f3b82;
+  --album-tab-ink: #0f265d;
+  --album-slot-locked: rgba(210,226,255,0.25);
+}
+#album[data-album-theme='ocean']{
+  --album-sheet-bg: radial-gradient(circle at 25% 25%, rgba(133,224,255,0.12), transparent 45%), linear-gradient(170deg, rgba(215,241,255,0.42), rgba(186,229,248,0.28));
+  --album-sheet-border: rgba(102,196,230,0.35);
+  --album-slot-bg: linear-gradient(145deg,#e6f8ff,#d5eff8);
+  --album-slot-shadow: rgba(0,145,178,.16);
+  --album-tab-bg: linear-gradient(180deg,#def5ff,#c8eefa);
+  --album-tab-active: linear-gradient(180deg,#b4e4f5,#8bd4ea);
+  --album-tab-text: #0d5c6d;
+  --album-tab-ink: #0c3e4a;
+  --album-slot-locked: rgba(193,234,248,0.24);
+}
+#album[data-album-theme='fairy']{
+  --album-sheet-bg: radial-gradient(circle at 70% 20%, rgba(255,171,245,0.16), transparent 40%), linear-gradient(160deg, rgba(253,232,250,0.45), rgba(243,203,237,0.26));
+  --album-sheet-border: rgba(240,156,222,0.35);
+  --album-slot-bg: linear-gradient(145deg,#fee8fb,#f9d9f5);
+  --album-slot-shadow: rgba(172,74,151,.18);
+  --album-tab-bg: linear-gradient(180deg,#fce7fb,#f7d2f6);
+  --album-tab-active: linear-gradient(180deg,#f6c2ef,#eb9dde);
+  --album-tab-text: #8f2d77;
+  --album-tab-ink: #5c1d52;
+  --album-slot-locked: rgba(246,204,236,0.26);
+}
+.album-tab-btn[data-theme='animals']{
+  --tab-bg: linear-gradient(180deg,#f8e9cf,#f3d9b2);
+  --tab-active: linear-gradient(180deg,#f6d7a3,#ecbe7b);
+  --tab-text: #8a4b0f;
+  --tab-ink: #4a2b0a;
+}
+.album-tab-btn[data-theme='space']{
+  --tab-bg: linear-gradient(180deg,#e6eeff,#d8e5ff);
+  --tab-active: linear-gradient(180deg,#c9d9ff,#afc8ff);
+  --tab-text: #1f3b82;
+  --tab-ink: #0f265d;
+}
+.album-tab-btn[data-theme='ocean']{
+  --tab-bg: linear-gradient(180deg,#def5ff,#c8eefa);
+  --tab-active: linear-gradient(180deg,#b4e4f5,#8bd4ea);
+  --tab-text: #0d5c6d;
+  --tab-ink: #0c3e4a;
+}
+.album-tab-btn[data-theme='fairy']{
+  --tab-bg: linear-gradient(180deg,#fce7fb,#f7d2f6);
+  --tab-active: linear-gradient(180deg,#f6c2ef,#eb9dde);
+  --tab-text: #8f2d77;
+  --tab-ink: #5c1d52;
 }
 
 /* Install Button */
