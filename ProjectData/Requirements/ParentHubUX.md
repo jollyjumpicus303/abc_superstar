@@ -8,6 +8,7 @@ Ziel: Aufnahmen und Set-Verwaltung in einem kombinierten Bereich anbieten, damit
 - **Profil-Statistik-Switch:** Profilkarten in der Übersicht sind klickbar und setzen das aktive Profil; Statistiken aktualisieren ohne Umweg über das Profilmodal.
 - **Responsives Verhalten:** Desktop: Sidebar-Navigation, Inhalte gestapelt. Mobile: Inhalte untereinander, kein zusätzlicher Tab-Wechsel nötig.
 - **Zugänglichkeit:** Fokusfähige Profilkarten, Hover/Focus-Feedback, klarer aktiver Status (Badge „aktiv“).
+- **Profilbasierte Statistiken:** Versuche werden pro aktivem Profil in IndexedDB abgelegt (Attempt-Log, max. ca. 400 Einträge). Die Übersicht wertet nur dieses Log des aktiven Profils aus, zeigt bei <10 Einträgen einen Hinweis und trennt klar zwischen Herausforderungen und „Super-Buchstaben“ (mind. 5 richtige, keine Fehler).
 
 ## Akzeptanzkriterien
 - Nur noch zwei Haupt-Tabs im Eltern-Hub: „Übersicht“ und „Aufnahmen & Sets“.

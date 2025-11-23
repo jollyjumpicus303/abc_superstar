@@ -37,6 +37,6 @@ Bei Änderungen an UI/UX oder Spiel‑Logik nach Möglichkeit zuerst in den ents
 ## 4. Stil & Vorsicht
 
 - Änderungen klein und fokussiert halten; keine großflächigen Refactorings ohne Notwendigkeit.
-- Tests, sofern vorhanden, nach Logik‑Änderungen bevorzugt ausführen oder zumindest gedanklich durchgehen.
-- Keine sensiblen Daten (API‑Keys etc.) in Dateien einchecken; `.env` und ähnliche Dateien ignorieren.
-
+- Tests, sofern vorhanden, nach Logik-Änderungen bevorzugt ausführen oder zumindest gedanklich durchgehen.
+- Keine sensiblen Daten (API-Keys etc.) in Dateien einchecken; `.env` und ähnliche Dateien ignorieren.
+- Bei funktionalen/UI-Änderungen: CHANGELOG.md aktualisieren und relevante Doku unter `ProjectData/SPECS` und `ProjectData/Requirements` kurz nachziehen (1–2 Sätze reichen), solange nichts dagegen spricht.
