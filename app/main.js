@@ -591,7 +591,7 @@ function renderParentProfileList() {
       if (profile.id !== getActiveProfileId()) {
         await switchProfile(profile.id, { keepModalOpen: true });
       }
-      renderStatistics();
+      await renderStatistics();
     });
     if (actions) {
       actions.addEventListener('click', async (event) => {
@@ -636,7 +636,7 @@ async function hydrateProfileState() {
   updateProfileBadge();
   renderProfileCards();
   renderParentProfileList();
-  renderStatistics();
+  await renderStatistics();
 }
 
 async function switchProfile(profileId, { keepModalOpen = false } = {}) {
@@ -985,7 +985,7 @@ function hideMainSections() {
   document.getElementById('album').classList.add('hidden');
 }
 
-function switchParentHubTab(tabName = 'overview') {
+async function switchParentHubTab(tabName = 'overview') {
   if (!elParentHub) return;
   const tab = ['overview', 'recordingsSets'].includes(tabName) ? tabName : 'overview';
   hubTabButtons.forEach(btn => {
@@ -1002,7 +1002,7 @@ function switchParentHubTab(tabName = 'overview') {
     updateUIForRecordingState();
   }
   if (tab === 'overview') {
-    renderStatistics();
+    await renderStatistics();
   }
   updateParentHubStatus();
 }
@@ -1097,10 +1097,9 @@ tabsContainer.addEventListener('click', (e) => {
   switchToTab(tabName);
 });
 
-function renderStatistics() {
+async function renderStatistics() {
   if (!elParentStats) return;
-  const progress = getProgress();
-  const log = progress.attemptLog || [];
+  const log = await getProfileAttemptLog();
 
   if (log.length < 10) { // Require a minimum amount of data
     elParentStats.innerHTML = `
@@ -2217,6 +2216,30 @@ async function incrementLetterStat(letter) {
   stats[letter] = (stats[letter] || 0) + 1;
   await idbSet(makeProfileScopedKey('letterStats'), stats);
   return stats[letter];
+}
+
+// Profilbasierter Attempt-Log für Eltern-Statistiken
+async function getProfileAttemptLog(profileId) {
+  const log = await idbGet(makeProfileScopedKey('attemptLog', profileId));
+  return Array.isArray(log) ? log : [];
+}
+
+async function appendProfileAttempt({ target, chosen, correct }) {
+  const normalisedTarget = normaliseLetterInput(target);
+  if (!normalisedTarget) return;
+  const entry = {
+    target: normalisedTarget,
+    chosen: normaliseLetterInput(chosen),
+    correct: !!correct,
+    timestamp: Date.now(),
+  };
+  const log = await getProfileAttemptLog();
+  log.push(entry);
+  const MAX_LOG = 400;
+  if (log.length > MAX_LOG) {
+    log.splice(0, log.length - MAX_LOG);
+  }
+  await idbSet(makeProfileScopedKey('attemptLog'), log);
 }
 
 function shouldReduceMotion() {
@@ -5376,6 +5399,7 @@ async function onLetterClick(e) {
     }
     // Buchstaben-Statistik für Belohnungssystem tracken
     await incrementLetterStat(targetLetter);
+    await appendProfileAttempt({ target: targetLetter, chosen: letter, correct: true });
   } else {
     game.bad++;
     game.progress = markWrong(targetLetter, letter);
@@ -5383,6 +5407,7 @@ async function onLetterClick(e) {
       game.pendingMotivations = new Set();
     }
     game.pendingMotivations.add(targetLetter);
+    await appendProfileAttempt({ target: targetLetter, chosen: letter, correct: false });
   }
 
   game.errorHistory = [wasErrorPick, ...(game.errorHistory || [])].slice(0, 3);
