@@ -399,7 +399,8 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
 }
 .lernweg-foot{margin-top:10px; font-size:13px;}
 .recorder{
-  position:sticky; top:86px; align-self:start; background:linear-gradient(145deg,#faf5ff,var(--surface));
+  position:relative;
+  background:linear-gradient(145deg,#faf5ff,var(--surface));
   border-radius:var(--radius); box-shadow:var(--shadow); padding:18px;
   border:2px solid #f3e8ff;
 }
