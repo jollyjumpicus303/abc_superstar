@@ -44,6 +44,7 @@ const SOUND_FILES = {
   unlock: { url: 'app/sfx/unlock.mp3', volume: 0.75 },
   reward: { url: 'app/sfx/reward.mp3', volume: 0.85 },
   trophy: { url: 'app/sfx/trophy.mp3', volume: 0.9 },
+  duplicate: { url: 'app/sfx/boink.mp3', volume: 0.65 },
   starReveal: { url: 'app/sfx/star.mp3', volume: 0.9 },
   medalIntro: { url: 'ProjectData/SPECS/AdditionalInput/PlayBeforeMedalSound.mp3', volume: 0.85 },
   giftPop: { url: 'ProjectData/SPECS/AdditionalInput/pop.mp3', volume: 0.8 },
@@ -155,6 +156,7 @@ function playStartSound() { playSfx('start'); }
 function playUnlockSound() { playSfx('unlock'); }
 function playRewardSound() { playSfx('reward'); }
 function playTrophySound() { playSfx('trophy'); }
+function playDuplicateSound() { playSfx('duplicate'); }
 function playStarRevealSound() { playSfx('starReveal'); }
 function playGiftPopSound() { playSfx('giftPop'); }
 function playStickerPopSound() { playSfx('stickerPop'); }
@@ -2555,28 +2557,38 @@ async function animateStickerUnlock(stickers) {
     switchToTab('album');
     await sleep(150);
   }
+
+  // Einmalig rendern und dann Slots animieren
+  await renderAlbum();
+
+  // Tabs kurz highlighten
+  const tabBtn = document.querySelector(`[data-album-theme="${currentAlbumTheme}"]`);
+  if (tabBtn) {
+    tabBtn.classList.add('album-tab-highlight');
+    setTimeout(() => tabBtn.classList.remove('album-tab-highlight'), 900);
+  }
+
+  // Slots im bestehenden Grid animieren
   for (const sticker of stickers) {
     const themeKey = getStickerThemeKey(sticker.id);
     if (themeKey) {
       currentAlbumTheme = themeKey;
+      // Theme umschalten, aber Tabs/Sheet behalten
+      albumSection?.setAttribute('data-album-theme', currentAlbumTheme);
     }
-    await renderAlbum();
-    const tabBtn = document.querySelector(`[data-album-theme="${currentAlbumTheme}"]`);
-    if (tabBtn) {
-      tabBtn.classList.add('album-tab-highlight');
-      setTimeout(() => tabBtn.classList.remove('album-tab-highlight'), 1200);
-    }
-    await sleep(60);
+    await new Promise(resolve => requestAnimationFrame(resolve));
     const slot = document.querySelector(`[data-sticker-id=\"${sticker.id}\"]`);
     if (slot) {
       slot.classList.add('reveal');
       playStickerPopSound();
-      await sleep(1100);
+      await sleep(700);
       slot.classList.remove('reveal');
     } else {
-      await sleep(300);
+      await sleep(200);
     }
   }
+
+  // finaler Stand
   await renderAlbum();
 }
 
@@ -2593,17 +2605,24 @@ document.getElementById('btnOpenPack').addEventListener('click', async () => {
   // 3 zufällige Sticker ziehen
   const pack = openStickerPack();
   const newStickers = [];
+  let hasDuplicates = false;
 
   for (const stickerId of pack) {
     const isNew = await addSticker(stickerId);
     if (isNew) {
       newStickers.push(getStickerById(stickerId));
+    } else {
+      hasDuplicates = true;
     }
   }
 
   if (newStickers.length > 0) {
     await animateStickerUnlock(newStickers);
+    if (hasDuplicates) {
+      playDuplicateSound();
+    }
   } else {
+    playDuplicateSound();
     alert('🎁 Pack geöffnet!\n\nLeider nur Duplikate. Versuche es erneut!');
     await renderAlbum();
   }
