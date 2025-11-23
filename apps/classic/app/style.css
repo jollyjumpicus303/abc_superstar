@@ -1200,7 +1200,11 @@ html[data-theme='nebula'] .tabs button{
   box-shadow:0 10px 24px rgba(0,0,0,.35), inset 0 0 0 1px rgba(255,255,255,.06);
 }
 html[data-theme='nebula'] .tabs button:hover{background:#3b3a66;}
-html[data-theme='nebula'] .tabs button.active{box-shadow:0 12px 26px rgba(51,92,158,.45);}
+html[data-theme='nebula'] .tabs button.active{
+  background:var(--brand-2);
+  color:#0f1022;
+  box-shadow:0 12px 26px rgba(107,184,255,.45);
+}
 html[data-theme='nebula'] .card,
 html[data-theme='nebula'] .mode-section,
 html[data-theme='nebula'] .mode-controls,
@@ -1237,7 +1241,11 @@ html[data-theme='nebula'] .chip{
   box-shadow:0 10px 24px rgba(0,0,0,.4);
 }
 html[data-theme='nebula'] .chip:hover{box-shadow:0 14px 28px rgba(0,0,0,.5);}
-html[data-theme='nebula'] .chip.active{background:#335c9e; color:#fff;}
+html[data-theme='nebula'] .chip.active{
+  background:var(--brand-2);
+  color:#0f1022;
+  box-shadow:0 12px 20px rgba(107,184,255,.4);
+}
 html[data-theme='nebula'] .mode-card{
   background:linear-gradient(160deg,#1f1f3d,#16162b);
   box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.05);
@@ -1422,7 +1430,11 @@ html[data-theme='nebula'] .parent-profile-actions button{
   background:rgba(99,102,241,.22);
   color:#e0e7ff;
 }
-html[data-theme='nebula'] .album-tab-btn.active{box-shadow:0 12px 28px rgba(0,0,0,.6);}
+html[data-theme='nebula'] .album-tab-btn.active{
+  background:var(--brand-2);
+  color:#0f1022;
+  box-shadow:0 12px 28px rgba(107,184,255,.5);
+}
 html[data-theme='nebula'] .album-tab-highlight{
   animation:albumTabPulseDark .9s ease;
 }
