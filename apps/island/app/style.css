@@ -767,6 +767,132 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
   box-shadow:none;
 }
 .profile-card.add span{font-size:32px;}
+.profile-editor{
+  position:fixed;
+  inset:0;
+  background:rgba(15,23,42,.45);
+  backdrop-filter:blur(6px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  z-index:90;
+}
+.profile-editor.hidden{display:none;}
+.profile-editor__card{
+  width:min(540px, 96vw);
+  background:#fff;
+  border-radius:24px;
+  box-shadow:0 25px 60px rgba(15,23,42,.25);
+  padding:22px 22px 20px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.profile-editor__head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+}
+.profile-editor__eyebrow{
+  margin:0;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  font-size:11px;
+  color:var(--muted);
+}
+.profile-editor__title{margin:2px 0 4px;}
+.profile-editor__label{
+  font-weight:800;
+  font-size:13px;
+  margin:6px 0 4px;
+  display:block;
+  color:#1f2937;
+}
+.text-input{
+  width:100%;
+  border:2px solid rgba(79,70,229,.16);
+  border-radius:14px;
+  padding:12px 14px;
+  font-size:15px;
+  font-weight:600;
+  color:var(--ink);
+  background:#fff;
+  transition:border-color .15s ease, box-shadow .15s ease;
+}
+.text-input:focus{
+  outline:none;
+  border-color:#7c3aed;
+  box-shadow:0 0 0 3px rgba(124,58,237,.16);
+}
+.emoji-row{
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+.emoji-preview{
+  width:74px;
+  height:74px;
+  border-radius:18px;
+  display:grid;
+  place-items:center;
+  font-size:42px;
+  background:linear-gradient(160deg,#eef2ff,#e0f2fe);
+  box-shadow:0 10px 22px rgba(99,102,241,.18);
+  border:1px solid rgba(99,102,241,.2);
+}
+.emoji-controls{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+.emoji-reroll-btn{
+  border:1px solid var(--surface-border-strong);
+  background:linear-gradient(135deg,#f8fbff,#eef2ff);
+  color:var(--brand);
+  padding:0 14px;
+  min-width:48px;
+  height:46px;
+  border-radius:12px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  font-weight:800;
+  cursor:pointer;
+  box-shadow:0 10px 22px rgba(99,102,241,.14);
+  transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+}
+.emoji-reroll-btn:hover{
+  transform:translateY(-1px);
+  box-shadow:0 12px 26px rgba(99,102,241,.2);
+  border-color:rgba(124,58,237,.3);
+}
+.emoji-reroll-btn:active{
+  transform:translateY(0);
+  box-shadow:0 8px 18px rgba(99,102,241,.16);
+}
+.emoji-reroll-btn:focus-visible{
+  outline:3px solid rgba(124,58,237,.22);
+  outline-offset:2px;
+}
+.emoji-reroll-btn svg{
+  width:18px;
+  height:18px;
+}
+.emoji-input-row{display:flex; gap:8px; align-items:center;}
+.emoji-hints{display:flex; flex-wrap:wrap; gap:6px; align-items:center;}
+.hint{font-size:12px;}
+.hint.warning{color:#d97706; font-size:12px;}
+.profile-editor__actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  margin-top:6px;
+}
+.badge-random{background:rgba(234,179,8,.16); color:#b45309;}
 .profile-manager{
   margin-top:32px;
   padding:20px;
@@ -794,10 +920,11 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
   box-shadow:0 4px 12px rgba(15,23,42,.08);
 }
 .parent-profile-info{display:flex; align-items:center; gap:12px;}
+.parent-profile-tags{display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;}
 .parent-profile-info strong{font-size:16px;}
 .parent-profile-info .badge{
   display:inline-block;
-  margin-left:8px;
+  margin-left:0;
   font-size:11px;
   text-transform:uppercase;
   color:#10b981;
@@ -1462,6 +1589,30 @@ html[data-theme='nebula'] .profile-card.add{
   color:#e0e7ff;
 }
 html[data-theme='nebula'] .profile-card__badge{color:#93c5fd;}
+html[data-theme='nebula'] .profile-editor{background:rgba(2,6,23,.8);}
+html[data-theme='nebula'] .profile-editor__card{
+  background:#111827;
+  color:#e0e7ff;
+  box-shadow:0 28px 60px rgba(0,0,0,.8);
+}
+html[data-theme='nebula'] .text-input{
+  background:#0b1020;
+  border-color:rgba(147,197,253,.25);
+  color:#e0e7ff;
+}
+html[data-theme='nebula'] .text-input:focus{
+  border-color:#6bb8ff;
+  box-shadow:0 0 0 3px rgba(107,184,255,.18);
+}
+html[data-theme='nebula'] .emoji-preview{
+  background:linear-gradient(160deg,#1c1f38,#0f172a);
+  border-color:rgba(255,255,255,.08);
+  box-shadow:0 16px 30px rgba(0,0,0,.6);
+}
+html[data-theme='nebula'] .badge-random{
+  background:rgba(234,179,8,.2);
+  color:#fcd34d;
+}
 html[data-theme='nebula'] .profile-manager{
   background:linear-gradient(145deg,#1b1a33,#272750);
   box-shadow:0 22px 50px rgba(0,0,0,.65);

@@ -82,6 +82,47 @@
     </div>
   </div>
 
+  <div id="profileEditor" class="profile-editor hidden" role="dialog" aria-modal="true" aria-label="Profil bearbeiten oder anlegen">
+    <div class="profile-editor__card">
+      <div class="profile-editor__head">
+        <div>
+          <p class="profile-editor__eyebrow" id="profileEditorContext">Profil</p>
+          <h3 class="profile-editor__title" id="profileEditorTitle">Neues Profil</h3>
+          <p class="muted small">Avatar wird automatisch zufällig vergeben – „Neu würfeln“ mischt erneut, Eingabe überschreibt.</p>
+        </div>
+        <button type="button" id="closeProfileEditor" class="profile-modal__close" aria-label="Schließen">✖️</button>
+      </div>
+      <label class="profile-editor__label" for="profileEditorName">Name</label>
+      <input id="profileEditorName" class="text-input" type="text" name="profileName" placeholder="Name eingeben" maxlength="20">
+      <label class="profile-editor__label" for="profileEditorEmojiInput">Avatar</label>
+      <div class="emoji-row">
+        <div class="emoji-preview" id="profileEditorEmojiPreview" aria-hidden="true">🐣</div>
+        <div class="emoji-controls">
+          <div class="emoji-input-row">
+            <input id="profileEditorEmojiInput" class="text-input" type="text" inputmode="text" maxlength="4" placeholder="Emoji eingeben">
+            <button type="button" id="profileEditorRandomBtn" class="emoji-reroll-btn" title="Zufälliges Emoji" aria-label="Zufälliges Emoji">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M4 4v6h6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M20 20v-6h-6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M20 10a8 8 0 0 0-14.83-3.47L4 10" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                <path d="M4 14a8 8 0 0 0 14.83 3.47L20 14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="emoji-hints">
+            <span id="profileEditorBadge" class="badge badge-random hidden">zufällig</span>
+            <small class="muted">Zufällig gewählt – Neu würfeln für neues, manuelle Eingabe erlaubt Duplikate.</small>
+            <small id="profileEditorFreeHint" class="hint warning hidden"></small>
+          </div>
+        </div>
+      </div>
+      <div class="profile-editor__actions">
+        <button type="button" id="profileEditorCancel" class="btn secondary">Abbrechen</button>
+        <button type="button" id="profileEditorSave" class="btn">Speichern</button>
+      </div>
+    </div>
+  </div>
+
   <main>
     <nav class="tabs">
       <button class="active" data-tab="spiel">Spiel</button>

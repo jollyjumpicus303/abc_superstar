@@ -3,7 +3,29 @@ const ACTIVE_PROFILE_KEY = 'abc_abenteuer_active_profile';
 const PROFILE_MIGRATION_PREFIX = 'abc_abenteuer_profile_migrated_';
 
 const DEFAULT_COLORS = ['#7c3aed', '#fb7185', '#f97316', '#0ea5e9', '#22c55e'];
-const DEFAULT_EMOJIS = ['🐣', '🦄', '🦕', '🌈', '🚀', '🐙'];
+
+const RAW_EMOJI_POOL = [
+  "😀", "😃", "😄", "😁", "😆", "😅", "😂", "🤣", "☺️", "😊", "😇", "🙂", "🙃", "😉", "😌",
+  "😍", "😘", "😗", "😙", "😚", "😋", "😜", "😝", "😛", "🤑", "🤗", "🤓", "😎", "🤡", "🤠",
+  "😏", "🤩", "🤫", "🤪", "🤭", "🥳", "💩", "👻", "🤖", "🎃",
+  "😺", "😸", "😹", "😻", "😼", "😽", "🐶", "🐱", "🐭", "🐹", "🐰", "🦊", "🙉", "🙊", "🐒",
+  "🐥", "🦆", "🦢", "🦅", "🦚", "🦉", "🦇", "🐺", "🐗", "🐴", "🦄", "🐝", "🐛", "🦋", "🐌",
+  "🐚", "🐞", "🐢", "🐍", "🪱", "🦎", "🦂", "🦀", "🦑", "🐙", "🦐", "🦞", "🐠", "🐟", "🐡",
+  "🐬", "🦈", "🐳", "🐋", "🐊", "🐆", "🐅", "🦛", "🐃", "🐂", "🐄", "🦌", "🐪", "🐫", "🦘",
+  "🐘", "🦏", "🦍", "🐎", "🦙", "🐖", "🐐", "🐏", "🐑", "🐕", "🐩", "🐈", "🐓", "🦃", "🕊️",
+  "🪶", "🐇", "🐁", "🐀", "🐿️", "🐉", "🐲", "🦖", "🦕", "🦒", "🦔", "🦓", "🦗", "🦧", "🦮",
+  "🦥", "🦦", "🦡", "🦨", "🦩", "🐔", "🦜", "🐧", "🐦", "🐤", "🐣"
+];
+
+export function normalizeEmoji(input){
+  if(!input || typeof input !== 'string') return '';
+  const cleaned = input.replace(/\ufe0f/g, '').trim();
+  if(!cleaned) return '';
+  const first = Array.from(cleaned)[0];
+  return first || '';
+}
+
+const EMOJI_POOL = Array.from(new Set(RAW_EMOJI_POOL.map(normalizeEmoji).filter(Boolean)));
 
 function safeStorage(){
   try{
@@ -40,6 +62,47 @@ function randomFrom(list){
   if(!Array.isArray(list) || list.length === 0) return null;
   const idx = Math.floor(Math.random() * list.length);
   return list[idx];
+}
+
+function getUsedEmojiSet(){
+  return new Set(
+    readProfiles()
+      .map(p => normalizeEmoji(p.emoji))
+      .filter(Boolean)
+  );
+}
+
+function pickRandomEmoji({ avoid = [], allowReuseWhenExhausted = true } = {}){
+  const avoidSet = new Set((avoid || []).map(normalizeEmoji).filter(Boolean));
+  const used = getUsedEmojiSet();
+  const primaryPool = EMOJI_POOL.filter(e => !used.has(e) && !avoidSet.has(e));
+  if(primaryPool.length){
+    return randomFrom(primaryPool);
+  }
+  if(allowReuseWhenExhausted){
+    const reusePool = EMOJI_POOL.filter(e => !avoidSet.has(e));
+    if(reusePool.length){
+      return randomFrom(reusePool);
+    }
+    if(EMOJI_POOL.length){
+      return randomFrom(EMOJI_POOL);
+    }
+  }
+  return null;
+}
+
+export function getEmojiPool(){
+  return EMOJI_POOL.slice();
+}
+
+export function getFreeEmojiCount({ avoid = [] } = {}){
+  const avoidSet = new Set((avoid || []).map(normalizeEmoji).filter(Boolean));
+  const used = getUsedEmojiSet();
+  return EMOJI_POOL.filter(e => !used.has(e) && !avoidSet.has(e)).length;
+}
+
+export function getRandomEmojiSuggestion(options = {}){
+  return pickRandomEmoji(options);
 }
 
 function makeId(){
@@ -84,14 +147,19 @@ export function getActiveProfile(){
   return profiles.find(p => p.id === id) || profiles[0] || null;
 }
 
-function createProfileRecord({ name, emoji, color }){
+function createProfileRecord({ name, emoji, color, seenEmojis = [], emojiSource, avatarId } = {}){
+  const normalizedEmoji = normalizeEmoji(emoji);
+  const suggestedEmoji = normalizedEmoji || pickRandomEmoji({ avoid: seenEmojis, allowReuseWhenExhausted: true }) || '🐣';
+  const source = emojiSource || (emoji ? 'manual' : 'random');
   return {
     id: makeId(),
     name: (name || 'SPIELER').trim().toUpperCase().slice(0, 12),
-    emoji: emoji || randomFrom(DEFAULT_EMOJIS) || '🐣',
+    emoji: suggestedEmoji,
+    emojiSource: source,
     color: color || randomFrom(DEFAULT_COLORS) || '#7c3aed',
     created: Date.now(),
     lastSetId: null,
+    avatarId: avatarId || null,
   };
 }
 
@@ -110,10 +178,18 @@ export function updateProfile(profileId, updates){
   const next = profiles.map(profile => {
     if(profile.id !== profileId) return profile;
     changed = true;
+    const nextName = updates && updates.name ? updates.name.trim().toUpperCase().slice(0, 12) : profile.name;
+    const hasEmojiUpdate = updates && Object.prototype.hasOwnProperty.call(updates, 'emoji');
+    const nextEmoji = hasEmojiUpdate ? (normalizeEmoji(updates.emoji) || profile.emoji) : profile.emoji;
+    const nextEmojiSource = hasEmojiUpdate
+      ? (updates && updates.emojiSource ? updates.emojiSource : (profile.emojiSource || 'manual'))
+      : (updates && updates.emojiSource ? updates.emojiSource : profile.emojiSource);
     return {
       ...profile,
       ...updates,
-      name: updates && updates.name ? updates.name.trim().toUpperCase().slice(0, 12) : profile.name,
+      name: nextName,
+      emoji: nextEmoji,
+      emojiSource: nextEmojiSource,
     };
   });
   if(changed){
@@ -148,8 +224,6 @@ export function ensureProfileSetup(){
   }
   const profile = createProfileRecord({
     name: 'SPIELER 1',
-    emoji: '🐣',
-    color: '#7c3aed',
   });
   writeProfiles([profile]);
   setActiveProfile(profile.id);
