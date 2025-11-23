@@ -1478,6 +1478,34 @@ html[data-theme='nebula'] .parent-profile-actions button{
   background:rgba(99,102,241,.22);
   color:#e0e7ff;
 }
+html[data-theme='nebula'] .parent-hub__nav{position:sticky; top:92px;}
+html[data-theme='nebula'] .hub-tab-btn{
+  background:#1f1f3d;
+  color:#e0e7ff;
+  box-shadow:0 12px 26px rgba(0,0,0,.55);
+}
+html[data-theme='nebula'] .hub-tab-btn.active{
+  background:linear-gradient(135deg,#335c9e,#6bb8ff);
+  color:#0f172a;
+  box-shadow:0 20px 38px rgba(0,0,0,.65);
+}
+html[data-theme='nebula'] .hub-block{
+  background:#1b1b36;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:0 20px 44px rgba(0,0,0,.6);
+  color:#e0e7ff;
+}
+html[data-theme='nebula'] .hub-status__item{
+  background:#2a2950;
+  color:#e0e7ff;
+  box-shadow:0 12px 26px rgba(0,0,0,.55);
+}
+html[data-theme='nebula'] .hub-status__item--cta{
+  background:linear-gradient(135deg,#2a2950,#335c9e);
+}
+html[data-theme='nebula'] .hub-status__item strong{color:#f8fafc;}
+html[data-theme='nebula'] .hub-block .muted{color:#c8d8ff;}
+html[data-theme='nebula'] .parent-hub__head .eyebrow{color:#94a3b8;}
 html[data-theme='nebula'] .album-tab-btn.active{box-shadow:0 12px 28px rgba(0,0,0,.6);}
 html[data-theme='nebula'] .album-tab-highlight{
   animation:albumTabPulseDark .9s ease;
