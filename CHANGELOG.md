@@ -8,3 +8,4 @@ All notable changes to this project are documented here. Releases are tagged via
 - [theme][nebula] Eltern-Hub in Nachthimmel-Theme visuell angeglichen (Tabs/Status-Kacheln/Blöcke).
 - [profiles] Emoji-Avatar Randomizer mit 🔄-Button (globale Duplikate vermeiden, manueller Override möglich, Editor im Eltern-Hub).
 - [profiles][ui] Avatar-Reroll-Button auf SVG-Icon mit größerer Hit-Area und passender Gradient-Styling umgestellt (Classic & Island), Text-Hint auf „Neu würfeln“ angepasst.
+- [parent-hub] Aufnahmen- und Set-Verwaltung zu „Aufnahmen & Sets“ zusammengeführt; Set-Wechsel direkt beim Aufnehmen möglich; Profilkarten schalten Statistiken per Klick um.

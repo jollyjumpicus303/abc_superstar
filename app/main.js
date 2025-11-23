@@ -17,6 +17,9 @@ import {
   getProfileLastSet,
   markProfileMigrated,
   wasProfileMigrated,
+  normalizeEmoji,
+  getRandomEmojiSuggestion,
+  getFreeEmojiCount,
 } from './profileStore.js';
 import { pickNext } from './letterPool.js';
 import { advanceAfterRun } from './progression.js';
@@ -288,7 +291,27 @@ const elProfileList = document.getElementById('profileList');
 const elParentProfileList = document.getElementById('parentProfileList');
 const elParentStats = document.getElementById('parentStats');
 const elBtnAddProfileParent = document.getElementById('btnAddProfileParent');
+const elProfileEditor = document.getElementById('profileEditor');
+const elProfileEditorTitle = document.getElementById('profileEditorTitle');
+const elProfileEditorContext = document.getElementById('profileEditorContext');
+const elProfileEditorName = document.getElementById('profileEditorName');
+const elProfileEditorEmojiInput = document.getElementById('profileEditorEmojiInput');
+const elProfileEditorEmojiPreview = document.getElementById('profileEditorEmojiPreview');
+const elProfileEditorRandomBtn = document.getElementById('profileEditorRandomBtn');
+const elProfileEditorSave = document.getElementById('profileEditorSave');
+const elProfileEditorCancel = document.getElementById('profileEditorCancel');
+const elCloseProfileEditor = document.getElementById('closeProfileEditor');
+const elProfileEditorBadge = document.getElementById('profileEditorBadge');
+const elProfileEditorFreeHint = document.getElementById('profileEditorFreeHint');
 let isProfileModalOpen = false;
+let isProfileEditorOpen = false;
+const profileEditorState = {
+  mode: 'create',
+  profileId: null,
+  seen: new Set(),
+  selectedEmoji: '',
+  selectedSource: 'random',
+};
 const medalControls = MEDAL_TYPES.reduce((acc, type) => {
   acc[type] = {
     recordBtn: document.getElementById(`btnMedalRecord-${type}`),
@@ -374,19 +397,129 @@ function closeProfileModal() {
   }
 }
 
-async function handleCreateProfile() {
-  const nameInput = prompt('Name des Kindes:', '');
-  if (!nameInput) {
-    return;
+function resetProfileEditorState() {
+  profileEditorState.mode = 'create';
+  profileEditorState.profileId = null;
+  profileEditorState.seen = new Set();
+  profileEditorState.selectedEmoji = '';
+  profileEditorState.selectedSource = 'random';
+  if (elProfileEditorName) elProfileEditorName.value = '';
+  if (elProfileEditorEmojiInput) elProfileEditorEmojiInput.value = '';
+}
+
+function setProfileEditorEmoji(emoji, { source = 'manual', addToSeen = false } = {}) {
+  const normalized = normalizeEmoji(emoji);
+  if (addToSeen && normalized) {
+    profileEditorState.seen.add(normalized);
   }
-  const trimmedName = nameInput.trim();
-  if (!trimmedName) {
-    return;
+  profileEditorState.selectedEmoji = normalized;
+  profileEditorState.selectedSource = source;
+  if (elProfileEditorEmojiPreview) {
+    elProfileEditorEmojiPreview.textContent = normalized || '❔';
   }
-  const emojiInput = prompt('Lieblings-Emoji (optional):', '🐣');
-  const profile = createProfile({ name: trimmedName, emoji: emojiInput && emojiInput.trim() ? emojiInput.trim() : undefined });
-  await migrateProfileScopedData(profile);
-  await switchProfile(profile.id);
+  if (elProfileEditorEmojiInput) {
+    elProfileEditorEmojiInput.value = normalized || '';
+  }
+  if (elProfileEditorBadge) {
+    elProfileEditorBadge.classList.toggle('hidden', source !== 'random');
+  }
+}
+
+function updateProfileEditorFreeHint() {
+  if (!elProfileEditorFreeHint) return;
+  const remaining = getFreeEmojiCount({ avoid: Array.from(profileEditorState.seen) });
+  if (remaining <= 4) {
+    elProfileEditorFreeHint.textContent = remaining > 0
+      ? `Nur noch ${remaining} Emojis frei`
+      : 'Alle Emojis vergeben – wir vergeben jetzt erneut';
+    elProfileEditorFreeHint.classList.remove('hidden');
+  } else {
+    elProfileEditorFreeHint.classList.add('hidden');
+  }
+}
+
+function openProfileEditor({ mode = 'create', profileId = null } = {}) {
+  if (!elProfileEditor) return;
+  resetProfileEditorState();
+  profileEditorState.mode = mode;
+  profileEditorState.profileId = profileId || null;
+  isProfileEditorOpen = true;
+
+  if (elProfileEditorTitle) {
+    elProfileEditorTitle.textContent = mode === 'edit' ? 'Profil bearbeiten' : 'Neues Profil';
+  }
+  if (elProfileEditorContext) {
+    elProfileEditorContext.textContent = mode === 'edit' ? 'Elternbereich' : 'Profil auswählen';
+  }
+
+  const profiles = getProfiles();
+  if (mode === 'edit' && profileId) {
+    const current = profiles.find(p => p.id === profileId);
+    if (current) {
+      if (elProfileEditorName) elProfileEditorName.value = current.name || '';
+      if (current.emoji) {
+        profileEditorState.seen.add(normalizeEmoji(current.emoji));
+      }
+      setProfileEditorEmoji(current.emoji || '', { source: current.emojiSource || 'manual', addToSeen: !!current.emoji });
+    }
+  } else if (elProfileEditorName) {
+    elProfileEditorName.value = '';
+  }
+
+  if (!profileEditorState.selectedEmoji) {
+    const suggestion = getRandomEmojiSuggestion({ avoid: Array.from(profileEditorState.seen) });
+    setProfileEditorEmoji(suggestion || '🐣', { source: 'random', addToSeen: true });
+  }
+
+  updateProfileEditorFreeHint();
+  elProfileEditor.classList.remove('hidden');
+}
+
+function closeProfileEditor() {
+  if (!elProfileEditor) return;
+  isProfileEditorOpen = false;
+  elProfileEditor.classList.add('hidden');
+}
+
+function handleCreateProfile() {
+  openProfileEditor({ mode: 'create' });
+}
+
+function handleEditorEmojiInput(event) {
+  setProfileEditorEmoji(event.target.value || '', { source: 'manual' });
+  updateProfileEditorFreeHint();
+}
+
+function handleEditorRandomize() {
+  const avoid = Array.from(profileEditorState.seen);
+  if (profileEditorState.selectedEmoji) {
+    avoid.push(profileEditorState.selectedEmoji);
+  }
+  const suggestion = getRandomEmojiSuggestion({ avoid, allowReuseWhenExhausted: true }) || profileEditorState.selectedEmoji || '🐣';
+  setProfileEditorEmoji(suggestion, { source: 'random', addToSeen: true });
+  updateProfileEditorFreeHint();
+}
+
+async function saveProfileFromEditor() {
+  const nameValue = elProfileEditorName ? elProfileEditorName.value.trim() : '';
+  let emojiValue = elProfileEditorEmojiInput ? normalizeEmoji(elProfileEditorEmojiInput.value) : '';
+  let source = profileEditorState.selectedSource || 'manual';
+
+  if (!emojiValue) {
+    const fallback = getRandomEmojiSuggestion({ avoid: Array.from(profileEditorState.seen) });
+    emojiValue = fallback || '🐣';
+    source = 'random';
+  }
+
+  if (profileEditorState.mode === 'edit' && profileEditorState.profileId) {
+    updateProfile(profileEditorState.profileId, { name: nameValue || undefined, emoji: emojiValue, emojiSource: source });
+    await hydrateProfileState();
+  } else {
+    const profile = createProfile({ name: nameValue || undefined, emoji: emojiValue, emojiSource: source });
+    await migrateProfileScopedData(profile);
+    await switchProfile(profile.id);
+  }
+  closeProfileEditor();
 }
 
 function renderParentProfileList() {
@@ -403,12 +536,18 @@ function renderParentProfileList() {
   profiles.forEach(profile => {
     const row = document.createElement('div');
     row.className = 'parent-profile-row';
+    if (profile.id === activeId) {
+      row.classList.add('is-active');
+    }
     row.innerHTML = `
       <div class="parent-profile-info">
         <span class="parent-profile-emoji">${profile.emoji || '🐣'}</span>
         <div>
           <strong>${profile.name}</strong>
-          ${profile.id === activeId ? '<span class="badge">aktiv</span>' : ''}
+          <div class="parent-profile-tags">
+            ${profile.id === activeId ? '<span class="badge">aktiv</span>' : ''}
+            ${profile.emojiSource === 'random' ? '<span class="badge badge-random">zufällig</span>' : ''}
+          </div>
         </div>
       </div>
       <div class="parent-profile-actions">
@@ -417,28 +556,22 @@ function renderParentProfileList() {
       </div>
     `;
     const actions = row.querySelector('.parent-profile-actions');
+    row.addEventListener('click', async (event) => {
+      if (event.target.closest('.parent-profile-actions')) {
+        return;
+      }
+      if (profile.id !== getActiveProfileId()) {
+        await switchProfile(profile.id, { keepModalOpen: true });
+      }
+      renderStatistics();
+    });
     if (actions) {
       actions.addEventListener('click', async (event) => {
         const btn = event.target.closest('button');
         if (!btn) return;
         const id = btn.dataset.id;
         if (btn.dataset.action === 'edit') {
-          const current = getProfiles().find(p => p.id === id);
-          if (!current) return;
-          let newName = prompt('Neuer Name:', current.name);
-          if (newName) {
-            newName = newName.trim();
-          }
-          const safeName = newName && newName.length ? newName : current.name;
-          let newEmoji = prompt('Emoji (optional):', current.emoji || '🐣');
-          if (newEmoji) {
-            newEmoji = newEmoji.trim();
-          }
-          const safeEmoji = newEmoji && newEmoji.length ? newEmoji : current.emoji;
-          updateProfile(id, { name: safeName, emoji: safeEmoji });
-          updateProfileBadge();
-          renderProfileCards();
-          renderParentProfileList();
+          openProfileEditor({ mode: 'edit', profileId: id });
         } else if (btn.dataset.action === 'delete') {
           if (!confirm('Dieses Profil wirklich löschen?')) return;
           const prevActive = getActiveProfileId();
@@ -515,12 +648,40 @@ function setupProfileEvents() {
     });
   }
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && isProfileModalOpen) {
-      closeProfileModal();
+    if (event.key === 'Escape') {
+      if (isProfileEditorOpen) {
+        closeProfileEditor();
+        return;
+      }
+      if (isProfileModalOpen) {
+        closeProfileModal();
+      }
     }
   });
   if (elBtnAddProfileParent) {
     elBtnAddProfileParent.addEventListener('click', () => handleCreateProfile());
+  }
+  if (elProfileEditorRandomBtn) {
+    elProfileEditorRandomBtn.addEventListener('click', handleEditorRandomize);
+  }
+  if (elProfileEditorEmojiInput) {
+    elProfileEditorEmojiInput.addEventListener('input', handleEditorEmojiInput);
+  }
+  if (elProfileEditorSave) {
+    elProfileEditorSave.addEventListener('click', saveProfileFromEditor);
+  }
+  if (elProfileEditorCancel) {
+    elProfileEditorCancel.addEventListener('click', closeProfileEditor);
+  }
+  if (elCloseProfileEditor) {
+    elCloseProfileEditor.addEventListener('click', closeProfileEditor);
+  }
+  if (elProfileEditor) {
+    elProfileEditor.addEventListener('click', (event) => {
+      if (event.target === elProfileEditor) {
+        closeProfileEditor();
+      }
+    });
   }
 }
 
@@ -741,8 +902,7 @@ const elParentHub = document.getElementById('parentHub');
 const elParentHubClose = document.getElementById('parentHubClose');
 const hubTabButtons = elParentHub ? Array.from(elParentHub.querySelectorAll('[data-hub-tab]')) : [];
 const elHubOverview = document.getElementById('hubOverview');
-const elHubRecordings = document.getElementById('hubRecordings');
-const elHubSets = document.getElementById('hubSets');
+const elHubRecordingsSets = document.getElementById('hubRecordingsSets');
 const elHubStatusProfile = document.getElementById('hubStatusProfile');
 const elHubStatusRecordings = document.getElementById('hubStatusRecordings');
 const elHubStatusExport = document.getElementById('hubStatusExport');
@@ -799,22 +959,19 @@ function hideMainSections() {
 
 function switchParentHubTab(tabName = 'overview') {
   if (!elParentHub) return;
-  const tab = ['overview', 'recordings', 'sets'].includes(tabName) ? tabName : 'overview';
+  const tab = ['overview', 'recordingsSets'].includes(tabName) ? tabName : 'overview';
   hubTabButtons.forEach(btn => {
     const isActive = btn.dataset.hubTab === tab;
     btn.classList.toggle('active', isActive);
     btn.setAttribute('aria-pressed', String(isActive));
   });
   if (elHubOverview) elHubOverview.classList.toggle('hidden', tab !== 'overview');
-  if (elHubRecordings) elHubRecordings.classList.toggle('hidden', tab !== 'recordings');
-  if (elHubSets) elHubSets.classList.toggle('hidden', tab !== 'sets');
+  if (elHubRecordingsSets) elHubRecordingsSets.classList.toggle('hidden', tab !== 'recordingsSets');
 
-  if (tab === 'recordings') {
+  if (tab === 'recordingsSets') {
+    renderSetsList();
     updateStatusGridFromDB();
     updateUIForRecordingState();
-  }
-  if (tab === 'sets') {
-    renderSetsList();
   }
   if (tab === 'overview') {
     renderStatistics();
@@ -1081,7 +1238,7 @@ if (elInGameDifficulty) {
 const elModeWarningAction = document.getElementById('modeWarningAction');
 if (elModeWarningAction) {
   elModeWarningAction.addEventListener('click', () => {
-    requestParentHub('recordings');
+    requestParentHub('recordingsSets');
     setTimeout(() => elStatusGrid?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
   });
 }
@@ -1340,7 +1497,7 @@ async function syncActiveGameWithSet(newSetId) {
 
 // "Jetzt Aufnahmen machen" Button
 document.getElementById('goToSettings').addEventListener('click', () => {
-  requestParentHub('recordings');
+  requestParentHub('recordingsSets');
 });
 
 // Settings-Zahnrad Button (oben rechts)

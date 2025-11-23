@@ -270,8 +270,7 @@
       <div class="parent-hub__body">
         <nav class="parent-hub__nav" aria-label="Elternbereiche">
           <button class="hub-tab-btn active" data-hub-tab="overview">📊 Übersicht</button>
-          <button class="hub-tab-btn" data-hub-tab="recordings">🎤 Aufnahmen</button>
-          <button class="hub-tab-btn" data-hub-tab="sets">⚙️ Sets & Extras</button>
+          <button class="hub-tab-btn" data-hub-tab="recordingsSets">🎤 Aufnahmen & Sets</button>
         </nav>
         <div class="parent-hub__content">
           <div id="hubOverview" class="hub-section">
@@ -309,7 +308,22 @@
             </div>
           </div>
 
-          <div id="hubRecordings" class="hub-section hidden">
+          <div id="hubRecordingsSets" class="hub-section hidden">
+            <div class="hub-block" style="margin-bottom:24px; padding-bottom:24px; border-bottom:2px solid #f3e8ff">
+              <p><b>Aufnahme-Sets verwalten</b></p>
+              <p class="muted">Erstelle verschiedene Aufnahme-Sets (z.B. "Mit Wörtern", "Nur Buchstaben", "Kinderstimme") und wechsle zwischen ihnen.</p>
+
+              <div id="setsList" style="display:flex; gap:10px; flex-wrap:wrap; margin:16px 0"></div>
+
+              <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center">
+                <button id="btnCreateSet" class="btn secondary">➕ Neues Set erstellen</button>
+                <div style="margin-left:auto; display:flex; gap:8px; align-items:center">
+                  <label style="font-weight:600; color:#6b7896">Standard-Set:</label>
+                  <select id="defaultSetSelector" class="btn secondary" style="min-width:200px; text-align:left; font-size:14px"></select>
+                </div>
+              </div>
+            </div>
+
             <div class="hub-block">
               <p><b>Einstellungen · Aufnahmen</b></p>
               <div id="progressBadge" class="progress-badge empty">0 von 26 Buchstaben aufgenommen</div>
@@ -362,23 +376,6 @@
               <div id="clipList" class="clip-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px"></div>
               <div class="muted">Tipp: Spreche klar und kurz (z. B. „B“ oder „B – wie Ball“).</div>
             </aside>
-          </div>
-
-          <div id="hubSets" class="hub-section hidden">
-            <div class="hub-block" style="margin-bottom:24px; padding-bottom:24px; border-bottom:2px solid #f3e8ff">
-              <p><b>Aufnahme-Sets verwalten</b></p>
-              <p class="muted">Erstelle verschiedene Aufnahme-Sets (z.B. "Mit Wörtern", "Nur Buchstaben", "Kinderstimme") und wechsle zwischen ihnen.</p>
-
-              <div id="setsList" style="display:flex; gap:10px; flex-wrap:wrap; margin:16px 0"></div>
-
-              <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center">
-                <button id="btnCreateSet" class="btn secondary">➕ Neues Set erstellen</button>
-                <div style="margin-left:auto; display:flex; gap:8px; align-items:center">
-                  <label style="font-weight:600; color:#6b7896">Standard-Set:</label>
-                  <select id="defaultSetSelector" class="btn secondary" style="min-width:200px; text-align:left; font-size:14px"></select>
-                </div>
-              </div>
-            </div>
 
             <section class="extras-card hub-block">
               <div class="extras-header">

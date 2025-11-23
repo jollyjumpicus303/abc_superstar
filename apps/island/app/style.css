@@ -918,6 +918,18 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
   align-items:center;
   gap:12px;
   box-shadow:0 4px 12px rgba(15,23,42,.08);
+  border:1px solid rgba(15,23,42,.06);
+  cursor:pointer;
+  transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+}
+.parent-profile-row:hover{
+  transform:translateY(-1px);
+  box-shadow:0 8px 18px rgba(15,23,42,.12);
+  border-color:var(--surface-border-strong);
+}
+.parent-profile-row.is-active{
+  border-color:var(--surface-border-strong);
+  box-shadow:0 8px 18px rgba(124,58,237,.16);
 }
 .parent-profile-info{display:flex; align-items:center; gap:12px;}
 .parent-profile-tags{display:flex; gap:6px; flex-wrap:wrap; margin-top:4px;}
