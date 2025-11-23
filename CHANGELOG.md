@@ -4,3 +4,4 @@ All notable changes to this project are documented here. Releases are tagged via
 
 ## [Unreleased]
 - [classic] Sonnig/Nachthimmel Farb-Tokens an Island-Palette angeglichen (Root-CSS-Tokens & Theme-Color).
+- [classic][island] Eltern-Hub eingeführt (Single Entry über Zahnrad, Parental-Gate mit 10s-Timeout, interne Tabs für Übersicht/Aufnahmen/Sets & Extras).

@@ -306,24 +306,13 @@ let installPromptEvent = null;
 
 const THEME_STORAGE_KEY = 'abc-abenteuer-theme';
 const THEME_OPTIONS = {
-  classic: { id: 'classic', label: 'Sonnig', emoji: '🌈', metaColor: '#5a6ff0' },
+  classic: { id: 'classic', label: 'Sonnig', emoji: '🌈', metaColor: '#49b6ff' },
   nebula: { id: 'nebula', label: 'Nachthimmel', emoji: '🌌', metaColor: '#0f1022' }
 };
 const DEFAULT_THEME = 'classic';
+const LAST_EXPORT_STORAGE_KEY = 'abc-last-export';
 let isThemeMenuOpen = false;
 let activeTheme = document.documentElement.getAttribute('data-theme') || DEFAULT_THEME;
-
-const AVATAR_CONFIG = {
-  fox: { id: 'fox', src: 'app/assets/ui/avatar_fox.png', label: 'Fuchs' },
-  turtle: { id: 'turtle', src: 'app/assets/ui/avatar_turtle.png', label: 'Schildkröte' },
-  lion: { id: 'lion', src: 'app/assets/ui/avatar_lion.png', label: 'Löwe' },
-  dino: { id: 'dino', src: 'app/assets/ui/avatar_dino.png', label: 'Dino' },
-};
-
-function getAvatarConfig(avatarId) {
-  if (!avatarId) return null;
-  return AVATAR_CONFIG[avatarId] || null;
-}
 
 initThemeSelector();
 registerServiceWorker();
@@ -334,17 +323,7 @@ function updateProfileBadge() {
   const profile = getActiveProfile();
   const emoji = profile?.emoji || '🐣';
   const name = profile?.name || 'SPIELER';
-  const avatar = getAvatarConfig(profile && profile.avatarId);
-  if (avatar) {
-    elProfileEmoji.textContent = '';
-    const img = document.createElement('img');
-    img.src = avatar.src;
-    img.alt = avatar.label || name;
-    img.className = 'profile-avatar-img';
-    elProfileEmoji.appendChild(img);
-  } else {
-    elProfileEmoji.textContent = emoji;
-  }
+  elProfileEmoji.textContent = emoji;
   elProfileName.textContent = name;
 }
 
@@ -354,16 +333,11 @@ function renderProfileCards() {
   const activeId = getActiveProfileId();
   elProfileList.innerHTML = '';
   profiles.forEach(profile => {
-    const avatar = getAvatarConfig(profile.avatarId);
-    const emoji = profile.emoji || '🐣';
-    const avatarMarkup = avatar
-      ? `<img src="${avatar.src}" alt="${avatar.label || profile.name}" class="profile-card__avatar-img">`
-      : emoji;
     const card = document.createElement('button');
     card.type = 'button';
     card.className = 'profile-card' + (profile.id === activeId ? ' active' : '');
     card.innerHTML = `
-      <span class="profile-card__emoji">${avatarMarkup}</span>
+      <span class="profile-card__emoji">${profile.emoji || '🐣'}</span>
       <span class="profile-card__name">${profile.name}</span>
       ${profile.id === activeId ? '<span class="profile-card__badge">Jetzt</span>' : ''}
     `;
@@ -409,29 +383,8 @@ async function handleCreateProfile() {
   if (!trimmedName) {
     return;
   }
-  const avatarInput = prompt('Lieblings-Emoji ODER eines der Wörter: Fuchs, Schildkröte, Löwe, Dino', '🐣');
-  let emojiValue;
-  let avatarId = null;
-  if (avatarInput && avatarInput.trim()) {
-    const raw = avatarInput.trim();
-    const lower = raw.toLowerCase();
-    if (lower === 'fuchs' || lower === 'fox') {
-      avatarId = 'fox';
-    } else if (lower === 'schildkröte' || lower === 'schildkroete' || lower === 'turtle') {
-      avatarId = 'turtle';
-    } else if (lower === 'löwe' || lower === 'loewe' || lower === 'lion') {
-      avatarId = 'lion';
-    } else if (lower === 'dino' || lower === 'dinosaurier') {
-      avatarId = 'dino';
-    } else {
-      emojiValue = raw;
-    }
-  }
-  const profile = createProfile({
-    name: trimmedName,
-    emoji: emojiValue,
-    avatarId,
-  });
+  const emojiInput = prompt('Lieblings-Emoji (optional):', '🐣');
+  const profile = createProfile({ name: trimmedName, emoji: emojiInput && emojiInput.trim() ? emojiInput.trim() : undefined });
   await migrateProfileScopedData(profile);
   await switchProfile(profile.id);
 }
@@ -450,14 +403,9 @@ function renderParentProfileList() {
   profiles.forEach(profile => {
     const row = document.createElement('div');
     row.className = 'parent-profile-row';
-    const avatar = getAvatarConfig(profile.avatarId);
-    const emoji = profile.emoji || '🐣';
-    const avatarMarkup = avatar
-      ? `<img src="${avatar.src}" alt="${avatar.label || profile.name}" class="parent-profile-avatar-img">`
-      : emoji;
     row.innerHTML = `
       <div class="parent-profile-info">
-        <span class="parent-profile-emoji">${avatarMarkup}</span>
+        <span class="parent-profile-emoji">${profile.emoji || '🐣'}</span>
         <div>
           <strong>${profile.name}</strong>
           ${profile.id === activeId ? '<span class="badge">aktiv</span>' : ''}
@@ -789,13 +737,29 @@ const elGateQuestion = document.getElementById('gateQuestion');
 const elGateAnswer = document.getElementById('gateAnswer');
 const elGateCancel = document.getElementById('gateCancel');
 const elGateSubmit = document.getElementById('gateSubmit');
+const elParentHub = document.getElementById('parentHub');
+const elParentHubClose = document.getElementById('parentHubClose');
+const hubTabButtons = elParentHub ? Array.from(elParentHub.querySelectorAll('[data-hub-tab]')) : [];
+const elHubOverview = document.getElementById('hubOverview');
+const elHubRecordings = document.getElementById('hubRecordings');
+const elHubSets = document.getElementById('hubSets');
+const elHubStatusProfile = document.getElementById('hubStatusProfile');
+const elHubStatusRecordings = document.getElementById('hubStatusRecordings');
+const elHubStatusExport = document.getElementById('hubStatusExport');
+const elHubStatusNext = document.getElementById('hubStatusNext');
 let gateNum1, gateNum2;
-let isParentalGatePassed = false; // Simple session flag
+let pendingGateAction = null;
+let isParentHubOpen = false;
+let parentGateGraceUntil = 0;
+let activeMainTab = 'spiel';
 
 // Tabs & Parental Gate
 const tabsContainer = document.querySelector('.tabs');
 
-function openParentalGate() {
+function openParentalGate(nextAction = pendingGateAction) {
+  if (typeof nextAction === 'function') {
+    pendingGateAction = nextAction;
+  }
   gateNum1 = Math.floor(Math.random() * 5) + 5;
   gateNum2 = Math.floor(Math.random() * 5) + 1;
   elGateQuestion.textContent = `Was ist ${gateNum1} + ${gateNum2}?`;
@@ -804,24 +768,113 @@ function openParentalGate() {
   elGateAnswer.focus();
 }
 
-function closeParentalGate() {
+function closeParentalGate(clearPending = true) {
   elParentalGate.classList.add('hidden');
+  if (clearPending) {
+    pendingGateAction = null;
+  }
 }
 
 elGateCancel.addEventListener('click', closeParentalGate);
 elGateSubmit.addEventListener('click', () => {
   const answer = parseInt(elGateAnswer.value, 10);
   if (answer === gateNum1 + gateNum2) {
-    isParentalGatePassed = true;
-    closeParentalGate();
-    switchToTab('eltern');
+    closeParentalGate(false);
+    const action = pendingGateAction;
+    pendingGateAction = null;
+    if (typeof action === 'function') {
+      action();
+    }
   } else {
     alert('Leider falsch. Bitte versuche es nochmal.');
     openParentalGate();
   }
 });
 
+function hideMainSections() {
+  document.getElementById('spiel').classList.add('hidden');
+  document.getElementById('ueben').classList.add('hidden');
+  document.getElementById('album').classList.add('hidden');
+}
+
+function switchParentHubTab(tabName = 'overview') {
+  if (!elParentHub) return;
+  const tab = ['overview', 'recordings', 'sets'].includes(tabName) ? tabName : 'overview';
+  hubTabButtons.forEach(btn => {
+    const isActive = btn.dataset.hubTab === tab;
+    btn.classList.toggle('active', isActive);
+    btn.setAttribute('aria-pressed', String(isActive));
+  });
+  if (elHubOverview) elHubOverview.classList.toggle('hidden', tab !== 'overview');
+  if (elHubRecordings) elHubRecordings.classList.toggle('hidden', tab !== 'recordings');
+  if (elHubSets) elHubSets.classList.toggle('hidden', tab !== 'sets');
+
+  if (tab === 'recordings') {
+    updateStatusGridFromDB();
+    updateUIForRecordingState();
+  }
+  if (tab === 'sets') {
+    renderSetsList();
+  }
+  if (tab === 'overview') {
+    renderStatistics();
+  }
+  updateParentHubStatus();
+}
+
+function openParentHub(targetTab = 'overview') {
+  if (!elParentHub) return;
+  isParentHubOpen = true;
+  tabsContainer?.classList.add('hidden');
+  hideMainSections();
+  elParentHub.classList.remove('hidden');
+  switchParentHubTab(targetTab);
+}
+
+function closeParentHub() {
+  if (!elParentHub || !isParentHubOpen) return;
+  isParentHubOpen = false;
+  parentGateGraceUntil = Date.now() + 10000;
+  elParentHub.classList.add('hidden');
+  tabsContainer?.classList.remove('hidden');
+  switchToTab(activeMainTab || 'spiel');
+}
+
+if (hubTabButtons.length) {
+  hubTabButtons.forEach(btn => {
+    btn.addEventListener('click', () => switchParentHubTab(btn.dataset.hubTab));
+  });
+}
+
+if (elParentHubClose) {
+  elParentHubClose.addEventListener('click', closeParentHub);
+}
+
+function shouldAskParentalGate() {
+  if (!elParentalGate) return false;
+  if (isParentHubOpen) return false;
+  return Date.now() > parentGateGraceUntil;
+}
+
+function requestParentHub(targetTab = 'overview') {
+  const openAction = () => openParentHub(targetTab);
+  if (!shouldAskParentalGate()) {
+    openAction();
+    return;
+  }
+  openParentalGate(openAction);
+}
+
 function switchToTab(tabName) {
+  if (!tabName) return;
+  activeMainTab = tabName;
+  if (elParentHub && isParentHubOpen) {
+    elParentHub.classList.add('hidden');
+    isParentHubOpen = false;
+  }
+  if (tabsContainer) {
+    tabsContainer.classList.remove('hidden');
+  }
   tabsContainer.querySelectorAll('button').forEach(b => {
     const isActive = b.dataset.tab === tabName;
     b.classList.toggle('active', isActive);
@@ -829,21 +882,9 @@ function switchToTab(tabName) {
   document.getElementById('spiel').classList.toggle('hidden', tabName !== 'spiel');
   document.getElementById('ueben').classList.toggle('hidden', tabName !== 'ueben');
   document.getElementById('album').classList.toggle('hidden', tabName !== 'album');
-  document.getElementById('einstellungen').classList.toggle('hidden', tabName !== 'einstellungen');
-  document.getElementById('eltern').classList.toggle('hidden', tabName !== 'eltern');
-
-  if (tabName === 'einstellungen') {
-    renderSetsList();
-    updateStatusGridFromDB();
-    updateUIForRecordingState();
-  }
 
   if (tabName === 'album') {
     renderAlbum();
-  }
-
-  if (tabName === 'eltern') {
-    renderStatistics();
   }
 
   if (tabName === 'ueben') {
@@ -856,16 +897,15 @@ tabsContainer.addEventListener('click', (e) => {
   if (!targetButton) return;
   const tabName = targetButton.dataset.tab;
 
+  if (isParentHubOpen) {
+    closeParentHub();
+  }
+
   if (tabName === 'spiel' && game) {
     const ended = confirmEndGame();
     if (ended) {
       switchToTab('spiel');
     }
-    return;
-  }
-
-  if (tabName === 'eltern' && !isParentalGatePassed) {
-    openParentalGate();
     return;
   }
 
@@ -1041,8 +1081,8 @@ if (elInGameDifficulty) {
 const elModeWarningAction = document.getElementById('modeWarningAction');
 if (elModeWarningAction) {
   elModeWarningAction.addEventListener('click', () => {
-    switchToTab('einstellungen');
-    elStatusGrid?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    requestParentHub('recordings');
+    setTimeout(() => elStatusGrid?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
   });
 }
 
@@ -1112,8 +1152,78 @@ async function updateUIForRecordingState() {
   elProgressBadge.textContent = `${recordedCount} von 26 Buchstaben aufgenommen`;
   elProgressBadge.classList.toggle('empty', recordedCount === 0);
 
+  updateParentHubStatus({ recordedCount, setId });
+
   // Buchstaben-Buttons im Preview-Modus aktualisieren
   await updateLetterButtons();
+}
+
+function getLastExportTimestamp() {
+  try {
+    const raw = localStorage.getItem(LAST_EXPORT_STORAGE_KEY);
+    const ts = raw ? parseInt(raw, 10) : 0;
+    return Number.isFinite(ts) && ts > 0 ? ts : null;
+  } catch (err) {
+    return null;
+  }
+}
+
+function setLastExportTimestamp(ts) {
+  try {
+    localStorage.setItem(LAST_EXPORT_STORAGE_KEY, String(ts));
+  } catch (err) {
+    /* ignore storage errors */
+  }
+}
+
+function formatDateTime(ts) {
+  if (!ts) return '–';
+  try {
+    return new Intl.DateTimeFormat('de-DE', {
+      day: '2-digit',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).format(new Date(ts));
+  } catch (err) {
+    return '–';
+  }
+}
+
+async function updateParentHubStatus(context = {}) {
+  if (!elParentHub) return;
+  try {
+    const profile = getActiveProfile();
+    if (elHubStatusProfile) {
+      const emoji = profile?.emoji || '👤';
+      const name = profile?.name || 'Profil';
+      elHubStatusProfile.textContent = `${emoji} ${name}`;
+    }
+
+    let recordedCount = typeof context.recordedCount === 'number' ? context.recordedCount : null;
+    let setId = context.setId;
+    if (!setId) {
+      setId = await getActiveSet();
+    }
+    if (recordedCount === null) {
+      recordedCount = await getSetRecordingCount(setId);
+    }
+
+    if (elHubStatusRecordings) {
+      elHubStatusRecordings.textContent = `${recordedCount}/26`;
+    }
+
+    const lastExport = getLastExportTimestamp();
+    if (elHubStatusExport) {
+      elHubStatusExport.textContent = lastExport ? formatDateTime(lastExport) : '–';
+    }
+
+    if (elHubStatusNext) {
+      elHubStatusNext.textContent = recordedCount < 26 ? 'Aufnahmen vervollständigen' : 'Backup exportieren';
+    }
+  } catch (err) {
+    console.warn('[ParentHubStatus]', err);
+  }
 }
 
 const ACTIVE_SET_SELECTOR_IDS = ['setSelector', 'inGameSetSelector', 'practiceSetSelector'];
@@ -1230,12 +1340,12 @@ async function syncActiveGameWithSet(newSetId) {
 
 // "Jetzt Aufnahmen machen" Button
 document.getElementById('goToSettings').addEventListener('click', () => {
-  switchToTab('einstellungen');
+  requestParentHub('recordings');
 });
 
 // Settings-Zahnrad Button (oben rechts)
 document.getElementById('settingsBtn').addEventListener('click', () => {
-  switchToTab('einstellungen');
+  requestParentHub('overview');
 });
 
 // Set-Selector im Spiel-Tab für Kinder
@@ -3754,6 +3864,7 @@ async function updateStatusGridFromDB() {
   const hasSet = new Set(clips.map(clip => clip.letter));
   const byDifficulty = aggregateClipsByLetter(clips);
   renderStatusGrid(hasSet, byDifficulty);
+  updateParentHubStatus({ recordedCount: hasSet.size, setId });
 }
 
 function fmt(t) {
@@ -4096,6 +4207,8 @@ document.getElementById('exportBtn').addEventListener('click', async () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
+    setLastExportTimestamp(Date.now());
+    updateParentHubStatus();
     alert(`✅ ${sets.length} Set(s) mit insgesamt ${totalAudio} Aufnahmen exportiert!`);
   } catch (e) {
     console.error('Export fehlgeschlagen:', e);
@@ -4602,7 +4715,6 @@ async function startGame() {
     b.classList.toggle('active', active);
   });
   document.getElementById('spiel').classList.remove('hidden');
-  document.getElementById('einstellungen').classList.add('hidden');
 
   // Runde 1
   playStartSound();
@@ -5035,9 +5147,6 @@ const elWelcomeLernpfad = document.getElementById('welcomeLernpfad');
 const elWelcomeIndividuell = document.getElementById('welcomeIndividuell');
 const elWelcomeUeben = document.getElementById('welcomeUeben');
 const elWelcomeClose = document.getElementById('welcomeClose');
-const elWelcomeAlbum = document.getElementById('welcomeAlbum');
-const elWelcomeSettings = document.getElementById('welcomeSettings');
-const elWelcomeMic = document.getElementById('welcomeMic');
 
 function showWelcomeDialog() {
   if (elWelcomeDialog) {
@@ -5095,31 +5204,6 @@ if (elWelcomeClose) {
   });
 }
 
-if (elWelcomeAlbum) {
-  elWelcomeAlbum.addEventListener('click', () => {
-    closeWelcomeDialog();
-    switchToTab('album');
-  });
-}
-
-if (elWelcomeSettings) {
-  elWelcomeSettings.addEventListener('click', () => {
-    closeWelcomeDialog();
-    openParentalGate();
-  });
-}
-
-if (elWelcomeMic) {
-  elWelcomeMic.addEventListener('click', () => {
-    closeWelcomeDialog();
-    switchToTab('einstellungen');
-    if (elStatusGrid) {
-      elStatusGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  });
-}
-
 // Show welcome dialog on startup
 // Show welcome dialog on startup - REMOVED in favor of Profile -> Welcome flow
 // setTimeout(showWelcomeDialog, 500);
-

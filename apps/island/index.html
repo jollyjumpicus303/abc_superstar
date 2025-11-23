@@ -8,7 +8,7 @@
   <!-- PWA Manifest & Theme -->
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
-  <meta name="theme-color" content="#5a6ff0">
+  <meta name="theme-color" content="#49b6ff">
 
   <!-- JSZip für Export/Import -->
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
@@ -86,8 +86,7 @@
     <nav class="tabs">
       <button class="active" data-tab="spiel">Spiel</button>
       <button data-tab="ueben">Üben</button>
-      <button data-tab="album">Mein Album</button>
-      <button data-tab="eltern">Für Eltern</button>
+      <button data-tab="album">🎁 Mein Album</button>
     </nav>
 
     <!-- SPIEL -->
@@ -174,7 +173,7 @@
     <!-- MEIN ALBUM -->
     <section id="album" class="card hidden">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
-        <h2 style="margin:0">Mein Sticker-Album</h2>
+        <h2 style="margin:0">🎁 Mein Sticker-Album</h2>
         <div style="font-weight:800; font-size:18px">⭐ <span id="starCount">0</span> Sterne</div>
       </div>
 
@@ -192,7 +191,7 @@
       <div id="albumContent"></div>
 
       <div style="margin-top:20px; text-align:center">
-        <button id="btnOpenPack" class="btn" disabled>Pack öffnen (10 ⭐)</button>
+        <button id="btnOpenPack" class="btn" disabled>🎁 Pack öffnen (10 ⭐)</button>
       </div>
     </section>
 
@@ -216,178 +215,214 @@
       <div id="practiceLetters" class="grid-letters" aria-label="Buchstaben-Auswahl"></div>
     </section>
 
-    <!-- ELTERN-BEREICH -->
-    <section id="eltern" class="card hidden">
-      <div id="parentStats">
-        <h2>Statistiken & Fortschritt</h2>
-        <p class="muted">Hier sehen Sie bald eine Auswertung des Lernfortschritts.</p>
-      </div>
-      <div class="profile-manager">
-        <div class="profile-manager__head">
-          <div>
-            <h3>Kindprofile</h3>
-            <p class="muted">Jedes Kind sammelt seine eigenen Sterne & Fortschritte.</p>
-          </div>
-          <button type="button" id="btnAddProfileParent" class="btn secondary">➕ Neues Profil</button>
-        </div>
-        <div id="parentProfileList" class="profile-manager__list"></div>
-      </div>
-    </section>
-
-    <!-- EINSTELLUNGEN -->
-    <section id="einstellungen" class="card hidden">
-      <!-- Set-Verwaltung -->
-      <div style="margin-bottom:24px; padding-bottom:24px; border-bottom:2px solid #f3e8ff">
-        <p><b>Aufnahme-Sets verwalten</b></p>
-        <p class="muted">Erstelle verschiedene Aufnahme-Sets (z.B. "Mit Wörtern", "Nur Buchstaben", "Kinderstimme") und wechsle zwischen ihnen.</p>
-
-        <div id="setsList" style="display:flex; gap:10px; flex-wrap:wrap; margin:16px 0"></div>
-
-        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center">
-          <button id="btnCreateSet" class="btn secondary">➕ Neues Set erstellen</button>
-          <div style="margin-left:auto; display:flex; gap:8px; align-items:center">
-            <label style="font-weight:600; color:#6b7896">Standard-Set:</label>
-            <select id="defaultSetSelector" class="btn secondary" style="min-width:200px; text-align:left; font-size:14px"></select>
-          </div>
-        </div>
-      </div>
-
-      <div class="settings-wrap">
+    <section id="parentHub" class="card hidden parent-hub">
+      <div class="parent-hub__head">
         <div>
-          <p><b>Einstellungen · Aufnahmen</b></p>
-          <div id="progressBadge" class="progress-badge empty">0 von 26 Buchstaben aufgenommen</div>
-          <p class="muted">Tippe einen Buchstaben an, um ihn aufzunehmen. Deine Aufnahmen werden <b>nur lokal</b> gespeichert.</p>
-          <div id="statusGrid" class="status-grid" aria-label="Aufnahmestatus"></div>
-          <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center">
-            <button id="exportBtn" class="btn secondary">📦 Exportieren</button>
-            <button id="importBtn" class="btn secondary">📥 Importieren</button>
-            <input type="file" id="importFile" accept=".zip" style="display:none">
-            <button id="btnLoadDefaultSets" class="btn ghost" type="button">📦 Standard-Sets laden</button>
-            <button id="clearAll" class="btn danger">Alle löschen</button>
-            <span class="muted">Mikrofon benötigt https/localhost.</span>
-          </div>
+          <p class="eyebrow">Eltern-Hub</p>
+          <h2>Alles an einem Ort</h2>
+          <p class="muted small">Geschützt durch Eltern-Sperre</p>
         </div>
-
-        <aside class="recorder">
-          <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px">
-            <div id="recLetter" class="rec-letter">A</div>
-            <div>
-              <h3 style="margin:.2rem 0">Aufnahme: <span id="recTitle">A</span></h3>
-              <div class="muted">Status: <b id="recStatus">Keine Aufnahme</b></div>
-            </div>
-          </div>
-          <div id="recordDifficultyGroup" class="chip-group" style="margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap">
-            <button type="button" class="chip active" data-record-difficulty="LEICHT">Leicht</button>
-            <button type="button" class="chip" data-record-difficulty="MITTEL">Mittel</button>
-            <button type="button" class="chip" data-record-difficulty="SCHWER">Schwer</button>
-            <button type="button" class="chip" data-record-difficulty="AFFIG">Affig</button>
-          </div>
-          <div class="controls record-controls" style="margin:10px 0">
-            <div class="record-mode-row">
-              <button id="btnRecord" class="btn">🎙️ Aufnehmen</button>
-              <button id="btnLetterImport" class="btn secondary" type="button">📁 Buchstabe importieren</button>
-              <label class="series-toggle">
-                <input type="checkbox" id="seriesToggle">
-                <span class="series-toggle__control" aria-hidden="true"></span>
-                <span class="series-toggle__label">
-                  Serienaufnahme
-                  <small>springt automatisch weiter</small>
-                </span>
-              </label>
-            </div>
-            <div class="record-action-row">
-              <button id="btnPlay" class="btn secondary" disabled>▶️ Testen</button>
-              <button id="btnDelete" class="btn ghost" disabled>🗑️ Löschen</button>
-              <span class="timer" id="timer">00:00</span>
-            </div>
-          </div>
-          <input type="file" id="letterImportFile" accept="audio/*" style="display:none">
-          <div id="clipList" class="clip-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px"></div>
-          <div class="muted">Tipp: Spreche klar und kurz (z. B. „B“ oder „B – wie Ball“).</div>
-        </aside>
+        <div class="parent-hub__actions">
+          <button id="parentHubClose" class="btn ghost" type="button">← Zurück</button>
+        </div>
       </div>
+      <div class="parent-hub__body">
+        <nav class="parent-hub__nav" aria-label="Elternbereiche">
+          <button class="hub-tab-btn active" data-hub-tab="overview">📊 Übersicht</button>
+          <button class="hub-tab-btn" data-hub-tab="recordings">🎤 Aufnahmen</button>
+          <button class="hub-tab-btn" data-hub-tab="sets">⚙️ Sets & Extras</button>
+        </nav>
+        <div class="parent-hub__content">
+          <div id="hubOverview" class="hub-section">
+            <div class="hub-status">
+              <div class="hub-status__item">
+                <p class="muted">Aktives Profil</p>
+                <strong id="hubStatusProfile">–</strong>
+              </div>
+              <div class="hub-status__item">
+                <p class="muted">Aufnahmen</p>
+                <strong id="hubStatusRecordings">0/26</strong>
+              </div>
+              <div class="hub-status__item">
+                <p class="muted">Letzter Export</p>
+                <strong id="hubStatusExport">–</strong>
+              </div>
+              <div class="hub-status__item hub-status__item--cta">
+                <p class="muted">Empfehlung</p>
+                <strong id="hubStatusNext">Aufnahmen vervollständigen</strong>
+              </div>
+            </div>
+            <div id="parentStats" class="hub-block">
+              <h2>Statistiken & Fortschritt</h2>
+              <p class="muted">Hier sehen Sie bald eine Auswertung des Lernfortschritts.</p>
+            </div>
+            <div class="profile-manager hub-block">
+              <div class="profile-manager__head">
+                <div>
+                  <h3>Kindprofile</h3>
+                  <p class="muted">Jedes Kind sammelt seine eigenen Sterne & Fortschritte.</p>
+                </div>
+                <button type="button" id="btnAddProfileParent" class="btn secondary">➕ Neues Profil</button>
+              </div>
+              <div id="parentProfileList" class="profile-manager__list"></div>
+            </div>
+          </div>
 
-      <section class="extras-card">
-        <div class="extras-header">
-          <div>
-            <h3>✨ Extra-Sounds</h3>
-            <p class="muted">Motivation für schwierige Buchstaben und Jubel für Medaillen – alles an einem Ort.</p>
+          <div id="hubRecordings" class="hub-section hidden">
+            <div class="hub-block">
+              <p><b>Einstellungen · Aufnahmen</b></p>
+              <div id="progressBadge" class="progress-badge empty">0 von 26 Buchstaben aufgenommen</div>
+              <p class="muted">Tippe einen Buchstaben an, um ihn aufzunehmen. Deine Aufnahmen werden <b>nur lokal</b> gespeichert.</p>
+              <div id="statusGrid" class="status-grid" aria-label="Aufnahmestatus"></div>
+              <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center">
+                <button id="exportBtn" class="btn secondary">📦 Exportieren</button>
+                <button id="importBtn" class="btn secondary">📥 Importieren</button>
+                <input type="file" id="importFile" accept=".zip" style="display:none">
+                <button id="btnLoadDefaultSets" class="btn ghost" type="button">📦 Standard-Sets laden</button>
+                <button id="clearAll" class="btn danger">Alle löschen</button>
+                <span class="muted">Mikrofon benötigt https/localhost.</span>
+              </div>
+            </div>
+
+            <aside class="recorder hub-block">
+              <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px">
+                <div id="recLetter" class="rec-letter">A</div>
+                <div>
+                  <h3 style="margin:.2rem 0">Aufnahme: <span id="recTitle">A</span></h3>
+                  <div class="muted">Status: <b id="recStatus">Keine Aufnahme</b></div>
+                </div>
+              </div>
+              <div id="recordDifficultyGroup" class="chip-group" style="margin-bottom:8px; display:flex; gap:8px; flex-wrap:wrap">
+                <button type="button" class="chip active" data-record-difficulty="LEICHT">Leicht</button>
+                <button type="button" class="chip" data-record-difficulty="MITTEL">Mittel</button>
+                <button type="button" class="chip" data-record-difficulty="SCHWER">Schwer</button>
+                <button type="button" class="chip" data-record-difficulty="AFFIG">Affig</button>
+              </div>
+              <div class="controls record-controls" style="margin:10px 0">
+                <div class="record-mode-row">
+                  <button id="btnRecord" class="btn">🎙️ Aufnehmen</button>
+                  <button id="btnLetterImport" class="btn secondary" type="button">📁 Buchstabe importieren</button>
+                  <label class="series-toggle">
+                    <input type="checkbox" id="seriesToggle">
+                    <span class="series-toggle__control" aria-hidden="true"></span>
+                    <span class="series-toggle__label">
+                      Serienaufnahme
+                      <small>springt automatisch weiter</small>
+                    </span>
+                  </label>
+                </div>
+                <div class="record-action-row">
+                  <button id="btnPlay" class="btn secondary" disabled>▶️ Testen</button>
+                  <button id="btnDelete" class="btn ghost" disabled>🗑️ Löschen</button>
+                  <span class="timer" id="timer">00:00</span>
+                </div>
+              </div>
+              <input type="file" id="letterImportFile" accept="audio/*" style="display:none">
+              <div id="clipList" class="clip-list" style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px"></div>
+              <div class="muted">Tipp: Spreche klar und kurz (z. B. „B“ oder „B – wie Ball“).</div>
+            </aside>
+          </div>
+
+          <div id="hubSets" class="hub-section hidden">
+            <div class="hub-block" style="margin-bottom:24px; padding-bottom:24px; border-bottom:2px solid #f3e8ff">
+              <p><b>Aufnahme-Sets verwalten</b></p>
+              <p class="muted">Erstelle verschiedene Aufnahme-Sets (z.B. "Mit Wörtern", "Nur Buchstaben", "Kinderstimme") und wechsle zwischen ihnen.</p>
+
+              <div id="setsList" style="display:flex; gap:10px; flex-wrap:wrap; margin:16px 0"></div>
+
+              <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; align-items:center">
+                <button id="btnCreateSet" class="btn secondary">➕ Neues Set erstellen</button>
+                <div style="margin-left:auto; display:flex; gap:8px; align-items:center">
+                  <label style="font-weight:600; color:#6b7896">Standard-Set:</label>
+                  <select id="defaultSetSelector" class="btn secondary" style="min-width:200px; text-align:left; font-size:14px"></select>
+                </div>
+              </div>
+            </div>
+
+            <section class="extras-card hub-block">
+              <div class="extras-header">
+                <div>
+                  <h3>✨ Extra-Sounds</h3>
+                  <p class="muted">Motivation für schwierige Buchstaben und Jubel für Medaillen – alles an einem Ort.</p>
+                </div>
+              </div>
+              <div class="extras-grid">
+                <div class="extra-block">
+                  <div class="extra-block-head">
+                    <h4>💪 Motivationssounds</h4>
+                    <span id="motivationStatus" class="muted">Keine Clips</span>
+                  </div>
+                  <p class="muted">Diese Clips hängen sich automatisch nach dem Buchstaben an, wenn er zuvor falsch war.</p>
+                  <div class="controls" style="margin:10px 0">
+                    <button id="btnMotivationRecord" class="btn secondary">🎙️ Aufnehmen</button>
+                    <button id="btnMotivationUpload" class="btn ghost" type="button">📁 Importieren</button>
+                    <span class="timer" id="motivationTimer">00:00</span>
+                  </div>
+                  <input type="file" id="motivationFile" accept="audio/*" multiple style="display:none">
+                  <div id="motivationList" class="clip-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+                </div>
+
+                <div class="extra-block">
+                  <div class="extra-block-head">
+                    <h4>🏅 Medaillen-Sounds</h4>
+                    <p class="muted" style="margin:4px 0 0;">Eigene Jubel für Gold, Silber und Bronze. Jeder Rang darf mehrere Clips haben.</p>
+                  </div>
+                  <div class="medal-grid">
+                    <div class="medal-sound" data-medal="gold">
+                      <div class="medal-info">
+                        <span class="medal-emoji">🥇</span>
+                        <div>
+                          <div class="medal-label">Gold</div>
+                          <div class="muted" id="medalStatus-gold">Standard-Sound aktiv</div>
+                        </div>
+                      </div>
+                      <div class="controls">
+                        <button id="btnMedalRecord-gold" class="btn secondary">🎙️ Aufnehmen</button>
+                        <button id="btnMedalUpload-gold" class="btn ghost" type="button">📁 Importieren</button>
+                        <span class="timer" id="medalTimer-gold">00:00</span>
+                      </div>
+                      <input type="file" id="medalFile-gold" accept="audio/*" multiple style="display:none">
+                      <div id="medalList-gold" class="clip-list medal-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+                    </div>
+                    <div class="medal-sound" data-medal="silver">
+                      <div class="medal-info">
+                        <span class="medal-emoji">🥈</span>
+                        <div>
+                          <div class="medal-label">Silber</div>
+                          <div class="muted" id="medalStatus-silver">Standard-Sound aktiv</div>
+                        </div>
+                      </div>
+                      <div class="controls">
+                        <button id="btnMedalRecord-silver" class="btn secondary">🎙️ Aufnehmen</button>
+                        <button id="btnMedalUpload-silver" class="btn ghost" type="button">📁 Importieren</button>
+                        <span class="timer" id="medalTimer-silver">00:00</span>
+                      </div>
+                      <input type="file" id="medalFile-silver" accept="audio/*" multiple style="display:none">
+                      <div id="medalList-silver" class="clip-list medal-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+                    </div>
+                    <div class="medal-sound" data-medal="bronze">
+                      <div class="medal-info">
+                        <span class="medal-emoji">🥉</span>
+                        <div>
+                          <div class="medal-label">Bronze</div>
+                          <div class="muted" id="medalStatus-bronze">Standard-Sound aktiv</div>
+                        </div>
+                      </div>
+                      <div class="controls">
+                        <button id="btnMedalRecord-bronze" class="btn secondary">🎙️ Aufnehmen</button>
+                        <button id="btnMedalUpload-bronze" class="btn ghost" type="button">📁 Importieren</button>
+                        <span class="timer" id="medalTimer-bronze">00:00</span>
+                      </div>
+                      <input type="file" id="medalFile-bronze" accept="audio/*" multiple style="display:none">
+                      <div id="medalList-bronze" class="clip-list medal-list" style="display:flex; flex-direction:column; gap:6px;"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
           </div>
         </div>
-        <div class="extras-grid">
-          <div class="extra-block">
-            <div class="extra-block-head">
-              <h4>💪 Motivationssounds</h4>
-              <span id="motivationStatus" class="muted">Keine Clips</span>
-            </div>
-            <p class="muted">Diese Clips hängen sich automatisch nach dem Buchstaben an, wenn er zuvor falsch war.</p>
-            <div class="controls" style="margin:10px 0">
-              <button id="btnMotivationRecord" class="btn secondary">🎙️ Aufnehmen</button>
-              <button id="btnMotivationUpload" class="btn ghost" type="button">📁 Importieren</button>
-              <span class="timer" id="motivationTimer">00:00</span>
-            </div>
-            <input type="file" id="motivationFile" accept="audio/*" multiple style="display:none">
-            <div id="motivationList" class="clip-list" style="display:flex; flex-direction:column; gap:6px;"></div>
-          </div>
-
-          <div class="extra-block">
-            <div class="extra-block-head">
-              <h4>🏅 Medaillen-Sounds</h4>
-              <p class="muted" style="margin:4px 0 0;">Eigene Jubel für Gold, Silber und Bronze. Jeder Rang darf mehrere Clips haben.</p>
-            </div>
-            <div class="medal-grid">
-              <div class="medal-sound" data-medal="gold">
-                <div class="medal-info">
-                  <span class="medal-emoji">🥇</span>
-                  <div>
-                    <div class="medal-label">Gold</div>
-                    <div class="muted" id="medalStatus-gold">Standard-Sound aktiv</div>
-                  </div>
-                </div>
-                <div class="controls">
-                  <button id="btnMedalRecord-gold" class="btn secondary">🎙️ Aufnehmen</button>
-                  <button id="btnMedalUpload-gold" class="btn ghost" type="button">📁 Importieren</button>
-                  <span class="timer" id="medalTimer-gold">00:00</span>
-                </div>
-                <input type="file" id="medalFile-gold" accept="audio/*" multiple style="display:none">
-                <div id="medalList-gold" class="clip-list medal-list" style="display:flex; flex-direction:column; gap:6px;"></div>
-              </div>
-              <div class="medal-sound" data-medal="silver">
-                <div class="medal-info">
-                  <span class="medal-emoji">🥈</span>
-                  <div>
-                    <div class="medal-label">Silber</div>
-                    <div class="muted" id="medalStatus-silver">Standard-Sound aktiv</div>
-                  </div>
-                </div>
-                <div class="controls">
-                  <button id="btnMedalRecord-silver" class="btn secondary">🎙️ Aufnehmen</button>
-                  <button id="btnMedalUpload-silver" class="btn ghost" type="button">📁 Importieren</button>
-                  <span class="timer" id="medalTimer-silver">00:00</span>
-                </div>
-                <input type="file" id="medalFile-silver" accept="audio/*" multiple style="display:none">
-                <div id="medalList-silver" class="clip-list medal-list" style="display:flex; flex-direction:column; gap:6px;"></div>
-              </div>
-              <div class="medal-sound" data-medal="bronze">
-                <div class="medal-info">
-                  <span class="medal-emoji">🥉</span>
-                  <div>
-                    <div class="medal-label">Bronze</div>
-                    <div class="muted" id="medalStatus-bronze">Standard-Sound aktiv</div>
-                  </div>
-                </div>
-                <div class="controls">
-                  <button id="btnMedalRecord-bronze" class="btn secondary">🎙️ Aufnehmen</button>
-                  <button id="btnMedalUpload-bronze" class="btn ghost" type="button">📁 Importieren</button>
-                  <span class="timer" id="medalTimer-bronze">00:00</span>
-                </div>
-                <input type="file" id="medalFile-bronze" accept="audio/*" multiple style="display:none">
-                <div id="medalList-bronze" class="clip-list medal-list" style="display:flex; flex-direction:column; gap:6px;"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      </div>
     </section>
   </main>
 
@@ -522,20 +557,23 @@
 
   <div id="welcomeDialog" class="modal hidden welcome-dialog" role="dialog" aria-modal="true" aria-labelledby="welcomeDialogTitle">
     <div class="dialog">
-      <div class="welcome-island">
-        <h3 id="welcomeDialogTitle" class="welcome-island-title">Wohin geht dein Abenteuer?</h3>
-        <p class="welcome-island-subtitle">Tippe auf PLAY oder eines der Symbole.</p>
-        <div class="welcome-planet" aria-hidden="false">
-          <button type="button" id="welcomeLernpfad" class="welcome-main-button" aria-label="Spiel starten"></button>
-          <button type="button" id="welcomeUeben" class="welcome-orbit-button welcome-orbit-button--book" aria-label="Buchstaben üben"></button>
-          <button type="button" id="welcomeAlbum" class="welcome-orbit-button welcome-orbit-button--gift" aria-label="Sticker-Album öffnen"></button>
-          <button type="button" id="welcomeSettings" class="welcome-orbit-button welcome-orbit-button--settings" aria-label="Elternbereich & Einstellungen"></button>
-          <button type="button" id="welcomeMic" class="welcome-orbit-button welcome-orbit-button--mic" aria-label="Aufnahmen machen"></button>
-        </div>
-        <div class="welcome-island-actions">
-          <button type="button" id="welcomeIndividuell" class="welcome-individual-link">Individuelles Spiel wählen</button>
-          <button id="welcomeClose" class="btn secondary welcome-skip-btn" type="button">Nur umsehen</button>
-        </div>
+      <h3 id="welcomeDialogTitle">Hallo! Was möchtest du tun?</h3>
+      <div class="welcome-options">
+        <button type="button" id="welcomeLernpfad" class="welcome-card">
+            <span class="emoji">🦋</span>
+            <strong>Lernpfad</strong>
+        </button>
+        <button type="button" id="welcomeIndividuell" class="welcome-card">
+            <span class="emoji">🎨</span>
+            <strong>Individuelles Spiel</strong>
+        </button>
+        <button type="button" id="welcomeUeben" class="welcome-card">
+            <span class="emoji">🧩</span>
+            <strong>Buchstaben üben</strong>
+        </button>
+      </div>
+      <div class="controls" style="justify-content: center; margin-top: 20px;">
+        <button id="welcomeClose" class="btn secondary">Weiter zum Hauptmenü</button>
       </div>
     </div>
   </div>

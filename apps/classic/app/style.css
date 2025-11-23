@@ -812,6 +812,58 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
   cursor:pointer;
   font-size:14px;
 }
+.parent-hub{display:flex; flex-direction:column; gap:12px;}
+.parent-hub__head{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:8px;}
+.parent-hub__actions{display:flex; gap:8px; align-items:center;}
+.parent-hub__body{display:grid; grid-template-columns:240px 1fr; gap:16px; align-items:start;}
+.parent-hub__nav{display:flex; flex-direction:column; gap:10px; position:sticky; top:92px;}
+.hub-tab-btn{
+  width:100%;
+  border:0;
+  padding:12px 14px;
+  border-radius:14px;
+  background:var(--surface-soft);
+  color:var(--ink);
+  font-weight:800;
+  cursor:pointer;
+  text-align:left;
+  box-shadow:0 6px 14px rgba(15,23,42,.1);
+  transition:transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.hub-tab-btn:hover{transform:translateY(-1px); box-shadow:0 10px 20px rgba(15,23,42,.16);}
+.hub-tab-btn.active{background:linear-gradient(120deg,#49b6ff,#6bb8ff); color:#0f172a; box-shadow:0 12px 26px rgba(73,182,255,.35);}
+.parent-hub__content{display:flex; flex-direction:column; gap:16px;}
+.hub-section{display:block;}
+.hub-section.hidden{display:none !important;}
+.hub-block{
+  background:rgba(255,255,255,0.9);
+  border-radius:18px;
+  padding:16px;
+  box-shadow:0 10px 24px rgba(15,23,42,.08);
+  border:1px solid rgba(15,23,42,.06);
+}
+.hub-status{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+  margin-bottom:16px;
+}
+.hub-status__item{
+  background:var(--surface-soft);
+  border-radius:14px;
+  padding:12px 14px;
+  box-shadow:0 6px 14px rgba(15,23,42,.08);
+}
+.hub-status__item strong{display:block; font-size:18px; margin-top:4px;}
+.hub-status__item--cta{background:linear-gradient(135deg,#e6f5ff,#f5fbff); box-shadow:0 10px 22px rgba(73,182,255,.22);}
+.eyebrow{text-transform:uppercase; letter-spacing:.08em; font-weight:800; font-size:11px; color:var(--muted); margin:0;}
+.parent-hub .profile-manager{margin-top:0;}
+.parent-hub .extras-card{margin-top:0;}
+@media(max-width:900px){
+  .parent-hub__body{grid-template-columns:1fr;}
+  .parent-hub__nav{flex-direction:row; position:static;}
+  .hub-tab-btn{text-align:center;}
+}
 .profile-modal__content .small{font-size:12px;}
 .dialog{background:#fff; border-radius:24px; box-shadow:var(--shadow);
   width:min(560px,92vw); padding:20px; text-align:center}
@@ -1241,11 +1293,7 @@ html[data-theme='nebula'] .chip{
   box-shadow:0 10px 24px rgba(0,0,0,.4);
 }
 html[data-theme='nebula'] .chip:hover{box-shadow:0 14px 28px rgba(0,0,0,.5);}
-html[data-theme='nebula'] .chip.active{
-  background:var(--brand-2);
-  color:#0f1022;
-  box-shadow:0 12px 20px rgba(107,184,255,.4);
-}
+html[data-theme='nebula'] .chip.active{background:#335c9e; color:#fff;}
 html[data-theme='nebula'] .mode-card{
   background:linear-gradient(160deg,#1f1f3d,#16162b);
   box-shadow:0 16px 30px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.05);
@@ -1430,11 +1478,7 @@ html[data-theme='nebula'] .parent-profile-actions button{
   background:rgba(99,102,241,.22);
   color:#e0e7ff;
 }
-html[data-theme='nebula'] .album-tab-btn.active{
-  background:var(--brand-2);
-  color:#0f1022;
-  box-shadow:0 12px 28px rgba(107,184,255,.5);
-}
+html[data-theme='nebula'] .album-tab-btn.active{box-shadow:0 12px 28px rgba(0,0,0,.6);}
 html[data-theme='nebula'] .album-tab-highlight{
   animation:albumTabPulseDark .9s ease;
 }
