@@ -17,9 +17,6 @@ import {
   getProfileLastSet,
   markProfileMigrated,
   wasProfileMigrated,
-  normalizeEmoji,
-  getRandomEmojiSuggestion,
-  getFreeEmojiCount,
 } from './profileStore.js';
 import { pickNext } from './letterPool.js';
 import { advanceAfterRun } from './progression.js';
@@ -290,48 +287,8 @@ const elCloseProfileModal = document.getElementById('closeProfileModal');
 const elProfileList = document.getElementById('profileList');
 const elParentProfileList = document.getElementById('parentProfileList');
 const elParentStats = document.getElementById('parentStats');
-const elDevtoolsBanner = document.getElementById('devtoolsBanner');
-const elDevtoolsPanel = document.getElementById('devtoolsPanel');
-const elDevtoolsTogglePanel = document.getElementById('devtoolsTogglePanel');
-const elDevtoolsDisable = document.getElementById('devtoolsDisable');
-const elDevtoolsClosePanel = document.getElementById('devtoolsClosePanel');
-const elDevtoolsStarInput = document.getElementById('devtoolsStarInput');
-const elDevtoolsSetStars = document.getElementById('devtoolsSetStars');
-const devtoolsStarDeltaButtons = Array.from(document.querySelectorAll('[data-devtools-star-delta]'));
-const elDevtoolsGrantPack = document.getElementById('devtoolsGrantPack');
-const elDevtoolsResetStars = document.getElementById('devtoolsResetStars');
-const elDevtoolsMedalIntro = document.getElementById('devtoolsMedalIntro');
-const devtoolsMedalButtons = Array.from(document.querySelectorAll('[data-devtools-medal]'));
-const elDevtoolsRunStars = document.getElementById('devtoolsRunStars');
-const elDevtoolsRunMedal = document.getElementById('devtoolsRunMedal');
-const elDevtoolsSimulateResult = document.getElementById('devtoolsSimulateResult');
-const elDevtoolsLetterInput = document.getElementById('devtoolsLetterInput');
-const elDevtoolsBumpLetter = document.getElementById('devtoolsBumpLetter');
-const elDevtoolsLetterFeedback = document.getElementById('devtoolsLetterFeedback');
-const elDevtoolsGiveSticker = document.getElementById('devtoolsGiveSticker');
-const elDevtoolsStatus = document.getElementById('devtoolsStatus');
 const elBtnAddProfileParent = document.getElementById('btnAddProfileParent');
-const elProfileEditor = document.getElementById('profileEditor');
-const elProfileEditorTitle = document.getElementById('profileEditorTitle');
-const elProfileEditorContext = document.getElementById('profileEditorContext');
-const elProfileEditorName = document.getElementById('profileEditorName');
-const elProfileEditorEmojiInput = document.getElementById('profileEditorEmojiInput');
-const elProfileEditorEmojiPreview = document.getElementById('profileEditorEmojiPreview');
-const elProfileEditorRandomBtn = document.getElementById('profileEditorRandomBtn');
-const elProfileEditorSave = document.getElementById('profileEditorSave');
-const elProfileEditorCancel = document.getElementById('profileEditorCancel');
-const elCloseProfileEditor = document.getElementById('closeProfileEditor');
-const elProfileEditorBadge = document.getElementById('profileEditorBadge');
-const elProfileEditorFreeHint = document.getElementById('profileEditorFreeHint');
 let isProfileModalOpen = false;
-let isProfileEditorOpen = false;
-const profileEditorState = {
-  mode: 'create',
-  profileId: null,
-  seen: new Set(),
-  selectedEmoji: '',
-  selectedSource: 'random',
-};
 const medalControls = MEDAL_TYPES.reduce((acc, type) => {
   acc[type] = {
     recordBtn: document.getElementById(`btnMedalRecord-${type}`),
@@ -347,19 +304,27 @@ let trophyAnimation = null;
 let trophyLoader = null;
 let installPromptEvent = null;
 
+console.log('App.js loaded - Top of file');
 const THEME_STORAGE_KEY = 'abc-abenteuer-theme';
 const THEME_OPTIONS = {
-  classic: { id: 'classic', label: 'Sonnig', emoji: '🌈', metaColor: '#49b6ff' },
+  classic: { id: 'classic', label: 'Sonnig', emoji: '🌈', metaColor: '#5a6ff0' },
   nebula: { id: 'nebula', label: 'Nachthimmel', emoji: '🌌', metaColor: '#0f1022' }
 };
 const DEFAULT_THEME = 'classic';
-const LAST_EXPORT_STORAGE_KEY = 'abc-last-export';
-const DEVTOOLS_FLAG_KEY = 'abc_abenteuer_devtools';
-const DEVTOOLS_URL_FLAGS = ['devtools', 'debug'];
 let isThemeMenuOpen = false;
 let activeTheme = document.documentElement.getAttribute('data-theme') || DEFAULT_THEME;
-let devtoolsEnabled = false;
-let devtoolsPanelOpen = false;
+
+const AVATAR_CONFIG = {
+  fox: { id: 'fox', src: 'app/assets/ui/avatar_fox.png', label: 'Fuchs' },
+  turtle: { id: 'turtle', src: 'app/assets/ui/avatar_turtle.png', label: 'Schildkröte' },
+  lion: { id: 'lion', src: 'app/assets/ui/avatar_lion.png', label: 'Löwe' },
+  dino: { id: 'dino', src: 'app/assets/ui/avatar_dino.png', label: 'Dino' },
+};
+
+function getAvatarConfig(avatarId) {
+  if (!avatarId) return null;
+  return AVATAR_CONFIG[avatarId] || null;
+}
 
 initThemeSelector();
 registerServiceWorker();
@@ -370,7 +335,17 @@ function updateProfileBadge() {
   const profile = getActiveProfile();
   const emoji = profile?.emoji || '🐣';
   const name = profile?.name || 'SPIELER';
-  elProfileEmoji.textContent = emoji;
+  const avatar = getAvatarConfig(profile && profile.avatarId);
+  if (avatar) {
+    elProfileEmoji.textContent = '';
+    const img = document.createElement('img');
+    img.src = avatar.src;
+    img.alt = avatar.label || name;
+    img.className = 'profile-avatar-img';
+    elProfileEmoji.appendChild(img);
+  } else {
+    elProfileEmoji.textContent = emoji;
+  }
   elProfileName.textContent = name;
 }
 
@@ -380,11 +355,16 @@ function renderProfileCards() {
   const activeId = getActiveProfileId();
   elProfileList.innerHTML = '';
   profiles.forEach(profile => {
+    const avatar = getAvatarConfig(profile.avatarId);
+    const emoji = profile.emoji || '🐣';
+    const avatarMarkup = avatar
+      ? `<img src="${avatar.src}" alt="${avatar.label || profile.name}" class="profile-card__avatar-img">`
+      : emoji;
     const card = document.createElement('button');
     card.type = 'button';
     card.className = 'profile-card' + (profile.id === activeId ? ' active' : '');
     card.innerHTML = `
-      <span class="profile-card__emoji">${profile.emoji || '🐣'}</span>
+      <span class="profile-card__emoji">${avatarMarkup}</span>
       <span class="profile-card__name">${profile.name}</span>
       ${profile.id === activeId ? '<span class="profile-card__badge">Jetzt</span>' : ''}
     `;
@@ -421,129 +401,40 @@ function closeProfileModal() {
   }
 }
 
-function resetProfileEditorState() {
-  profileEditorState.mode = 'create';
-  profileEditorState.profileId = null;
-  profileEditorState.seen = new Set();
-  profileEditorState.selectedEmoji = '';
-  profileEditorState.selectedSource = 'random';
-  if (elProfileEditorName) elProfileEditorName.value = '';
-  if (elProfileEditorEmojiInput) elProfileEditorEmojiInput.value = '';
-}
-
-function setProfileEditorEmoji(emoji, { source = 'manual', addToSeen = false } = {}) {
-  const normalized = normalizeEmoji(emoji);
-  if (addToSeen && normalized) {
-    profileEditorState.seen.add(normalized);
+async function handleCreateProfile() {
+  const nameInput = prompt('Name des Kindes:', '');
+  if (!nameInput) {
+    return;
   }
-  profileEditorState.selectedEmoji = normalized;
-  profileEditorState.selectedSource = source;
-  if (elProfileEditorEmojiPreview) {
-    elProfileEditorEmojiPreview.textContent = normalized || '❔';
+  const trimmedName = nameInput.trim();
+  if (!trimmedName) {
+    return;
   }
-  if (elProfileEditorEmojiInput) {
-    elProfileEditorEmojiInput.value = normalized || '';
-  }
-  if (elProfileEditorBadge) {
-    elProfileEditorBadge.classList.toggle('hidden', source !== 'random');
-  }
-}
-
-function updateProfileEditorFreeHint() {
-  if (!elProfileEditorFreeHint) return;
-  const remaining = getFreeEmojiCount({ avoid: Array.from(profileEditorState.seen) });
-  if (remaining <= 4) {
-    elProfileEditorFreeHint.textContent = remaining > 0
-      ? `Nur noch ${remaining} Emojis frei`
-      : 'Alle Emojis vergeben – wir vergeben jetzt erneut';
-    elProfileEditorFreeHint.classList.remove('hidden');
-  } else {
-    elProfileEditorFreeHint.classList.add('hidden');
-  }
-}
-
-function openProfileEditor({ mode = 'create', profileId = null } = {}) {
-  if (!elProfileEditor) return;
-  resetProfileEditorState();
-  profileEditorState.mode = mode;
-  profileEditorState.profileId = profileId || null;
-  isProfileEditorOpen = true;
-
-  if (elProfileEditorTitle) {
-    elProfileEditorTitle.textContent = mode === 'edit' ? 'Profil bearbeiten' : 'Neues Profil';
-  }
-  if (elProfileEditorContext) {
-    elProfileEditorContext.textContent = mode === 'edit' ? 'Elternbereich' : 'Profil auswählen';
-  }
-
-  const profiles = getProfiles();
-  if (mode === 'edit' && profileId) {
-    const current = profiles.find(p => p.id === profileId);
-    if (current) {
-      if (elProfileEditorName) elProfileEditorName.value = current.name || '';
-      if (current.emoji) {
-        profileEditorState.seen.add(normalizeEmoji(current.emoji));
-      }
-      setProfileEditorEmoji(current.emoji || '', { source: current.emojiSource || 'manual', addToSeen: !!current.emoji });
+  const avatarInput = prompt('Lieblings-Emoji ODER eines der Wörter: Fuchs, Schildkröte, Löwe, Dino', '🐣');
+  let emojiValue;
+  let avatarId = null;
+  if (avatarInput && avatarInput.trim()) {
+    const raw = avatarInput.trim();
+    const lower = raw.toLowerCase();
+    if (lower === 'fuchs' || lower === 'fox') {
+      avatarId = 'fox';
+    } else if (lower === 'schildkröte' || lower === 'schildkroete' || lower === 'turtle') {
+      avatarId = 'turtle';
+    } else if (lower === 'löwe' || lower === 'loewe' || lower === 'lion') {
+      avatarId = 'lion';
+    } else if (lower === 'dino' || lower === 'dinosaurier') {
+      avatarId = 'dino';
+    } else {
+      emojiValue = raw;
     }
-  } else if (elProfileEditorName) {
-    elProfileEditorName.value = '';
   }
-
-  if (!profileEditorState.selectedEmoji) {
-    const suggestion = getRandomEmojiSuggestion({ avoid: Array.from(profileEditorState.seen) });
-    setProfileEditorEmoji(suggestion || '🐣', { source: 'random', addToSeen: true });
-  }
-
-  updateProfileEditorFreeHint();
-  elProfileEditor.classList.remove('hidden');
-}
-
-function closeProfileEditor() {
-  if (!elProfileEditor) return;
-  isProfileEditorOpen = false;
-  elProfileEditor.classList.add('hidden');
-}
-
-function handleCreateProfile() {
-  openProfileEditor({ mode: 'create' });
-}
-
-function handleEditorEmojiInput(event) {
-  setProfileEditorEmoji(event.target.value || '', { source: 'manual' });
-  updateProfileEditorFreeHint();
-}
-
-function handleEditorRandomize() {
-  const avoid = Array.from(profileEditorState.seen);
-  if (profileEditorState.selectedEmoji) {
-    avoid.push(profileEditorState.selectedEmoji);
-  }
-  const suggestion = getRandomEmojiSuggestion({ avoid, allowReuseWhenExhausted: true }) || profileEditorState.selectedEmoji || '🐣';
-  setProfileEditorEmoji(suggestion, { source: 'random', addToSeen: true });
-  updateProfileEditorFreeHint();
-}
-
-async function saveProfileFromEditor() {
-  const nameValue = elProfileEditorName ? elProfileEditorName.value.trim() : '';
-  let emojiValue = elProfileEditorEmojiInput ? normalizeEmoji(elProfileEditorEmojiInput.value) : '';
-  let source = profileEditorState.selectedSource || 'manual';
-
-  if (!emojiValue) {
-    const fallback = getRandomEmojiSuggestion({ avoid: Array.from(profileEditorState.seen) });
-    emojiValue = fallback || '🐣';
-    source = 'random';
-  }
-
-  if (profileEditorState.mode === 'edit' && profileEditorState.profileId) {
-    updateProfile(profileEditorState.profileId, { name: nameValue || undefined, emoji: emojiValue, emojiSource: source });
-    await hydrateProfileState();
-  } else {
-    const profile = createProfile({ name: nameValue || undefined, emoji: emojiValue, emojiSource: source });
-    await migrateProfileScopedData(profile);
-    await switchProfile(profile.id);
-  }
-  closeProfileEditor();
+  const profile = createProfile({
+    name: trimmedName,
+    emoji: emojiValue,
+    avatarId,
+  });
+  await migrateProfileScopedData(profile);
+  await switchProfile(profile.id);
 }
 
 function renderParentProfileList() {
@@ -560,18 +451,17 @@ function renderParentProfileList() {
   profiles.forEach(profile => {
     const row = document.createElement('div');
     row.className = 'parent-profile-row';
-    if (profile.id === activeId) {
-      row.classList.add('is-active');
-    }
+    const avatar = getAvatarConfig(profile.avatarId);
+    const emoji = profile.emoji || '🐣';
+    const avatarMarkup = avatar
+      ? `<img src="${avatar.src}" alt="${avatar.label || profile.name}" class="parent-profile-avatar-img">`
+      : emoji;
     row.innerHTML = `
       <div class="parent-profile-info">
-        <span class="parent-profile-emoji">${profile.emoji || '🐣'}</span>
+        <span class="parent-profile-emoji">${avatarMarkup}</span>
         <div>
           <strong>${profile.name}</strong>
-          <div class="parent-profile-tags">
-            ${profile.id === activeId ? '<span class="badge">aktiv</span>' : ''}
-            ${profile.emojiSource === 'random' ? '<span class="badge badge-random">zufällig</span>' : ''}
-          </div>
+          ${profile.id === activeId ? '<span class="badge">aktiv</span>' : ''}
         </div>
       </div>
       <div class="parent-profile-actions">
@@ -580,22 +470,28 @@ function renderParentProfileList() {
       </div>
     `;
     const actions = row.querySelector('.parent-profile-actions');
-    row.addEventListener('click', async (event) => {
-      if (event.target.closest('.parent-profile-actions')) {
-        return;
-      }
-      if (profile.id !== getActiveProfileId()) {
-        await switchProfile(profile.id, { keepModalOpen: true });
-      }
-      renderStatistics();
-    });
     if (actions) {
       actions.addEventListener('click', async (event) => {
         const btn = event.target.closest('button');
         if (!btn) return;
         const id = btn.dataset.id;
         if (btn.dataset.action === 'edit') {
-          openProfileEditor({ mode: 'edit', profileId: id });
+          const current = getProfiles().find(p => p.id === id);
+          if (!current) return;
+          let newName = prompt('Neuer Name:', current.name);
+          if (newName) {
+            newName = newName.trim();
+          }
+          const safeName = newName && newName.length ? newName : current.name;
+          let newEmoji = prompt('Emoji (optional):', current.emoji || '🐣');
+          if (newEmoji) {
+            newEmoji = newEmoji.trim();
+          }
+          const safeEmoji = newEmoji && newEmoji.length ? newEmoji : current.emoji;
+          updateProfile(id, { name: safeName, emoji: safeEmoji });
+          updateProfileBadge();
+          renderProfileCards();
+          renderParentProfileList();
         } else if (btn.dataset.action === 'delete') {
           if (!confirm('Dieses Profil wirklich löschen?')) return;
           const prevActive = getActiveProfileId();
@@ -672,40 +568,12 @@ function setupProfileEvents() {
     });
   }
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      if (isProfileEditorOpen) {
-        closeProfileEditor();
-        return;
-      }
-      if (isProfileModalOpen) {
-        closeProfileModal();
-      }
+    if (event.key === 'Escape' && isProfileModalOpen) {
+      closeProfileModal();
     }
   });
   if (elBtnAddProfileParent) {
     elBtnAddProfileParent.addEventListener('click', () => handleCreateProfile());
-  }
-  if (elProfileEditorRandomBtn) {
-    elProfileEditorRandomBtn.addEventListener('click', handleEditorRandomize);
-  }
-  if (elProfileEditorEmojiInput) {
-    elProfileEditorEmojiInput.addEventListener('input', handleEditorEmojiInput);
-  }
-  if (elProfileEditorSave) {
-    elProfileEditorSave.addEventListener('click', saveProfileFromEditor);
-  }
-  if (elProfileEditorCancel) {
-    elProfileEditorCancel.addEventListener('click', closeProfileEditor);
-  }
-  if (elCloseProfileEditor) {
-    elCloseProfileEditor.addEventListener('click', closeProfileEditor);
-  }
-  if (elProfileEditor) {
-    elProfileEditor.addEventListener('click', (event) => {
-      if (event.target === elProfileEditor) {
-        closeProfileEditor();
-      }
-    });
   }
 }
 
@@ -883,38 +751,7 @@ function toggleThemeMenu() {
   setThemeMenuOpen(!isThemeMenuOpen);
 }
 
-function setThemeMenuOpen(shouldOpen) {
-  if (!elThemeMenu || !elThemeTrigger || !elThemeSwitcher) return;
-  isThemeMenuOpen = shouldOpen;
-  elThemeMenu.classList.toggle('hidden', !shouldOpen);
-  elThemeTrigger.setAttribute('aria-expanded', String(shouldOpen));
-  elThemeSwitcher.classList.toggle('open', shouldOpen);
-}
 
-function closeThemeMenu() {
-  if (isThemeMenuOpen) {
-    setThemeMenuOpen(false);
-  }
-}
-
-function handleThemeMenuOutside(event) {
-  if (!isThemeMenuOpen || !elThemeSwitcher) return;
-  if (!elThemeSwitcher.contains(event.target)) {
-    closeThemeMenu();
-  }
-}
-
-function handleThemeMenuKeydown(event) {
-  if (event.key === 'Escape' && isThemeMenuOpen) {
-    closeThemeMenu();
-    if (elThemeTrigger) {
-      elThemeTrigger.focus();
-    }
-  }
-}
-elBtnChangeMode.addEventListener('click', openModeDialog);
-elBtnStart.addEventListener('click', startGame);
-elBtnEndGame.addEventListener('click', confirmEndGame);
 
 // Eltern-Sperre
 const elParentalGate = document.getElementById('parentalGate');
@@ -922,28 +759,13 @@ const elGateQuestion = document.getElementById('gateQuestion');
 const elGateAnswer = document.getElementById('gateAnswer');
 const elGateCancel = document.getElementById('gateCancel');
 const elGateSubmit = document.getElementById('gateSubmit');
-const elParentHub = document.getElementById('parentHub');
-const elParentHubClose = document.getElementById('parentHubClose');
-const hubTabButtons = elParentHub ? Array.from(elParentHub.querySelectorAll('[data-hub-tab]')) : [];
-const elHubOverview = document.getElementById('hubOverview');
-const elHubRecordingsSets = document.getElementById('hubRecordingsSets');
-const elHubStatusProfile = document.getElementById('hubStatusProfile');
-const elHubStatusRecordings = document.getElementById('hubStatusRecordings');
-const elHubStatusExport = document.getElementById('hubStatusExport');
-const elHubStatusNext = document.getElementById('hubStatusNext');
 let gateNum1, gateNum2;
-let pendingGateAction = null;
-let isParentHubOpen = false;
-let parentGateGraceUntil = 0;
-let activeMainTab = 'spiel';
+let isParentalGatePassed = false; // Simple session flag
 
 // Tabs & Parental Gate
 const tabsContainer = document.querySelector('.tabs');
 
-function openParentalGate(nextAction = pendingGateAction) {
-  if (typeof nextAction === 'function') {
-    pendingGateAction = nextAction;
-  }
+function openParentalGate() {
   gateNum1 = Math.floor(Math.random() * 5) + 5;
   gateNum2 = Math.floor(Math.random() * 5) + 1;
   elGateQuestion.textContent = `Was ist ${gateNum1} + ${gateNum2}?`;
@@ -952,110 +774,24 @@ function openParentalGate(nextAction = pendingGateAction) {
   elGateAnswer.focus();
 }
 
-function closeParentalGate(clearPending = true) {
+function closeParentalGate() {
   elParentalGate.classList.add('hidden');
-  if (clearPending) {
-    pendingGateAction = null;
-  }
 }
 
 elGateCancel.addEventListener('click', closeParentalGate);
 elGateSubmit.addEventListener('click', () => {
   const answer = parseInt(elGateAnswer.value, 10);
   if (answer === gateNum1 + gateNum2) {
-    closeParentalGate(false);
-    const action = pendingGateAction;
-    pendingGateAction = null;
-    if (typeof action === 'function') {
-      action();
-    }
+    isParentalGatePassed = true;
+    closeParentalGate();
+    switchToTab('parents-dashboard');
   } else {
     alert('Leider falsch. Bitte versuche es nochmal.');
     openParentalGate();
   }
 });
 
-function hideMainSections() {
-  document.getElementById('spiel').classList.add('hidden');
-  document.getElementById('ueben').classList.add('hidden');
-  document.getElementById('album').classList.add('hidden');
-}
-
-function switchParentHubTab(tabName = 'overview') {
-  if (!elParentHub) return;
-  const tab = ['overview', 'recordingsSets'].includes(tabName) ? tabName : 'overview';
-  hubTabButtons.forEach(btn => {
-    const isActive = btn.dataset.hubTab === tab;
-    btn.classList.toggle('active', isActive);
-    btn.setAttribute('aria-pressed', String(isActive));
-  });
-  if (elHubOverview) elHubOverview.classList.toggle('hidden', tab !== 'overview');
-  if (elHubRecordingsSets) elHubRecordingsSets.classList.toggle('hidden', tab !== 'recordingsSets');
-
-  if (tab === 'recordingsSets') {
-    renderSetsList();
-    updateStatusGridFromDB();
-    updateUIForRecordingState();
-  }
-  if (tab === 'overview') {
-    renderStatistics();
-  }
-  updateParentHubStatus();
-}
-
-function openParentHub(targetTab = 'overview') {
-  if (!elParentHub) return;
-  isParentHubOpen = true;
-  tabsContainer?.classList.add('hidden');
-  hideMainSections();
-  elParentHub.classList.remove('hidden');
-  switchParentHubTab(targetTab);
-}
-
-function closeParentHub() {
-  if (!elParentHub || !isParentHubOpen) return;
-  isParentHubOpen = false;
-  parentGateGraceUntil = Date.now() + 10000;
-  elParentHub.classList.add('hidden');
-  tabsContainer?.classList.remove('hidden');
-  switchToTab(activeMainTab || 'spiel');
-}
-
-if (hubTabButtons.length) {
-  hubTabButtons.forEach(btn => {
-    btn.addEventListener('click', () => switchParentHubTab(btn.dataset.hubTab));
-  });
-}
-
-if (elParentHubClose) {
-  elParentHubClose.addEventListener('click', closeParentHub);
-}
-
-function shouldAskParentalGate() {
-  if (!elParentalGate) return false;
-  if (isParentHubOpen) return false;
-  return Date.now() > parentGateGraceUntil;
-}
-
-function requestParentHub(targetTab = 'overview') {
-  const openAction = () => openParentHub(targetTab);
-  if (!shouldAskParentalGate()) {
-    openAction();
-    return;
-  }
-  openParentalGate(openAction);
-}
-
 function switchToTab(tabName) {
-  if (!tabName) return;
-  activeMainTab = tabName;
-  if (elParentHub && isParentHubOpen) {
-    elParentHub.classList.add('hidden');
-    isParentHubOpen = false;
-  }
-  if (tabsContainer) {
-    tabsContainer.classList.remove('hidden');
-  }
   tabsContainer.querySelectorAll('button').forEach(b => {
     const isActive = b.dataset.tab === tabName;
     b.classList.toggle('active', isActive);
@@ -1063,6 +799,27 @@ function switchToTab(tabName) {
   document.getElementById('spiel').classList.toggle('hidden', tabName !== 'spiel');
   document.getElementById('ueben').classList.toggle('hidden', tabName !== 'ueben');
   document.getElementById('album').classList.toggle('hidden', tabName !== 'album');
+  document.getElementById('einstellungen').classList.toggle('hidden', tabName !== 'einstellungen');
+  document.getElementById('parents-dashboard').classList.toggle('hidden', tabName !== 'parents-dashboard');
+
+  if (tabName === 'einstellungen') {
+    renderSetsList();
+    updateStatusGridFromDB();
+    updateUIForRecordingState();
+  }
+
+  if (tabName === 'parents-dashboard') {
+    // Default to overview if no sub-tab is active, or refresh current
+    if (!document.querySelector('.dash-nav-btn.active')) {
+      switchDashboardTab('dash-overview');
+    } else {
+      // Refresh data for all sections just in case
+      renderStatistics();
+      renderSetsList();
+      updateStatusGridFromDB();
+      updateUIForRecordingState();
+    }
+  }
 
   if (tabName === 'album') {
     renderAlbum();
@@ -1073,20 +830,53 @@ function switchToTab(tabName) {
   }
 }
 
+function switchDashboardTab(dashTabId) {
+  // Update Sidebar Buttons
+  document.querySelectorAll('.dash-nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.dashTab === dashTabId);
+  });
+
+  // Show/Hide Content Views
+  document.querySelectorAll('.dash-view').forEach(view => {
+    view.classList.toggle('hidden', view.id !== dashTabId);
+  });
+
+  // Trigger specific renders based on view
+  if (dashTabId === 'dash-overview') {
+    renderStatistics();
+    renderProfileCards();
+    renderParentProfileList();
+  } else if (dashTabId === 'dash-recordings') {
+    updateStatusGridFromDB();
+    updateUIForRecordingState();
+  } else if (dashTabId === 'dash-sets') {
+    renderSetsList();
+  }
+}
+
+// Dashboard Navigation Event Listener
+document.querySelector('.dashboard-sidebar').addEventListener('click', (e) => {
+  const btn = e.target.closest('.dash-nav-btn');
+  if (btn) {
+    switchDashboardTab(btn.dataset.dashTab);
+  }
+});
+
 tabsContainer.addEventListener('click', (e) => {
   const targetButton = e.target.closest('button');
   if (!targetButton) return;
   const tabName = targetButton.dataset.tab;
-
-  if (isParentHubOpen) {
-    closeParentHub();
-  }
 
   if (tabName === 'spiel' && game) {
     const ended = confirmEndGame();
     if (ended) {
       switchToTab('spiel');
     }
+    return;
+  }
+
+  if (tabName === 'parents-dashboard' && !isParentalGatePassed) {
+    openParentalGate();
     return;
   }
 
@@ -1262,8 +1052,8 @@ if (elInGameDifficulty) {
 const elModeWarningAction = document.getElementById('modeWarningAction');
 if (elModeWarningAction) {
   elModeWarningAction.addEventListener('click', () => {
-    requestParentHub('recordingsSets');
-    setTimeout(() => elStatusGrid?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 150);
+    switchToTab('einstellungen');
+    elStatusGrid?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 }
 
@@ -1333,78 +1123,8 @@ async function updateUIForRecordingState() {
   elProgressBadge.textContent = `${recordedCount} von 26 Buchstaben aufgenommen`;
   elProgressBadge.classList.toggle('empty', recordedCount === 0);
 
-  updateParentHubStatus({ recordedCount, setId });
-
   // Buchstaben-Buttons im Preview-Modus aktualisieren
   await updateLetterButtons();
-}
-
-function getLastExportTimestamp() {
-  try {
-    const raw = localStorage.getItem(LAST_EXPORT_STORAGE_KEY);
-    const ts = raw ? parseInt(raw, 10) : 0;
-    return Number.isFinite(ts) && ts > 0 ? ts : null;
-  } catch (err) {
-    return null;
-  }
-}
-
-function setLastExportTimestamp(ts) {
-  try {
-    localStorage.setItem(LAST_EXPORT_STORAGE_KEY, String(ts));
-  } catch (err) {
-    /* ignore storage errors */
-  }
-}
-
-function formatDateTime(ts) {
-  if (!ts) return '–';
-  try {
-    return new Intl.DateTimeFormat('de-DE', {
-      day: '2-digit',
-      month: 'short',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(new Date(ts));
-  } catch (err) {
-    return '–';
-  }
-}
-
-async function updateParentHubStatus(context = {}) {
-  if (!elParentHub) return;
-  try {
-    const profile = getActiveProfile();
-    if (elHubStatusProfile) {
-      const emoji = profile?.emoji || '👤';
-      const name = profile?.name || 'Profil';
-      elHubStatusProfile.textContent = `${emoji} ${name}`;
-    }
-
-    let recordedCount = typeof context.recordedCount === 'number' ? context.recordedCount : null;
-    let setId = context.setId;
-    if (!setId) {
-      setId = await getActiveSet();
-    }
-    if (recordedCount === null) {
-      recordedCount = await getSetRecordingCount(setId);
-    }
-
-    if (elHubStatusRecordings) {
-      elHubStatusRecordings.textContent = `${recordedCount}/26`;
-    }
-
-    const lastExport = getLastExportTimestamp();
-    if (elHubStatusExport) {
-      elHubStatusExport.textContent = lastExport ? formatDateTime(lastExport) : '–';
-    }
-
-    if (elHubStatusNext) {
-      elHubStatusNext.textContent = recordedCount < 26 ? 'Aufnahmen vervollständigen' : 'Backup exportieren';
-    }
-  } catch (err) {
-    console.warn('[ParentHubStatus]', err);
-  }
 }
 
 const ACTIVE_SET_SELECTOR_IDS = ['setSelector', 'inGameSetSelector', 'practiceSetSelector'];
@@ -1521,12 +1241,12 @@ async function syncActiveGameWithSet(newSetId) {
 
 // "Jetzt Aufnahmen machen" Button
 document.getElementById('goToSettings').addEventListener('click', () => {
-  requestParentHub('recordingsSets');
+  switchToTab('einstellungen');
 });
 
 // Settings-Zahnrad Button (oben rechts)
 document.getElementById('settingsBtn').addEventListener('click', () => {
-  requestParentHub('overview');
+  switchToTab('einstellungen');
 });
 
 // Set-Selector im Spiel-Tab für Kinder
@@ -2302,7 +2022,7 @@ function getStarRevealWidget() {
         if (shouldReduceMotion()) return;
         playStarRevealSound();
       },
-      revealDelay: 800,
+      revealDelay: 1000,
     });
   }
   return starRevealWidget;
@@ -2600,275 +2320,6 @@ document.getElementById('btnOpenPack').addEventListener('click', async () => {
     await renderAlbum();
   }
 });
-
-// ——————————————————————————————————————————
-// Entwicklertools (lokal)
-// ——————————————————————————————————————————
-function readDevtoolsFlag() {
-  try {
-    return typeof localStorage !== 'undefined' && localStorage.getItem(DEVTOOLS_FLAG_KEY) === '1';
-  } catch (_) {
-    return false;
-  }
-}
-
-function writeDevtoolsFlag(active) {
-  try {
-    if (typeof localStorage === 'undefined') return;
-    if (active) {
-      localStorage.setItem(DEVTOOLS_FLAG_KEY, '1');
-    } else {
-      localStorage.removeItem(DEVTOOLS_FLAG_KEY);
-    }
-  } catch (_) {
-    /* ignore */
-  }
-}
-
-function detectDevtoolsFromUrl() {
-  try {
-    const params = new URLSearchParams(window.location.search || '');
-    const hit = DEVTOOLS_URL_FLAGS.some(flag => params.has(flag));
-    if (hit) {
-      writeDevtoolsFlag(true);
-    }
-    return hit;
-  } catch (_) {
-    return false;
-  }
-}
-
-function setDevtoolsStatus(message) {
-  if (elDevtoolsStatus) {
-    elDevtoolsStatus.textContent = message || '';
-  }
-}
-
-function updateDevtoolsVisibility(enabled = devtoolsEnabled) {
-  devtoolsEnabled = !!enabled;
-  if (elDevtoolsBanner) {
-    elDevtoolsBanner.classList.toggle('hidden', !devtoolsEnabled);
-  }
-  if (elDevtoolsPanel && !devtoolsEnabled) {
-    elDevtoolsPanel.classList.add('hidden');
-    devtoolsPanelOpen = false;
-  }
-  if (devtoolsEnabled) {
-    syncDevtoolsInputs();
-  } else {
-    setDevtoolsStatus('');
-  }
-}
-
-async function syncDevtoolsInputs() {
-  if (!devtoolsEnabled) return;
-  const stars = await getStars();
-  if (elDevtoolsStarInput) {
-    elDevtoolsStarInput.value = Math.max(0, Math.floor(Number.isFinite(stars) ? stars : 0));
-  }
-  if (elDevtoolsRunStars && !elDevtoolsRunStars.value) {
-    elDevtoolsRunStars.value = 3;
-  }
-}
-
-async function openDevtoolsPanel() {
-  if (!devtoolsEnabled || !elDevtoolsPanel) return;
-  devtoolsPanelOpen = true;
-  elDevtoolsPanel.classList.remove('hidden');
-  await syncDevtoolsInputs();
-}
-
-function closeDevtoolsPanel() {
-  devtoolsPanelOpen = false;
-  if (elDevtoolsPanel) {
-    elDevtoolsPanel.classList.add('hidden');
-  }
-}
-
-async function devtoolsApplyStars(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) {
-    setDevtoolsStatus('Bitte eine Zahl eingeben.');
-    return;
-  }
-  const safe = Math.max(0, Math.floor(numeric));
-  await setStars(safe);
-  totalStarBank = safe;
-  updateStarTrackDisplay();
-  await renderAlbum();
-  if (elDevtoolsStarInput) {
-    elDevtoolsStarInput.value = safe;
-  }
-  setDevtoolsStatus(`Sternestand auf ${safe} gesetzt.`);
-}
-
-async function devtoolsAdjustStars(delta) {
-  const deltaNum = Number(delta);
-  if (!Number.isFinite(deltaNum)) return;
-  const current = await getStars();
-  await devtoolsApplyStars((Number.isFinite(current) ? current : 0) + deltaNum);
-}
-
-async function devtoolsGrantPack() {
-  const pack = openStickerPack();
-  const newStickers = [];
-  for (const stickerId of pack) {
-    const isNew = await addSticker(stickerId);
-    if (isNew) {
-      newStickers.push(getStickerById(stickerId));
-    }
-  }
-  await renderAlbum();
-  if (newStickers.length) {
-    const label = newStickers.map(s => s ? `${s.emoji || '✨'} ${s.name}` : 'Neu').join(', ');
-    setDevtoolsStatus(`🎁 Pack geöffnet – neu: ${label}`);
-  } else {
-    setDevtoolsStatus('🎁 Pack geöffnet – nur Duplikate.');
-  }
-}
-
-async function devtoolsGiveSingleSticker() {
-  const collected = await getCollectedStickers();
-  const missing = ALL_STICKER_IDS.filter(id => !collected.includes(id));
-  const sourcePool = missing.length ? missing : ALL_STICKER_IDS;
-  const target = sourcePool[Math.floor(Math.random() * sourcePool.length)];
-  const added = await addSticker(target);
-  await renderAlbum();
-  const sticker = getStickerById(target);
-  const label = sticker ? `${sticker.emoji || '✨'} ${sticker.name}` : target;
-  setDevtoolsStatus(added ? `Sticker hinzugefügt: ${label}` : `Sticker bereits vorhanden: ${label}`);
-}
-
-async function devtoolsPlayMedal(type) {
-  if (!MEDAL_TYPES.includes(type)) {
-    setDevtoolsStatus('Unbekannter Medaillentyp.');
-    return;
-  }
-  await playMedalIntroSound();
-  const custom = await playMedalCelebration(type);
-  if (!custom) {
-    playRewardSound();
-  }
-  const label = MEDAL_LABELS[type] || type;
-  setDevtoolsStatus(`Medaillen-Jubel abgespielt: ${label}`);
-}
-
-async function devtoolsSimulateRun() {
-  if (!devtoolsEnabled) return;
-  const medal = elDevtoolsRunMedal ? (elDevtoolsRunMedal.value || 'bronze') : 'bronze';
-  const rawStars = elDevtoolsRunStars ? Number(elDevtoolsRunStars.value) : 0;
-  const starGain = Number.isFinite(rawStars) ? Math.max(0, Math.min(MAX_RUN_STARS, Math.floor(rawStars))) : 0;
-  setDevtoolsStatus('Run wird simuliert ...');
-  updateStarSummary(starGain);
-  const widget = getStarRevealWidget();
-  if (widget) {
-    await widget.setStars(0);
-    await widget.setStars(starGain);
-  }
-  await playMedalIntroSound();
-  const custom = await playMedalCelebration(medal);
-  if (!custom && starGain > 0) {
-    playRewardSound();
-  }
-  const totalBefore = await getStars();
-  const total = starGain > 0 ? await addStars(starGain) : totalBefore;
-  totalStarBank = total;
-  updateStarTrackDisplay();
-  await renderAlbum();
-  if (elDevtoolsStarInput) {
-    elDevtoolsStarInput.value = total;
-  }
-  const label = MEDAL_LABELS[medal] || medal;
-  const gainText = starGain > 0 ? `+${starGain} Sterne (Bank: ${total})` : 'keine Sterne hinzugefügt';
-  setDevtoolsStatus(`Run simuliert: ${label}, ${gainText}.`);
-}
-
-async function devtoolsBumpLetterStat() {
-  const letter = normaliseLetterInput(elDevtoolsLetterInput ? elDevtoolsLetterInput.value : null);
-  if (!letter) {
-    setDevtoolsStatus('Bitte einen Buchstaben (A-Z) eingeben.');
-    return;
-  }
-  const next = await incrementLetterStat(letter);
-  if (elDevtoolsLetterFeedback) {
-    elDevtoolsLetterFeedback.textContent = `${letter}: ${next}`;
-  }
-  setDevtoolsStatus(`Statistik aktualisiert für ${letter} (neu: ${next}).`);
-}
-
-function initDevtoolsHotkey() {
-  window.addEventListener('keydown', (event) => {
-    const key = (event.key || '').toLowerCase();
-    if ((event.ctrlKey || event.metaKey) && event.shiftKey && key === 'd') {
-      const next = !devtoolsEnabled;
-      writeDevtoolsFlag(next);
-      updateDevtoolsVisibility(next);
-      if (next) {
-        openDevtoolsPanel();
-        setDevtoolsStatus('Entwicklermodus aktiviert.');
-      } else {
-        setDevtoolsStatus('');
-      }
-    }
-  });
-}
-
-async function initDevtools() {
-  initDevtoolsHotkey();
-
-  const initialEnabled = detectDevtoolsFromUrl() || readDevtoolsFlag();
-  updateDevtoolsVisibility(initialEnabled);
-
-  if (elDevtoolsTogglePanel) {
-    elDevtoolsTogglePanel.addEventListener('click', openDevtoolsPanel);
-  }
-  if (elDevtoolsClosePanel) {
-    elDevtoolsClosePanel.addEventListener('click', closeDevtoolsPanel);
-  }
-  if (elDevtoolsDisable) {
-    elDevtoolsDisable.addEventListener('click', () => {
-      writeDevtoolsFlag(false);
-      updateDevtoolsVisibility(false);
-    });
-  }
-  if (elDevtoolsSetStars && elDevtoolsStarInput) {
-    elDevtoolsSetStars.addEventListener('click', () => devtoolsApplyStars(elDevtoolsStarInput.value));
-  }
-  devtoolsStarDeltaButtons.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const delta = Number(btn.dataset.devtoolsStarDelta);
-      devtoolsAdjustStars(Number.isFinite(delta) ? delta : 0);
-    });
-  });
-  if (elDevtoolsResetStars) {
-    elDevtoolsResetStars.addEventListener('click', () => devtoolsApplyStars(0));
-  }
-  if (elDevtoolsGrantPack) {
-    elDevtoolsGrantPack.addEventListener('click', devtoolsGrantPack);
-  }
-  if (elDevtoolsMedalIntro) {
-    elDevtoolsMedalIntro.addEventListener('click', async () => {
-      await playMedalIntroSound();
-      setDevtoolsStatus('Medaillen-Intro abgespielt.');
-    });
-  }
-  devtoolsMedalButtons.forEach(btn => {
-    btn.addEventListener('click', () => devtoolsPlayMedal(btn.dataset.devtoolsMedal));
-  });
-  if (elDevtoolsSimulateResult) {
-    elDevtoolsSimulateResult.addEventListener('click', devtoolsSimulateRun);
-  }
-  if (elDevtoolsBumpLetter) {
-    elDevtoolsBumpLetter.addEventListener('click', devtoolsBumpLetterStat);
-  }
-  if (elDevtoolsGiveSticker) {
-    elDevtoolsGiveSticker.addEventListener('click', devtoolsGiveSingleSticker);
-  }
-
-  if (devtoolsEnabled) {
-    await syncDevtoolsInputs();
-  }
-}
 
 async function onPracticeLetterClick(e) {
   const letter = e.currentTarget.getAttribute('data-letter');
@@ -4314,7 +3765,6 @@ async function updateStatusGridFromDB() {
   const hasSet = new Set(clips.map(clip => clip.letter));
   const byDifficulty = aggregateClipsByLetter(clips);
   renderStatusGrid(hasSet, byDifficulty);
-  updateParentHubStatus({ recordedCount: hasSet.size, setId });
 }
 
 function fmt(t) {
@@ -4657,8 +4107,6 @@ document.getElementById('exportBtn').addEventListener('click', async () => {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    setLastExportTimestamp(Date.now());
-    updateParentHubStatus();
     alert(`✅ ${sets.length} Set(s) mit insgesamt ${totalAudio} Aufnahmen exportiert!`);
   } catch (e) {
     console.error('Export fehlgeschlagen:', e);
@@ -5165,6 +4613,7 @@ async function startGame() {
     b.classList.toggle('active', active);
   });
   document.getElementById('spiel').classList.remove('hidden');
+  document.getElementById('einstellungen').classList.add('hidden');
 
   // Runde 1
   playStartSound();
@@ -5574,20 +5023,20 @@ elLetters.addEventListener('keydown', (e) => {
 
 // Inhalte initial
 (async function init() {
-  const { profile } = ensureProfileSetup();
-  await migrateProfileScopedData(profile);
-  // Migration alter Aufnahmen (falls vorhanden)
-  await migrateOldRecordings();
-  await importBundledSetsIfNeeded();
-  await cleanupPlaceholderSets();
+  console.log('App init started');
+  try {
+    initThemeSelector();
+    registerServiceWorker();
+    initPWAInstall();
 
-  // Default-Set sicherstellen und UI initialisieren
-  // Default-Set sicherstellen und UI initialisieren
-  await hydrateProfileState();
-  await initDevtools();
+    console.log('Hydrating profile state...');
+    await hydrateProfileState();
+    console.log('Profile state hydrated.');
 
-  // Start flow: Profile -> Welcome
-  openProfileModal();
+    openProfileModal();
+  } catch (err) {
+    console.error('App init failed:', err);
+  }
 })();
 
 // ——————————————————————————————————————————
@@ -5598,6 +5047,9 @@ const elWelcomeLernpfad = document.getElementById('welcomeLernpfad');
 const elWelcomeIndividuell = document.getElementById('welcomeIndividuell');
 const elWelcomeUeben = document.getElementById('welcomeUeben');
 const elWelcomeClose = document.getElementById('welcomeClose');
+const elWelcomeAlbum = document.getElementById('welcomeAlbum');
+const elWelcomeSettings = document.getElementById('welcomeSettings');
+const elWelcomeMic = document.getElementById('welcomeMic');
 
 function showWelcomeDialog() {
   if (elWelcomeDialog) {
@@ -5618,14 +5070,9 @@ if (elWelcomeLernpfad) {
     const lernwegCard = document.querySelector('[data-mode="LERNWEG"]');
     if (lernwegCard) {
       lernwegCard.click();
-      // We need to wait a tick for the state to update if necessary, 
-      // but the click handler is synchronous usually.
-      // However, we want to start immediately.
       if (elModeDialogStart && !elModeDialogStart.disabled) {
         elModeDialogStart.click();
       } else {
-        // Fallback if for some reason start is disabled (e.g. missing recordings)
-        // Open the mode dialog so user sees the issue
         openModeDialog();
       }
     }
@@ -5655,6 +5102,33 @@ if (elWelcomeClose) {
   });
 }
 
-// Show welcome dialog on startup
-// Show welcome dialog on startup - REMOVED in favor of Profile -> Welcome flow
-// setTimeout(showWelcomeDialog, 500);
+if (elWelcomeAlbum) {
+  elWelcomeAlbum.addEventListener('click', () => {
+    closeWelcomeDialog();
+    switchToTab('album');
+  });
+}
+
+if (elWelcomeSettings) {
+  elWelcomeSettings.addEventListener('click', () => {
+    closeWelcomeDialog();
+    if (!isParentalGatePassed) {
+      openParentalGate();
+    } else {
+      switchToTab('parents-dashboard');
+    }
+  });
+}
+
+if (elWelcomeMic) {
+  elWelcomeMic.addEventListener('click', () => {
+    closeWelcomeDialog();
+    if (!isParentalGatePassed) {
+      openParentalGate();
+    } else {
+      switchToTab('parents-dashboard');
+      switchDashboardTab('dash-recordings');
+    }
+  });
+}
+
