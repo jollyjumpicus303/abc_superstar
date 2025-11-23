@@ -43,9 +43,10 @@ const SOUND_FILES = {
   start: { url: 'app/sfx/start.mp3', volume: 0.7 },
   unlock: { url: 'app/sfx/unlock.mp3', volume: 0.75 },
   reward: { url: 'app/sfx/reward.mp3', volume: 0.85 },
+  trophy: { url: 'app/sfx/trophy.mp3', volume: 0.9 },
   starReveal: { url: 'app/sfx/star.mp3', volume: 0.9 },
-  medalIntro: { url: 'SPECS/AdditionalInput/PlayBeforeMedalSound.mp3', volume: 0.85 },
-  giftPop: { url: 'SPECS/AdditionalInput/pop.mp3', volume: 0.8 },
+  medalIntro: { url: 'ProjectData/SPECS/AdditionalInput/PlayBeforeMedalSound.mp3', volume: 0.85 },
+  giftPop: { url: 'ProjectData/SPECS/AdditionalInput/pop.mp3', volume: 0.8 },
   stickerPop: { url: 'app/sfx/pop.mp3', volume: 0.85 },
 };
 
@@ -153,6 +154,7 @@ function playClickSound() { playSfx('click'); }
 function playStartSound() { playSfx('start'); }
 function playUnlockSound() { playSfx('unlock'); }
 function playRewardSound() { playSfx('reward'); }
+function playTrophySound() { playSfx('trophy'); }
 function playStarRevealSound() { playSfx('starReveal'); }
 function playGiftPopSound() { playSfx('giftPop'); }
 function playStickerPopSound() { playSfx('stickerPop'); }
@@ -2328,7 +2330,7 @@ function ensureGiftLottie() {
       renderer: 'svg',
       loop: true,
       autoplay: false,
-      path: 'SPECS/AdditionalInput/GiftLotti.json',
+      path: 'ProjectData/SPECS/AdditionalInput/GiftLotti.json',
     });
   }
   return giftLottieAnimation;
@@ -5043,7 +5045,6 @@ document.getElementById('closeModal').addEventListener('click', closeModal);
 
 if (elResultGiftButton) {
   elResultGiftButton.addEventListener('click', () => {
-    playRewardSound();
     closeModal();
     switchToTab('album');
     requestAnimationFrame(() => {
@@ -5450,6 +5451,7 @@ async function finishGame() {
     medalTier = 'bronze';
   }
   playTrophyAnimation(animationPath);
+  playTrophySound();
   const medalIntroPromise = playMedalIntroSound();
   const progressBefore = game && game.progress ? game.progress : null;
   if (progressBefore && progressBefore.mode === 'LERNWEG') {
