@@ -478,6 +478,22 @@ Die neue Clay-Insel-Variante wird parallel zur bestehenden Classic-UI als eigens
 
 ---
 
+## 19. Entwicklermodus / QA-Tools ✅
+
+**Priorität:** Mittel | **Aufwand:** Mittel | **Status:** Abgeschlossen
+
+### Ziele:
+- Manuelles Testen von Sternbank, Medaillen, Stickern und Statistiken ohne laufendes Spiel.
+- Aktivierung nur lokal/absichtlich; klare Trennung zum Kinder-UI.
+
+### Aufgaben:
+- [x] Flag-aktivierbares Dev-Panel im Eltern-Hub (Banner + Hotkey/URL-Flag).
+- [x] Sternbank-Steuerung (Setzen/±-Buttons), gratis Sticker-Pack, einzelner Sticker-Drop.
+- [x] Medaillen- und Run-Simulation (Intro + Gold/Silber/Bronze, Sterne hinzufügen, Star-Reveal aktualisieren).
+- [x] Statistik-Helper (Buchstaben-Stat hochzählen) und Doku/Changelog aktualisieren.
+
+---
+
 ## Deployment-Status
 
 ✅ **GitHub Pages:** https://jollyjumpicus303.github.io/abc_superstar/

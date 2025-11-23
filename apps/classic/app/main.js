@@ -290,6 +290,26 @@ const elCloseProfileModal = document.getElementById('closeProfileModal');
 const elProfileList = document.getElementById('profileList');
 const elParentProfileList = document.getElementById('parentProfileList');
 const elParentStats = document.getElementById('parentStats');
+const elDevtoolsBanner = document.getElementById('devtoolsBanner');
+const elDevtoolsPanel = document.getElementById('devtoolsPanel');
+const elDevtoolsTogglePanel = document.getElementById('devtoolsTogglePanel');
+const elDevtoolsDisable = document.getElementById('devtoolsDisable');
+const elDevtoolsClosePanel = document.getElementById('devtoolsClosePanel');
+const elDevtoolsStarInput = document.getElementById('devtoolsStarInput');
+const elDevtoolsSetStars = document.getElementById('devtoolsSetStars');
+const devtoolsStarDeltaButtons = Array.from(document.querySelectorAll('[data-devtools-star-delta]'));
+const elDevtoolsGrantPack = document.getElementById('devtoolsGrantPack');
+const elDevtoolsResetStars = document.getElementById('devtoolsResetStars');
+const elDevtoolsMedalIntro = document.getElementById('devtoolsMedalIntro');
+const devtoolsMedalButtons = Array.from(document.querySelectorAll('[data-devtools-medal]'));
+const elDevtoolsRunStars = document.getElementById('devtoolsRunStars');
+const elDevtoolsRunMedal = document.getElementById('devtoolsRunMedal');
+const elDevtoolsSimulateResult = document.getElementById('devtoolsSimulateResult');
+const elDevtoolsLetterInput = document.getElementById('devtoolsLetterInput');
+const elDevtoolsBumpLetter = document.getElementById('devtoolsBumpLetter');
+const elDevtoolsLetterFeedback = document.getElementById('devtoolsLetterFeedback');
+const elDevtoolsGiveSticker = document.getElementById('devtoolsGiveSticker');
+const elDevtoolsStatus = document.getElementById('devtoolsStatus');
 const elBtnAddProfileParent = document.getElementById('btnAddProfileParent');
 const elProfileEditor = document.getElementById('profileEditor');
 const elProfileEditorTitle = document.getElementById('profileEditorTitle');
@@ -334,8 +354,12 @@ const THEME_OPTIONS = {
 };
 const DEFAULT_THEME = 'classic';
 const LAST_EXPORT_STORAGE_KEY = 'abc-last-export';
+const DEVTOOLS_FLAG_KEY = 'abc_abenteuer_devtools';
+const DEVTOOLS_URL_FLAGS = ['devtools', 'debug'];
 let isThemeMenuOpen = false;
 let activeTheme = document.documentElement.getAttribute('data-theme') || DEFAULT_THEME;
+let devtoolsEnabled = false;
+let devtoolsPanelOpen = false;
 
 initThemeSelector();
 registerServiceWorker();
@@ -2576,6 +2600,275 @@ document.getElementById('btnOpenPack').addEventListener('click', async () => {
     await renderAlbum();
   }
 });
+
+// ——————————————————————————————————————————
+// Entwicklertools (lokal)
+// ——————————————————————————————————————————
+function readDevtoolsFlag() {
+  try {
+    return typeof localStorage !== 'undefined' && localStorage.getItem(DEVTOOLS_FLAG_KEY) === '1';
+  } catch (_) {
+    return false;
+  }
+}
+
+function writeDevtoolsFlag(active) {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    if (active) {
+      localStorage.setItem(DEVTOOLS_FLAG_KEY, '1');
+    } else {
+      localStorage.removeItem(DEVTOOLS_FLAG_KEY);
+    }
+  } catch (_) {
+    /* ignore */
+  }
+}
+
+function detectDevtoolsFromUrl() {
+  try {
+    const params = new URLSearchParams(window.location.search || '');
+    const hit = DEVTOOLS_URL_FLAGS.some(flag => params.has(flag));
+    if (hit) {
+      writeDevtoolsFlag(true);
+    }
+    return hit;
+  } catch (_) {
+    return false;
+  }
+}
+
+function setDevtoolsStatus(message) {
+  if (elDevtoolsStatus) {
+    elDevtoolsStatus.textContent = message || '';
+  }
+}
+
+function updateDevtoolsVisibility(enabled = devtoolsEnabled) {
+  devtoolsEnabled = !!enabled;
+  if (elDevtoolsBanner) {
+    elDevtoolsBanner.classList.toggle('hidden', !devtoolsEnabled);
+  }
+  if (elDevtoolsPanel && !devtoolsEnabled) {
+    elDevtoolsPanel.classList.add('hidden');
+    devtoolsPanelOpen = false;
+  }
+  if (devtoolsEnabled) {
+    syncDevtoolsInputs();
+  } else {
+    setDevtoolsStatus('');
+  }
+}
+
+async function syncDevtoolsInputs() {
+  if (!devtoolsEnabled) return;
+  const stars = await getStars();
+  if (elDevtoolsStarInput) {
+    elDevtoolsStarInput.value = Math.max(0, Math.floor(Number.isFinite(stars) ? stars : 0));
+  }
+  if (elDevtoolsRunStars && !elDevtoolsRunStars.value) {
+    elDevtoolsRunStars.value = 3;
+  }
+}
+
+async function openDevtoolsPanel() {
+  if (!devtoolsEnabled || !elDevtoolsPanel) return;
+  devtoolsPanelOpen = true;
+  elDevtoolsPanel.classList.remove('hidden');
+  await syncDevtoolsInputs();
+}
+
+function closeDevtoolsPanel() {
+  devtoolsPanelOpen = false;
+  if (elDevtoolsPanel) {
+    elDevtoolsPanel.classList.add('hidden');
+  }
+}
+
+async function devtoolsApplyStars(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) {
+    setDevtoolsStatus('Bitte eine Zahl eingeben.');
+    return;
+  }
+  const safe = Math.max(0, Math.floor(numeric));
+  await setStars(safe);
+  totalStarBank = safe;
+  updateStarTrackDisplay();
+  await renderAlbum();
+  if (elDevtoolsStarInput) {
+    elDevtoolsStarInput.value = safe;
+  }
+  setDevtoolsStatus(`Sternestand auf ${safe} gesetzt.`);
+}
+
+async function devtoolsAdjustStars(delta) {
+  const deltaNum = Number(delta);
+  if (!Number.isFinite(deltaNum)) return;
+  const current = await getStars();
+  await devtoolsApplyStars((Number.isFinite(current) ? current : 0) + deltaNum);
+}
+
+async function devtoolsGrantPack() {
+  const pack = openStickerPack();
+  const newStickers = [];
+  for (const stickerId of pack) {
+    const isNew = await addSticker(stickerId);
+    if (isNew) {
+      newStickers.push(getStickerById(stickerId));
+    }
+  }
+  await renderAlbum();
+  if (newStickers.length) {
+    const label = newStickers.map(s => s ? `${s.emoji || '✨'} ${s.name}` : 'Neu').join(', ');
+    setDevtoolsStatus(`🎁 Pack geöffnet – neu: ${label}`);
+  } else {
+    setDevtoolsStatus('🎁 Pack geöffnet – nur Duplikate.');
+  }
+}
+
+async function devtoolsGiveSingleSticker() {
+  const collected = await getCollectedStickers();
+  const missing = ALL_STICKER_IDS.filter(id => !collected.includes(id));
+  const sourcePool = missing.length ? missing : ALL_STICKER_IDS;
+  const target = sourcePool[Math.floor(Math.random() * sourcePool.length)];
+  const added = await addSticker(target);
+  await renderAlbum();
+  const sticker = getStickerById(target);
+  const label = sticker ? `${sticker.emoji || '✨'} ${sticker.name}` : target;
+  setDevtoolsStatus(added ? `Sticker hinzugefügt: ${label}` : `Sticker bereits vorhanden: ${label}`);
+}
+
+async function devtoolsPlayMedal(type) {
+  if (!MEDAL_TYPES.includes(type)) {
+    setDevtoolsStatus('Unbekannter Medaillentyp.');
+    return;
+  }
+  await playMedalIntroSound();
+  const custom = await playMedalCelebration(type);
+  if (!custom) {
+    playRewardSound();
+  }
+  const label = MEDAL_LABELS[type] || type;
+  setDevtoolsStatus(`Medaillen-Jubel abgespielt: ${label}`);
+}
+
+async function devtoolsSimulateRun() {
+  if (!devtoolsEnabled) return;
+  const medal = elDevtoolsRunMedal ? (elDevtoolsRunMedal.value || 'bronze') : 'bronze';
+  const rawStars = elDevtoolsRunStars ? Number(elDevtoolsRunStars.value) : 0;
+  const starGain = Number.isFinite(rawStars) ? Math.max(0, Math.min(MAX_RUN_STARS, Math.floor(rawStars))) : 0;
+  setDevtoolsStatus('Run wird simuliert ...');
+  updateStarSummary(starGain);
+  const widget = getStarRevealWidget();
+  if (widget) {
+    await widget.setStars(0);
+    await widget.setStars(starGain);
+  }
+  await playMedalIntroSound();
+  const custom = await playMedalCelebration(medal);
+  if (!custom && starGain > 0) {
+    playRewardSound();
+  }
+  const totalBefore = await getStars();
+  const total = starGain > 0 ? await addStars(starGain) : totalBefore;
+  totalStarBank = total;
+  updateStarTrackDisplay();
+  await renderAlbum();
+  if (elDevtoolsStarInput) {
+    elDevtoolsStarInput.value = total;
+  }
+  const label = MEDAL_LABELS[medal] || medal;
+  const gainText = starGain > 0 ? `+${starGain} Sterne (Bank: ${total})` : 'keine Sterne hinzugefügt';
+  setDevtoolsStatus(`Run simuliert: ${label}, ${gainText}.`);
+}
+
+async function devtoolsBumpLetterStat() {
+  const letter = normaliseLetterInput(elDevtoolsLetterInput ? elDevtoolsLetterInput.value : null);
+  if (!letter) {
+    setDevtoolsStatus('Bitte einen Buchstaben (A-Z) eingeben.');
+    return;
+  }
+  const next = await incrementLetterStat(letter);
+  if (elDevtoolsLetterFeedback) {
+    elDevtoolsLetterFeedback.textContent = `${letter}: ${next}`;
+  }
+  setDevtoolsStatus(`Statistik aktualisiert für ${letter} (neu: ${next}).`);
+}
+
+function initDevtoolsHotkey() {
+  window.addEventListener('keydown', (event) => {
+    const key = (event.key || '').toLowerCase();
+    if ((event.ctrlKey || event.metaKey) && event.shiftKey && key === 'd') {
+      const next = !devtoolsEnabled;
+      writeDevtoolsFlag(next);
+      updateDevtoolsVisibility(next);
+      if (next) {
+        openDevtoolsPanel();
+        setDevtoolsStatus('Entwicklermodus aktiviert.');
+      } else {
+        setDevtoolsStatus('');
+      }
+    }
+  });
+}
+
+async function initDevtools() {
+  initDevtoolsHotkey();
+
+  const initialEnabled = detectDevtoolsFromUrl() || readDevtoolsFlag();
+  updateDevtoolsVisibility(initialEnabled);
+
+  if (elDevtoolsTogglePanel) {
+    elDevtoolsTogglePanel.addEventListener('click', openDevtoolsPanel);
+  }
+  if (elDevtoolsClosePanel) {
+    elDevtoolsClosePanel.addEventListener('click', closeDevtoolsPanel);
+  }
+  if (elDevtoolsDisable) {
+    elDevtoolsDisable.addEventListener('click', () => {
+      writeDevtoolsFlag(false);
+      updateDevtoolsVisibility(false);
+    });
+  }
+  if (elDevtoolsSetStars && elDevtoolsStarInput) {
+    elDevtoolsSetStars.addEventListener('click', () => devtoolsApplyStars(elDevtoolsStarInput.value));
+  }
+  devtoolsStarDeltaButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const delta = Number(btn.dataset.devtoolsStarDelta);
+      devtoolsAdjustStars(Number.isFinite(delta) ? delta : 0);
+    });
+  });
+  if (elDevtoolsResetStars) {
+    elDevtoolsResetStars.addEventListener('click', () => devtoolsApplyStars(0));
+  }
+  if (elDevtoolsGrantPack) {
+    elDevtoolsGrantPack.addEventListener('click', devtoolsGrantPack);
+  }
+  if (elDevtoolsMedalIntro) {
+    elDevtoolsMedalIntro.addEventListener('click', async () => {
+      await playMedalIntroSound();
+      setDevtoolsStatus('Medaillen-Intro abgespielt.');
+    });
+  }
+  devtoolsMedalButtons.forEach(btn => {
+    btn.addEventListener('click', () => devtoolsPlayMedal(btn.dataset.devtoolsMedal));
+  });
+  if (elDevtoolsSimulateResult) {
+    elDevtoolsSimulateResult.addEventListener('click', devtoolsSimulateRun);
+  }
+  if (elDevtoolsBumpLetter) {
+    elDevtoolsBumpLetter.addEventListener('click', devtoolsBumpLetterStat);
+  }
+  if (elDevtoolsGiveSticker) {
+    elDevtoolsGiveSticker.addEventListener('click', devtoolsGiveSingleSticker);
+  }
+
+  if (devtoolsEnabled) {
+    await syncDevtoolsInputs();
+  }
+}
 
 async function onPracticeLetterClick(e) {
   const letter = e.currentTarget.getAttribute('data-letter');
@@ -5291,6 +5584,7 @@ elLetters.addEventListener('keydown', (e) => {
   // Default-Set sicherstellen und UI initialisieren
   // Default-Set sicherstellen und UI initialisieren
   await hydrateProfileState();
+  await initDevtools();
 
   // Start flow: Profile -> Welcome
   openProfileModal();

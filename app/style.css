@@ -998,6 +998,24 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
 }
 .hub-status__item strong{display:block; font-size:18px; margin-top:4px;}
 .hub-status__item--cta{background:linear-gradient(135deg,#e6f5ff,#f5fbff); box-shadow:0 10px 22px rgba(73,182,255,.22);}
+.devtools-banner{display:flex; align-items:center; gap:12px; padding:12px 14px; border:1px dashed rgba(139,92,246,.5); border-radius:var(--radius); background:var(--surface); box-shadow:var(--shadow-1);}
+.devtools-pill{background:linear-gradient(120deg,#8b5cf6,#22d3ee); color:#fff; font-weight:800; padding:6px 10px; border-radius:12px; letter-spacing:.02em; box-shadow:0 8px 20px rgba(139,92,246,.25);}
+.devtools-banner__copy strong{display:block; margin:0;}
+.devtools-banner__actions{margin-left:auto; display:flex; gap:8px; flex-wrap:wrap;}
+.devtools{border:1px dashed rgba(139,92,246,.3);}
+.devtools__head{display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;}
+.devtools-grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:12px;}
+.devtools-card{padding:12px; border-radius:14px; background:var(--surface-soft); box-shadow:var(--shadow-1); display:flex; flex-direction:column; gap:10px;}
+.devtools-card__head h4{margin:0;}
+.devtools-card__head p{margin:2px 0 0;}
+.devtools-row{display:flex; gap:8px; align-items:center; flex-wrap:wrap;}
+.devtools-row--actions{justify-content:space-between;}
+.devtools-label{font-weight:700; color:var(--muted); min-width:96px;}
+.devtools-input, .devtools-select{padding:8px 10px; border-radius:10px; border:1px solid rgba(124,58,237,.2); background:var(--surface); color:var(--ink); box-shadow:var(--shadow-0);}
+.devtools-input{min-width:80px; max-width:120px;}
+.devtools-select{min-width:120px;}
+.devtools-chip-row{display:flex; gap:8px; flex-wrap:wrap;}
+.devtools-status{margin-top:4px; min-height:18px;}
 .eyebrow{text-transform:uppercase; letter-spacing:.08em; font-weight:800; font-size:11px; color:var(--muted); margin:0;}
 .parent-hub .profile-manager{margin-top:0;}
 .parent-hub .extras-card{margin-top:0;}

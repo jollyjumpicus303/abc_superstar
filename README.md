@@ -50,6 +50,13 @@ anschließend im Browser:
 - Neues Insel‑UI (Design‑System, Screens, Assets):  
   `ProjectData/Requirements new UI/`
 
+### Entwicklermodus (lokal)
+
+- Flag/Hotkey: `?devtools=1` (oder `?debug=1`) bzw. `Ctrl+Shift+D` aktiviert einen lokalen Entwicklermodus (Flag `abc_abenteuer_devtools` in `localStorage`).
+- Ort: Eltern‑Hub → Tab „Übersicht“ zeigt Banner + Panel „Entwickler‑Tools“ (nur wenn Flag aktiv).
+- Funktionen: Sternbank setzen/auffüllen, gratis Sticker‑Pack, Medaillen‑Jubel (Gold/Silber/Bronze, inkl. Custom‑Clips), Run‑Simulation mit Sternen, Buchstaben‑Statistik hochzählen, Einzel‑Sticker vergeben.
+- Details: `ProjectData/Requirements/DeveloperMode.md`, `ProjectData/SPECS/ui/DEVTOOLS_MODE.md`.
+
 ---
 
 ## 3. Audio erzeugen (CLI)

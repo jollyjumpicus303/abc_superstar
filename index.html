@@ -292,6 +292,92 @@
                 <strong id="hubStatusNext">Aufnahmen vervollständigen</strong>
               </div>
             </div>
+            <div id="devtoolsBanner" class="devtools-banner hidden" role="status" aria-live="polite">
+              <div class="devtools-pill">DEV</div>
+              <div class="devtools-banner__copy">
+                <strong>Entwicklermodus aktiv</strong>
+                <p class="muted small">Nur lokal sichtbar · Hotkey: Ctrl+Shift+D · URL: ?devtools=1</p>
+              </div>
+              <div class="devtools-banner__actions">
+                <button type="button" id="devtoolsTogglePanel" class="btn secondary">Panel öffnen</button>
+                <button type="button" id="devtoolsDisable" class="btn ghost">Deaktivieren</button>
+              </div>
+            </div>
+
+            <div id="devtoolsPanel" class="hub-block devtools hidden" aria-label="Entwickler-Tools (nur lokal)">
+              <div class="devtools__head">
+                <div>
+                  <p class="eyebrow">Nur lokal</p>
+                  <h3>Entwickler-Tools</h3>
+                  <p class="muted small">Simuliere Sterne, Medaillen und Sticker ohne Spiel.</p>
+                </div>
+                <div class="devtools__actions">
+                  <button type="button" id="devtoolsClosePanel" class="btn ghost">Schließen</button>
+                </div>
+              </div>
+              <div class="devtools-grid">
+                <div class="devtools-card">
+                  <div class="devtools-card__head">
+                    <h4>⭐ Sterne & Packs</h4>
+                    <p class="muted small">Bank anpassen, Packs testen.</p>
+                  </div>
+                  <div class="devtools-row">
+                    <label class="devtools-label" for="devtoolsStarInput">Sternestand</label>
+                    <input id="devtoolsStarInput" class="devtools-input" type="number" inputmode="numeric" min="0" step="1" value="0">
+                    <button id="devtoolsSetStars" type="button" class="btn secondary">Setzen</button>
+                  </div>
+                  <div class="devtools-chip-row">
+                    <button type="button" class="chip" data-devtools-star-delta="1">+1</button>
+                    <button type="button" class="chip" data-devtools-star-delta="5">+5</button>
+                    <button type="button" class="chip" data-devtools-star-delta="10">+10</button>
+                    <button type="button" class="chip" data-devtools-star-delta="-5">-5</button>
+                  </div>
+                  <div class="devtools-row devtools-row--actions">
+                    <button type="button" id="devtoolsGrantPack" class="btn ghost">🎁 Gratis-Pack öffnen</button>
+                    <button type="button" id="devtoolsResetStars" class="btn ghost">Bank leeren</button>
+                  </div>
+                </div>
+                <div class="devtools-card">
+                  <div class="devtools-card__head">
+                    <h4>🏅 Medaillen & Runs</h4>
+                    <p class="muted small">Sounds & Sterngewinne prüfen.</p>
+                  </div>
+                  <div class="devtools-chip-row">
+                    <button type="button" id="devtoolsMedalIntro" class="chip">Intro</button>
+                    <button type="button" class="chip" data-devtools-medal="gold">Gold</button>
+                    <button type="button" class="chip" data-devtools-medal="silver">Silber</button>
+                    <button type="button" class="chip" data-devtools-medal="bronze">Bronze</button>
+                  </div>
+                  <div class="devtools-row">
+                    <label class="devtools-label" for="devtoolsRunStars">Run simulieren</label>
+                    <input id="devtoolsRunStars" class="devtools-input" type="number" min="0" max="5" step="1" value="3">
+                    <select id="devtoolsRunMedal" class="devtools-select" aria-label="Medaillen-Typ">
+                      <option value="gold">Gold</option>
+                      <option value="silver">Silber</option>
+                      <option value="bronze" selected>Bronze</option>
+                    </select>
+                    <button type="button" id="devtoolsSimulateResult" class="btn secondary">Simulieren</button>
+                  </div>
+                </div>
+                <div class="devtools-card">
+                  <div class="devtools-card__head">
+                    <h4>📊 Sticker & Stats</h4>
+                    <p class="muted small">Album & Buchstaben prüfen.</p>
+                  </div>
+                  <div class="devtools-row">
+                    <label class="devtools-label" for="devtoolsLetterInput">Buchstabe</label>
+                    <input id="devtoolsLetterInput" class="devtools-input" type="text" maxlength="1" placeholder="A">
+                    <button type="button" id="devtoolsBumpLetter" class="btn secondary">Stat +1</button>
+                    <span id="devtoolsLetterFeedback" class="muted small"></span>
+                  </div>
+                  <div class="devtools-row devtools-row--actions">
+                    <button type="button" id="devtoolsGiveSticker" class="btn ghost">🎟️ Sticker hinzufügen</button>
+                  </div>
+                </div>
+              </div>
+              <p id="devtoolsStatus" class="muted small devtools-status" aria-live="polite"></p>
+            </div>
+
             <div id="parentStats" class="hub-block">
               <h2>Statistiken & Fortschritt</h2>
               <p class="muted">Hier sehen Sie bald eine Auswertung des Lernfortschritts.</p>

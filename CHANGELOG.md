@@ -9,3 +9,4 @@ All notable changes to this project are documented here. Releases are tagged via
 - [profiles] Emoji-Avatar Randomizer mit 🔄-Button (globale Duplikate vermeiden, manueller Override möglich, Editor im Eltern-Hub).
 - [profiles][ui] Avatar-Reroll-Button auf SVG-Icon mit größerer Hit-Area und passender Gradient-Styling umgestellt (Classic & Island), Text-Hint auf „Neu würfeln“ angepasst.
 - [parent-hub] Aufnahmen- und Set-Verwaltung zu „Aufnahmen & Sets“ zusammengeführt; Set-Wechsel direkt beim Aufnehmen möglich; Profilkarten schalten Statistiken per Klick um.
+- [devtools] Lokaler Entwicklermodus (Hotkey/URL-Flag) mit Banner + Panel im Eltern-Hub: Sternbank steuern, Sticker-Packs simulieren, Medaillen-/Run-Simulation und Statistikhilfen.
