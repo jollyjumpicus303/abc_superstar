@@ -980,7 +980,9 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
   padding:16px;
   box-shadow:0 10px 24px rgba(15,23,42,.08);
   border:1px solid rgba(15,23,42,.06);
+  margin-bottom:16px;
 }
+.hub-block:last-child{margin-bottom:0;}
 .hub-status{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
