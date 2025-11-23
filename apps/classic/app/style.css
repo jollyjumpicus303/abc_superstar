@@ -1,38 +1,38 @@
 :root{
-  --bg:#fff8e7;
-  --ink:#2d1b4e;
-  --muted:#6b7896;
-  --brand:#7c3aed;
-  --brand-2:#fb923c;
-  --brand-3:#f472b6;
+  --bg:#79d7ff;
+  --ink:#11304f;
+  --muted:#5f6b86;
+  --brand:#ff6b7a;
+  --brand-2:#ffb347;
+  --brand-3:#ffd166;
   --ok:#22c55e;
   --bad:#ef4444;
   --surface:#ffffff;
   --card:#ffffff;
-  --shadow: 0 12px 40px rgba(124,58,237,.15);
+  --shadow: 0 18px 40px rgba(15, 23, 42, .18);
   --radius:20px;
   --radius-sm:14px;
-  --page-bg:linear-gradient(180deg,var(--bg),#fff);
-  --header-gradient:linear-gradient(90deg,var(--brand),#a78bfa 50%, var(--brand-2));
-  --surface-soft:#f3e8ff;
-  --surface-soft-strong:#faf5ff;
-  --surface-border:#e9d5ff;
-  --surface-border-strong:#e0d5ff;
-  --menu-surface:#fff;
-  --menu-border:rgba(15,23,42,.12);
-  --theme-switcher-shadow:0 12px 24px rgba(15,23,42,.2);
-  --header-pill-bg:rgba(255,255,255,.22);
-  --header-pill-bg-hover:rgba(255,255,255,.32);
-  --header-pill-color:#fff;
-  --overlay-panel-bg:rgba(255,255,255,.95);
-  --overlay-panel-color:#1b2055;
-  --overlay-panel-text-shadow:0 2px 0 #fff;
-  --overlay-tag-bg:rgba(0,0,0,.06);
-  --overlay-tag-color:#1b2055;
-  --overlay-info-color:#6b7896;
+  --page-bg:linear-gradient(180deg,var(--bg),#f5fbff);
+  --header-gradient:linear-gradient(90deg,#49b6ff,#6d8cff 45%, #ffb347);
+  --surface-soft:#e7f3ff;
+  --surface-soft-strong:#f0f7ff;
+  --surface-border:#c7ddff;
+  --surface-border-strong:#b2ccff;
+  --menu-surface:#ffffff;
+  --menu-border:rgba(15, 23, 42, .14);
+  --theme-switcher-shadow:0 12px 24px rgba(15, 23, 42, .25);
+  --header-pill-bg:rgba(255,255,255,.9);
+  --header-pill-bg-hover:rgba(255,255,255,1);
+  --header-pill-color:#0f172a;
+  --overlay-panel-bg:rgba(255,255,255,.96);
+  --overlay-panel-color:#0f172a;
+  --overlay-panel-text-shadow:0 2px 0 rgba(255,255,255,.75);
+  --overlay-tag-bg:rgba(15, 23, 42, .06);
+  --overlay-tag-color:#0f172a;
+  --overlay-info-color:#5f6b86;
   --overlay-card-bg:#ffffff;
-  --overlay-card-label-color:#6b7896;
-  --overlay-letter-shadow:0 3px 8px rgba(124,58,237,.3);
+  --overlay-card-label-color:#5f6b86;
+  --overlay-letter-shadow:0 6px 14px rgba(15, 23, 42, .35);
   --overlay-letter-color-bad:#ff477e;
   --overlay-letter-glow:rgba(255,71,126,.45);
 }
@@ -1201,9 +1201,9 @@ html[data-theme='nebula'] .tabs button{
 }
 html[data-theme='nebula'] .tabs button:hover{background:#3b3a66;}
 html[data-theme='nebula'] .tabs button.active{
-  background:var(--brand-2);
-  color:#0f1022;
-  box-shadow:0 12px 26px rgba(107,184,255,.45);
+  background:#6bb8ff;
+  color:#0f172a;
+  box-shadow:0 12px 26px rgba(51,92,158,.45);
 }
 html[data-theme='nebula'] .card,
 html[data-theme='nebula'] .mode-section,
@@ -1527,4 +1527,3 @@ html[data-theme='nebula'] .welcome-card:hover {
 html[data-theme='nebula'] .welcome-card strong {
   color: #fff;
 }
-

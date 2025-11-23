@@ -306,7 +306,7 @@ let installPromptEvent = null;
 
 const THEME_STORAGE_KEY = 'abc-abenteuer-theme';
 const THEME_OPTIONS = {
-  classic: { id: 'classic', label: 'Sonnig', emoji: '🌈', metaColor: '#5a6ff0' },
+  classic: { id: 'classic', label: 'Sonnig', emoji: '🌈', metaColor: '#49b6ff' },
   nebula: { id: 'nebula', label: 'Nachthimmel', emoji: '🌌', metaColor: '#0f1022' }
 };
 const DEFAULT_THEME = 'classic';
@@ -5042,4 +5042,3 @@ if (elWelcomeClose) {
 // Show welcome dialog on startup
 // Show welcome dialog on startup - REMOVED in favor of Profile -> Welcome flow
 // setTimeout(showWelcomeDialog, 500);
-
