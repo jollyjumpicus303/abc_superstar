@@ -3775,6 +3775,14 @@ function fmt(t) {
 }
 
 const RECORDER_MIME_CANDIDATES = ['audio/webm;codecs=opus', 'audio/ogg;codecs=opus', 'audio/mp4'];
+const ENHANCED_AUDIO_CONSTRAINTS = {
+  echoCancellation: { ideal: true },
+  noiseSuppression: { ideal: true },
+  autoGainControl: { ideal: true },
+  voiceIsolation: { ideal: true },
+  channelCount: { ideal: 1 },
+  sampleRate: { ideal: 48000 },
+};
 
 function selectRecordingMimeType() {
   if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) {
@@ -3797,6 +3805,20 @@ function isValidAudioFile(file) {
   return /\.(mp3|ogg|webm|wav|m4a|mp4)$/i.test(name);
 }
 
+async function requestRecordingStream() {
+  const constraints = { audio: ENHANCED_AUDIO_CONSTRAINTS };
+  try {
+    return await navigator.mediaDevices.getUserMedia(constraints);
+  } catch (err) {
+    const fatal = err && (err.name === 'NotAllowedError' || err.name === 'NotFoundError' || err.name === 'SecurityError');
+    if (!fatal) {
+      console.warn('Erweiterte Mikrofon-Constraints nicht verfügbar, fallback auf Standard.', err);
+      return navigator.mediaDevices.getUserMedia({ audio: true });
+    }
+    throw err;
+  }
+}
+
 async function ensureRecordingStream() {
   if (mediaStream) {
     return mediaStream;
@@ -3804,7 +3826,7 @@ async function ensureRecordingStream() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     throw new Error('Mikrofonzugriff nicht verfügbar.');
   }
-  mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  mediaStream = await requestRecordingStream();
   return mediaStream;
 }
 
