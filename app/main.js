@@ -1968,6 +1968,14 @@ function hasMedalSounds(map) {
   return MEDAL_TYPES.some(type => Array.isArray(map[type]) && map[type].length > 0);
 }
 
+function hasMedalSoundsForType(map, medalType) {
+  if (!map || typeof map !== 'object' || !medalType) {
+    return false;
+  }
+  const list = map[medalType];
+  return Array.isArray(list) && list.length > 0;
+}
+
 function isSetCompletelyEmpty(data) {
   if (!data) return true;
   const hasClips = Array.isArray(data.clips) && data.clips.length > 0;
@@ -2794,9 +2802,12 @@ async function devtoolsPlayMedal(type) {
     setDevtoolsStatus('Unbekannter Medaillentyp.');
     return;
   }
+  const setId = await getActiveSet();
+  const setData = await loadSetData(setId);
+  const hasCustomMedal = hasMedalSoundsForType(setData && setData.medalSounds, type);
   await playMedalIntroSound();
-  const custom = await playMedalCelebration(type);
-  if (!custom) {
+  const custom = await playMedalCelebration(type, { setId, setData });
+  if (!hasCustomMedal && !custom) {
     playRewardSound();
   }
   const label = MEDAL_LABELS[type] || type;
@@ -2815,9 +2826,12 @@ async function devtoolsSimulateRun() {
     await widget.setStars(0);
     await widget.setStars(starGain);
   }
+  const setId = await getActiveSet();
+  const setData = await loadSetData(setId);
+  const hasCustomMedal = hasMedalSoundsForType(setData && setData.medalSounds, medal);
   await playMedalIntroSound();
-  const custom = await playMedalCelebration(medal);
-  if (!custom && starGain > 0) {
+  const custom = await playMedalCelebration(medal, { setId, setData });
+  if (!hasCustomMedal && !custom && starGain > 0) {
     playRewardSound();
   }
   const totalBefore = await getStars();
@@ -3861,10 +3875,10 @@ function queueMotivationPlayback(primaryAudio, clipData) {
   primaryAudio.addEventListener('ended', motivationChainHandler);
 }
 
-async function playMedalCelebration(medalType) {
+async function playMedalCelebration(medalType, options = {}) {
   if (!medalType) return false;
-  const setId = game && game.setId ? game.setId : await getActiveSet();
-  const setData = await loadSetData(setId);
+  const setId = options.setId || (game && game.setId ? game.setId : await getActiveSet());
+  const setData = options.setData || await loadSetData(setId);
   const list = setData && setData.medalSounds && Array.isArray(setData.medalSounds[medalType])
     ? setData.medalSounds[medalType]
     : [];
@@ -5522,8 +5536,14 @@ async function finishGame() {
     elResultTitle.textContent = 'Bronze! Weiter so 🥉';
     medalTier = 'bronze';
   }
+  const medalSetId = game && game.setId ? game.setId : await getActiveSet();
+  const medalSetDataPromise = loadSetData(medalSetId);
   playTrophyAnimation(animationPath);
-  playTrophySound();
+  const medalSetData = await medalSetDataPromise;
+  const hasCustomMedal = hasMedalSoundsForType(medalSetData && medalSetData.medalSounds, medalTier);
+  if (!hasCustomMedal) {
+    playTrophySound();
+  }
   const medalIntroPromise = playMedalIntroSound();
   const progressBefore = game && game.progress ? game.progress : null;
   if (progressBefore && progressBefore.mode === 'LERNWEG') {
@@ -5564,8 +5584,8 @@ async function finishGame() {
   updateLetterButtons();
 
   await medalIntroPromise;
-  const customPlayed = await playMedalCelebration(medalTier);
-  if (!customPlayed && runStars > 0) {
+  const customPlayed = await playMedalCelebration(medalTier, { setId: medalSetId, setData: medalSetData });
+  if (!hasCustomMedal && !customPlayed && runStars > 0) {
     playRewardSound();
   }
   await animateResultStars(runStars);

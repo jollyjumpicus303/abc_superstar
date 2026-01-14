@@ -36,7 +36,7 @@ Das Dashboard wird intern durch eine Sidebar (oder Tabs auf Mobile) in drei logi
     *   **Daten-Management:** Globaler Export/Import (Backup).
 
 ## Design & UX
-*   **Visueller Stil:** Konsistent mit dem "Island UI" (weiche Schatten, runde Ecken), aber mit einem reduzierteren, übersichtlicheren Layout für Erwachsene.
+*   **Visueller Stil:** Konsistent mit dem "bestehenden UI" (weiche Schatten, runde Ecken), aber mit einem reduzierteren, übersichtlicheren Layout für Erwachsene.
 *   **Feedback:** Klare Statusanzeigen (z.B. "0 von 26 Buchstaben aufgenommen").
 *   **Responsivität:** Sidebar-Layout auf Desktop/Tablet, das auf Mobile in eine Tab-Leiste oder ein Hamburger-Menü umbricht.
 

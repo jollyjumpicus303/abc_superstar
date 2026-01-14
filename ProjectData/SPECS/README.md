@@ -16,18 +16,14 @@ Die Dokumentation ist in die folgenden Bereiche unterteilt, um eine klare Strukt
 
 Die Anwendung ist eine clientseitige Single-Page-Application (SPA), die hauptsächlich aus HTML, CSS und JavaScript besteht.
 
-In der Codebasis existieren inzwischen zwei UI-Varianten:
+In der Codebasis existiert eine UI-Variante:
 
-- **Classic** – aktuelle Standardoberfläche  
+- **Classic** - aktuelle Standardoberflaeche
   - Wichtige Dateien: `index.html`, `app/main.js` (Root)
-- **Island** – neue Clay-Insel-Variante (Work-in-Progress)  
-  - Wichtige Dateien: `apps/island/index.html`, `apps/island/app/main.js`
 
-Beide Varianten teilen sich die gleichen Kernmodule und Datenstrukturen. Die folgenden Hinweise beziehen sich hauptsächlich auf die Classic-Variante, sind aber konzeptionell für Island identisch.
+Die folgenden Hinweise beziehen sich auf die Classic-Variante.
 
 ### Wichtige Module
-
-_Pfadangaben beziehen sich auf die Classic-Variante im Root; für Island gelten die gleichen Namen relativ zu `apps/island/`._
 
 - **`app/main.js`**: Enthält die Hauptlogik der Anwendung, die Spielsteuerung und die Interaktion mit der Benutzeroberfläche.
 - **`app/letterPool.js`**: Implementiert die Logik zur Auswahl des nächsten Buchstabens basierend auf verschiedenen Kriterien.
@@ -38,7 +34,7 @@ _Pfadangaben beziehen sich auf die Classic-Variante im Root; für Island gelten 
 
 Während der Entwicklung haben sich einige Abweichungen zwischen der ursprünglichen Spezifikation und der finalen Implementierung ergeben. Die wichtigsten Punkte sind:
 
-- **Eltern-Hub (2025-11):** Eltern- und Einstellungsbereich wurden zu einem Hub zusammengeführt (Tabs: Übersicht, Aufnahmen, Sets & Extras), geschützt über Parental Gate mit 10 s Grace-Period nach Verlassen. Gemeinsame Implementierung in Classic und Island.
+- **Eltern-Hub (2025-11):** Eltern- und Einstellungsbereich wurden zu einem Hub zusammengeführt (Tabs: Übersicht, Aufnahmen, Sets & Extras), geschützt über Parental Gate mit 10 s Grace-Period nach Verlassen. Implementierung in Classic.
 - **Avatar-Randomizer (2025-11):** Profile erhalten standardmäßig einen zufälligen Emoji aus einem normalisierten 141er-Pool (globale Duplikate bis zur Pool-Erschöpfung vermeiden, 🔄-Button im Editor; manuelle Eingabe kann duplizieren).
 - **Monolithische `main.js`**: Ein Grossteil der Anwendungslogik ist in `app/main.js` konzentriert, was die Wartbarkeit erschwert. Zukünftige Refactorings sollten darauf abzielen, diese Datei in kleinere, spezialisierte Module aufzuteilen.
 - **Veraltete Konzepte**: Einige ursprünglich geplante Funktionen wie `audioSet`s und `makeOptions` wurden im Laufe der Entwicklung verworfen, sind aber teilweise noch in älteren Dokumentationsversionen oder im Code als "toter Code" vorhanden. Diese wurden im Rahmen der aktuellen Überarbeitung aus der Dokumentation entfernt.

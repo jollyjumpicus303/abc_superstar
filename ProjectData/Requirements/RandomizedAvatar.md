@@ -3,7 +3,7 @@
 Ziel: Beim Anlegen eines Kinderprofils wird automatisch ein zufälliger Emoji‑Avatar aus dem bereitgestellten Pool vergeben – ohne Dopplungen zu bestehenden Profilen. Ein großer, klarer „Neu würfeln“‑Button (Refresh‑Icon als SVG) bietet schnell neue Vorschläge und passt sich visuell an die UI an. Im Elternbereich sind sowohl Direkteingabe (beliebige Emojis) als auch Randomize möglich.
 
 ## Vereinbarter Scope
-- **Global eindeutig:** Random‑Zuweisungen vermeiden Emojis, die bereits irgendeinem Profil (Classic + Island) zugewiesen sind. Manual Override im Elternbereich darf trotzdem doppelt vergeben.
+- **Global eindeutig:** Random‑Zuweisungen vermeiden Emojis, die bereits irgendeinem Profil zugewiesen sind. Manual Override im Elternbereich darf trotzdem doppelt vergeben.
 - **Reroll‑Regeln:** „Neu würfeln“ schlägt ein neues Emoji vor, das nicht
   1) bereits vergeben ist **und**
   2) nicht in der aktuellen Sitzung schon angezeigt wurde.

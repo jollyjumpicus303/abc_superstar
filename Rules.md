@@ -1,58 +1,47 @@
 # Versions- & Arbeitsregeln
 
-Dieses Dokument beschreibt, wie wir im Monorepo mit Classic- und Island‑Variante versionieren und arbeiten.
+Dieses Dokument beschreibt, wie wir im Repo die Classic-Variante versionieren und arbeiten.
 
-## 1. Varianten
+## 1. Variante
 
-- **Classic**  
-  - Standard‑Variante, läuft unter `index.html` und `app/` am Root.  
-  - Zusätzlich gespiegelt unter `apps/classic/` (Referenzkopie).
-- **Island**  
-  - Neue Clay‑Insel‑Variante, läuft unter `apps/island/index.html` und `apps/island/app/`.
+- **Classic**
+  - Standard-Variante, laeuft unter `index.html` und `app/` am Root.
+  - Zusaetzlich gespiegelt unter `apps/classic/` (Referenzkopie).
 
-Beim Entwickeln gilt: Funktionale Änderungen möglichst in Classic testen, UI‑Experimente in Island.
+Beim Entwickeln gilt: Classic im Root pflegen und die Referenzkopie bei Bedarf nachziehen.
 
-## 2. Git‑Versionierung
+## 2. Git-Versionierung
 
-Wir versionieren ausschließlich über Git‑Tags, nicht über `package.json` oder Manifest‑Versionen.
+Wir versionieren ausschliesslich ueber Git-Tags, nicht ueber `package.json` oder Manifest-Versionen.
 
-- **Classic‑Tags:** `classic-vMAJOR.MINOR.PATCH`
+- **Classic-Tags:** `classic-vMAJOR.MINOR.PATCH`
   - Beispiel: `classic-v1.3.0`
-- **Island‑Tags:** `island-vMAJOR.MINOR.PATCH`
-  - Beispiel: `island-v0.1.0` (Early Preview)
 
 Empfohlene Praxis:
 
-1. Feature/Änderungen normal auf `main` committen.
-2. Wenn ein Stand stabil und deployed ist (z. B. auf GitHub Pages), einen passenden Tag setzen:
+1. Feature/Aenderungen normal auf `main` committen.
+2. Wenn ein Stand stabil und deployed ist (z.B. auf GitHub Pages), einen passenden Tag setzen:
    ```bash
    git tag classic-v1.3.0
    git push --tags
    ```
-3. Größere visuelle Meilensteine in Island separat taggen, ohne Classic zu beeinflussen:
-   ```bash
-   git tag island-v0.2.0
-   ```
 
 ## 3. Commit-Konvention (leichtgewichtig)
 
-Es genügt eine grobe Kennzeichnung in der Commit‑Message:
+Es genuegt eine grobe Kennzeichnung in der Commit-Message:
 
-- `[classic] …` – betrifft nur Classic‑Variante
-- `[island] …` – betrifft nur Island‑Variante
-- `[both] …` – gemeinsame Logik/Shared-Code
+- `[classic] ...` - betrifft nur die Classic-Variante
+- `[core] ...` - zentrale Logik/Shared-Code
 
 Beispiele:
 
-- `[island] Clay-Start-Hub mit neuen Assets`
 - `[classic] Bugfix beim Lernweg-Fortschritt`
-- `[both] ProgressStore für mehrere Profile erweitert`
+- `[core] ProgressStore fuer mehrere Profile erweitert`
 
 ## 4. Dokumentation
 
-- Technische Spezifikationen: `ProjectData/SPECS/`  
-- Neues UI‑Konzept (Island): `ProjectData/Requirements new UI/`  
+- Technische Spezifikationen: `ProjectData/SPECS/`
+- Produktanforderungen: `ProjectData/Requirements/`
 - Taskliste / Roadmap: `ProjectData/TASKS.md`
 
-`journal.md` bleibt für freie Entwicklungsnotizen; Versionsregeln und Repo‑Struktur werden ausschließlich hier (`Rules.md`) und in `AGENTS.md` beschrieben.
-
+`journal.md` bleibt fuer freie Entwicklungsnotizen; Versionsregeln und Repo-Struktur werden ausschliesslich hier (`Rules.md`) und in `AGENTS.md` beschrieben.

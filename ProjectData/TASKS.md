@@ -407,25 +407,9 @@ App ist über Browser-Menü installierbar: Chrome-Menü (⋮) → "App installie
 
 ---
 
-## 15. Island-UI Variante (Clay-Insel) ⬜
+## 15. Clay-UI Variante (archiviert)
 
-**Priorität:** Hoch | **Aufwand:** Hoch
-
-Die neue Clay-Insel-Variante wird parallel zur bestehenden Classic-UI als eigenständige App-Variante im Monorepo umgesetzt (`apps/island/`). Classic bleibt vorerst Standard.
-
-### Ziele:
-- Kinderbereich (Start-Hub, Spiel, Üben, Album) komplett im Clay-Insel-Look umsetzen.
-- Erwachsenenbereich (Eltern + Aufnahmen) in einem zusammengeführten, sachlicheren Design bereitstellen.
-- Grafische Assets (Insel, Buttons, Sterne, Trophäen etc.) konsistent integrieren.
-
-### Aufgaben:
-- [x] **Monorepo-Setup & Varianten-Trennung:** Classic und Island als getrennte Varianten anlegen (Root / `apps/classic` / `apps/island`) und im README dokumentieren.
-- [x] **UI-Requirements dokumentieren:** Neues Design-System, Screens & Asset-Bedarf in `ProjectData/Requirements new UI` erfassen.
-- [ ] **Start-Hub (Insel) finalisieren:** Island-Variante so umbauen, dass Hintergrund, Insel-Planet, zentraler Play-Button und Orbit-Buttons vollständig auf den Clay-Stil ausgelegt sind.
-- [ ] **Kinder-Screens im Clay-Stil angleichen:** Spiel-, Üben- und Album-Screens in `apps/island` auf Clay-Buttons, Letter-Tiles, Sterne & Trophäen umrüsten (siehe `screens-kids.md`).
-- [ ] **Erwachsenen-Screen zusammenführen:** In der Island-Variante Elternbereich und Aufnahme-UI zu einem einheitlichen Erwachsenen-Screen zusammenführen, Layout nach `screens-adults.md`.
-- [ ] **Asset-Integration:** Nach Generierung der Grafiken (siehe `assets-prompts.md`) die PNGs/SVGs ins Projekt einbinden und die UI-Komponenten entsprechend aktualisieren.
-- [ ] **Visueller Review & Feinschliff:** Island-Variante auf unterschiedlichen Auflösungen testen (Tablet/Phone), Abstände/Typo harmonisieren und ggf. Classic-spezifische Styles isolieren.
+**Status:** Eingestellt. Die Clay-Variante und zugehoerige Doku/Assets wurden entfernt; Classic bleibt allein.
 
 ---
 
@@ -436,7 +420,7 @@ Die neue Clay-Insel-Variante wird parallel zur bestehenden Classic-UI als eigens
 ### Ziele:
 - Eltern- und Einstellungsbereich in der Classic-UI zu einem geschützten Hub zusammenführen (Single Entry über das Zahnrad).
 - Einheitliche Navigation für Profile, Aufnahmen sowie Set- und Sound-Verwaltung; Parental Gate davor.
-- Umsetzung gemäß `ProjectData/Requirements/UnifiedParentalDashboard.md`, als Shared-Modul auch für Island nutzbar.
+- Umsetzung gemaess `ProjectData/Requirements/UnifiedParentalDashboard.md`, als Shared-Modul nutzbar.
 
 ### Aufgaben:
 - [ ] Single Entry Point: Zahnrad führt in den Hub; Parental Gate (Rechenaufgabe) vor Eintritt; erneute Abfrage erst nach Verlassen + 10s Ruhezeit, nicht während laufender Aufnahmen.
@@ -454,7 +438,7 @@ Die neue Clay-Insel-Variante wird parallel zur bestehenden Classic-UI als eigens
 **Priorität:** Mittel | **Aufwand:** Mittel
 
 ### Ziele:
-- Automatische Emoji-Vergabe bei Profilerstellung (global eindeutiger Vorschlag für Classic + Island).
+- Automatische Emoji-Vergabe bei Profilerstellung (global eindeutiger Vorschlag für Classic).
 - Schnelles 🔄‑Reroll ohne Wiederholungen, inkl. Fallback wenn der Pool voll ist.
 - Elternbereich: Freitext-Emoji-Eingabe + Randomize-Button; Duplikate nur bei manueller Eingabe.
 - Einheitliche Normalisierung/Validierung des Emoji-Pools.

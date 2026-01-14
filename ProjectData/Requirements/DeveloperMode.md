@@ -8,6 +8,7 @@ Ziel: Einen lokalen Entwicklermodus bereitstellen, mit dem man Sterne, Medaillen
 - **Panel „Entwickler-Tools“:** Im Eltern-Hub (Übersicht) als eigener Block.
   - Sterne-Bank setzen/adjustieren (+/- Buttons) und gratis Sticker-Pack öffnen (ohne Stern-Abzug) – wirkt auf das aktive Profil.
   - Medaillen-Flows testen: Intro-Sound + Gold/Silber/Bronze-Jubel abspielen, inkl. Custom-Clips aus dem aktiven Set.
+    Fallback-SFX nur verwenden, wenn fuer den Rang kein Custom-Clip vorhanden ist.
   - Run-Simulation: Medaille wählen, Sternanzahl vorgeben, Stars hinzufügen (Update UI + Star-Track/Album).
   - Sticker/Stats: Single-Sticker hinzufügen (möglichst fehlender), Buchstaben-Statistik für einen Buchstaben hochzählen.
 - **Safety:** Wirkt nur lokal und nur auf das aktive Profil/Set. Keine API-Calls, kein Tagging. Panel soll klar als „nur lokal“ gekennzeichnet sein.

@@ -36,6 +36,8 @@ Abspielen zur passenden Lernstufe zufällig auswählen.
   hängt nur daran, ob der Buchstabe zuvor falsch war.
 - Medaillen-Sounds werden pro Rang aus der jeweiligen Liste gezogen; fehlt ein
   Clip, greift die App auf den Standard-SFX zurück.
+  Wenn Custom-Clips fuer den Rang vorhanden sind, spielt die App keinen zusaetzlichen Standard-SFX
+  parallel ab.
 
 ## Migration
 - Bestehende Einzel-Aufnahmen werden zu Clips mit `difficulty = LEICHT`

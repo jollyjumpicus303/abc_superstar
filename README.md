@@ -2,13 +2,11 @@
 
 Dieses Repo enthält die Web‑App *ABC Abenteuer* und ein CLI, das komplette Audio‑Sets per TTS erzeugt.
 
-Die Web‑App liegt in zwei UI‑Varianten vor (**Monorepo**):
+Die Web-App liegt in einer UI-Variante (Classic):
 
-- **Classic** – bestehende Oberfläche, aktuell Standard  
-  - Code am Root (`index.html`, `app/` …)  
-  - Zusätzlich gespiegelt unter `apps/classic/`
-- **Island** – neue Clay‑Insel‑Variante (Work‑in‑Progress)  
-  - Code unter `apps/island/` (eigene `index.html` + `app/`)
+- **Classic** - bestehende Oberflaeche, aktuell Standard  
+  - Code am Root (`index.html`, `app/` .)  
+  - Zusaetzlich gespiegelt unter `apps/classic/`
 
 ---
 
@@ -42,13 +40,11 @@ npm start
 anschließend im Browser:
 
 - `http://localhost:8080/index.html` → Classic‑UI
-- `http://localhost:8080/apps/island/index.html` → Island‑UI (neues Design)
 
 ### UI‑Anforderungen & Spezifikation
 
 - Technische Spezifikation & Architektur: `ProjectData/SPECS/README.md`
-- Neues Insel‑UI (Design‑System, Screens, Assets):  
-  `ProjectData/Requirements new UI/`
+- Produktanforderungen: `ProjectData/Requirements/`
 
 ### Entwicklermodus (lokal)
 
