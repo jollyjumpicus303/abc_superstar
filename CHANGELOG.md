@@ -3,6 +3,7 @@
 All notable changes to this project are documented here. Releases are tagged via Git (see `Rules.md` for tag conventions).
 
 ## [Unreleased]
+- [ui][classic] Default-Runden auf 5 reduziert.
 - [repo] Island-Variante und zugehoerige Design-Dokumente entfernt.
 - [classic] Sonnig/Nachthimmel Farb-Tokens an Island-Palette angeglichen (Root-CSS-Tokens & Theme-Color).
 - [classic] Eltern-Hub eingeführt (Single Entry über Zahnrad, Parental-Gate mit 10s-Timeout, interne Tabs für Übersicht/Aufnahmen/Sets & Extras).

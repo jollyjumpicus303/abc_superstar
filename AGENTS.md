@@ -2,6 +2,18 @@
 
 Dieses Repository enthaelt die Classic-Variante und diverse Spezifikationsdateien. Bitte beachte beim Arbeiten folgende Regeln:
 
+## Communication & Language
+**MUST**
+- Respond to the user in **German** unless the user asks otherwise.
+- Code comments and docs may remain **English**.
+- Keep explanations accessible, include short “why/how” context.
+- If an error is fixed, explain what it was and what changed.
+- If a task is finished, recommend whether a short user test is needed and how to do it.
+
+**SHOULD**
+- Avoid deep technical dumps unless asked.
+- When presenting options, recommend one approach aligned with best practices and the existing implementation.
+
 ## 1. Varianten & Pfade
 
 - **Classic (Standard-Variante)**

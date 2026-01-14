@@ -12,6 +12,7 @@ Die Auswahl des Spielmodus ist ein zentraler Einstiegspunkt für die Nutzer.
   - 🦋 **Lernweg:** Führt den Nutzer durch den strukturierten Abenteuer-Pfad.
   - 🦸 **Meister:** Bietet eine Herausforderung mit schwierigen Einstellungen im freien Spiel.
 - **Feedback:** Die jeweils aktive Auswahl wird deutlich hervorgehoben, um dem Nutzer eine klare Orientierung zu geben.
+- **Runden-Default:** Im freien Modus startet die Rundenzahl bei 5.
 
 ## Belohnungen und Feedback
 
