@@ -3,6 +3,8 @@
 All notable changes to this project are documented here. Releases are tagged via Git (see `Rules.md` for tag conventions).
 
 ## [Unreleased]
+- [repo] Classic-Sync-Script mit optionalem Clean und Git-Hook-Installation ergänzt.
+- [gameplay][classic] Lernweg fuehrt nach 26 Grossbuchstaben mit Kleinbuchstaben weiter (4er-Stufen).
 - [ui][classic] Default-Runden auf 5 reduziert.
 - [repo] Island-Variante und zugehoerige Design-Dokumente entfernt.
 - [classic] Sonnig/Nachthimmel Farb-Tokens an Island-Palette angeglichen (Root-CSS-Tokens & Theme-Color).

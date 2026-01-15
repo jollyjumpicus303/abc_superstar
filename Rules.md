@@ -6,9 +6,10 @@ Dieses Dokument beschreibt, wie wir im Repo die Classic-Variante versionieren un
 
 - **Classic**
   - Standard-Variante, laeuft unter `index.html` und `app/` am Root.
-  - Zusaetzlich gespiegelt unter `apps/classic/` (Referenzkopie).
+  - Zusaetzlich gespiegelt unter `apps/classic/` (generierte Kopie).
 
-Beim Entwickeln gilt: Classic im Root pflegen und die Referenzkopie bei Bedarf nachziehen.
+Beim Entwickeln gilt: Classic im Root pflegen; `apps/classic/` ausschliesslich per Sync-Script aktualisieren (`npm run sync:classic` oder `scripts/sync-classic.ps1`).
+Optional: Lokale Pre-Commit-Hooks installierbar via `npm run hooks:install`.
 
 ## 2. Git-Versionierung
 

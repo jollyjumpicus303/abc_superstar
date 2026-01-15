@@ -9,7 +9,7 @@ Die Auswahl des Spielmodus ist ein zentraler Einstiegspunkt für die Nutzer.
 - **Titel:** Die Sektion wird mit einer freundlichen Frage eingeleitet, z.B. „Wie möchtest du heute spielen?“
 - **Auswahlkarten:** Anstelle von einfachen Buttons werden grosse, visuell ansprechende Karten für die verschiedenen Modi verwendet:
   - 🐣 **Anfänger:** Startet ein freies Spiel mit einfachen Einstellungen.
-  - 🦋 **Lernweg:** Führt den Nutzer durch den strukturierten Abenteuer-Pfad.
+  - 🦋 **Lernweg:** Führt den Nutzer durch den strukturierten Abenteuer-Pfad (Gross- und Kleinbuchstaben nacheinander).
   - 🦸 **Meister:** Bietet eine Herausforderung mit schwierigen Einstellungen im freien Spiel.
 - **Feedback:** Die jeweils aktive Auswahl wird deutlich hervorgehoben, um dem Nutzer eine klare Orientierung zu geben.
 - **Runden-Default:** Im freien Modus startet die Rundenzahl bei 5.

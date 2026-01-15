@@ -1,0 +1,9 @@
+#!/bin/sh
+set -e
+
+npm run -s sync:classic
+
+if ! git diff --quiet -- apps/classic; then
+  echo "Classic copy updated. Please stage apps/classic and retry the commit."
+  exit 1
+fi

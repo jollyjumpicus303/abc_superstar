@@ -24,6 +24,17 @@ import {
 import { pickNext } from './letterPool.js';
 import { advanceAfterRun } from './progression.js';
 import { computeRunStars, MAX_RUN_STARS } from './rewardUtils.js';
+import {
+  RECORDING_LETTERS,
+  LERNWEG_SECONDARY_SET,
+  normalizeRecordingLetter,
+  getLernwegSetId,
+  getLernwegSetLabel,
+  getLernwegUnlockedLetters,
+  getFreeModeLetters,
+  getLetterGridLetters,
+  hasRecording,
+} from './letterSets.js';
 import StarReveal from './js/starRevealCanvas.js';
 // ——————————————————————————————————————————
 // ABC-Abenteuer – Logik
@@ -44,6 +55,7 @@ const SOUND_FILES = {
   unlock: { url: 'app/sfx/unlock.mp3', volume: 0.75 },
   reward: { url: 'app/sfx/reward.mp3', volume: 0.85 },
   trophy: { url: 'app/sfx/trophy.mp3', volume: 0.9 },
+  duplicate: { url: 'app/sfx/boink.mp3', volume: 0.65 },
   starReveal: { url: 'app/sfx/star.mp3', volume: 0.9 },
   medalIntro: { url: 'ProjectData/SPECS/AdditionalInput/PlayBeforeMedalSound.mp3', volume: 0.85 },
   giftPop: { url: 'ProjectData/SPECS/AdditionalInput/pop.mp3', volume: 0.8 },
@@ -155,6 +167,7 @@ function playStartSound() { playSfx('start'); }
 function playUnlockSound() { playSfx('unlock'); }
 function playRewardSound() { playSfx('reward'); }
 function playTrophySound() { playSfx('trophy'); }
+function playDuplicateSound() { playSfx('duplicate'); }
 function playStarRevealSound() { playSfx('starReveal'); }
 function playGiftPopSound() { playSfx('giftPop'); }
 function playStickerPopSound() { playSfx('stickerPop'); }
@@ -191,8 +204,6 @@ function playMedalIntroSound() {
 }
 
 const sleep = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms));
-
-const LETTERS = Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 const RECORD_MODES = {
   SINGLE: 'single',
   SERIES: 'series',
@@ -589,7 +600,7 @@ function renderParentProfileList() {
       if (profile.id !== getActiveProfileId()) {
         await switchProfile(profile.id, { keepModalOpen: true });
       }
-      renderStatistics();
+      await renderStatistics();
     });
     if (actions) {
       actions.addEventListener('click', async (event) => {
@@ -634,7 +645,7 @@ async function hydrateProfileState() {
   updateProfileBadge();
   renderProfileCards();
   renderParentProfileList();
-  renderStatistics();
+  await renderStatistics();
 }
 
 async function switchProfile(profileId, { keepModalOpen = false } = {}) {
@@ -983,7 +994,7 @@ function hideMainSections() {
   document.getElementById('album').classList.add('hidden');
 }
 
-function switchParentHubTab(tabName = 'overview') {
+async function switchParentHubTab(tabName = 'overview') {
   if (!elParentHub) return;
   const tab = ['overview', 'recordingsSets'].includes(tabName) ? tabName : 'overview';
   hubTabButtons.forEach(btn => {
@@ -1000,7 +1011,7 @@ function switchParentHubTab(tabName = 'overview') {
     updateUIForRecordingState();
   }
   if (tab === 'overview') {
-    renderStatistics();
+    await renderStatistics();
   }
   updateParentHubStatus();
 }
@@ -1095,10 +1106,9 @@ tabsContainer.addEventListener('click', (e) => {
   switchToTab(tabName);
 });
 
-function renderStatistics() {
+async function renderStatistics() {
   if (!elParentStats) return;
-  const progress = getProgress();
-  const log = progress.attemptLog || [];
+  const log = await getProfileAttemptLog();
 
   if (log.length < 10) { // Require a minimum amount of data
     elParentStats.innerHTML = `
@@ -1280,9 +1290,10 @@ async function updateUIForRecordingState() {
   const setId = await getActiveSet();
   const setData = await loadSetData(setId);
   const clips = setData && setData.clips ? setData.clips : [];
-  const recordedLetters = clips.map(clip => clip.letter);
+  const recordedLetters = clips.map(clip => normalizeRecordingLetter(clip.letter));
   const recordedSet = new Set(recordedLetters);
   const recordedCount = recordedSet.size;
+  const totalLetters = RECORDING_LETTERS.length;
   const hasRecordings = recordedCount > 0;
 
   // Spiel-Tab: Empty State anzeigen/verstecken
@@ -1298,16 +1309,16 @@ async function updateUIForRecordingState() {
   const baseWarnings = [];
   if (hasRecordings) {
     if (mode === 'FREI') {
-      const targetLetters = LETTERS.slice(0, desiredFreeCount);
-      const missingBase = targetLetters.filter(letter => !recordedSet.has(letter));
+      const targetLetters = getFreeModeLetters({ freeLetterCount: desiredFreeCount });
+      const missingBase = targetLetters.filter(letter => !hasRecording(recordedSet, letter));
       if (missingBase.length) {
-        baseWarnings.push(desiredFreeCount === 26
-          ? `Für alle 26 Buchstaben fehlen noch ${missingBase.length}.`
+        baseWarnings.push(desiredFreeCount === totalLetters
+          ? `Für alle ${totalLetters} Buchstaben fehlen noch ${missingBase.length}.`
           : `Es fehlen Aufnahmen für: ${missingBase.join(', ')}`);
       }
     } else if (mode === 'LERNWEG') {
-      const requiredLetters = LETTERS.slice(0, unlockedForPath);
-      const missingBase = requiredLetters.filter(letter => !recordedSet.has(letter));
+      const requiredLetters = getLernwegUnlockedLetters({ ...progress, unlocked: unlockedForPath });
+      const missingBase = requiredLetters.filter(letter => !hasRecording(recordedSet, letter));
       if (missingBase.length) {
         baseWarnings.push(`Für den Lernweg fehlen Aufnahmen für: ${missingBase.join(', ')}`);
       }
@@ -1332,7 +1343,7 @@ async function updateUIForRecordingState() {
   }
 
   // Fortschrittsanzeige in Einstellungen
-  elProgressBadge.textContent = `${recordedCount} von 26 Buchstaben aufgenommen`;
+  elProgressBadge.textContent = `${recordedCount} von ${totalLetters} Buchstaben aufgenommen`;
   elProgressBadge.classList.toggle('empty', recordedCount === 0);
 
   updateParentHubStatus({ recordedCount, setId });
@@ -1393,7 +1404,7 @@ async function updateParentHubStatus(context = {}) {
     }
 
     if (elHubStatusRecordings) {
-      elHubStatusRecordings.textContent = `${recordedCount}/26`;
+      elHubStatusRecordings.textContent = `${recordedCount}/${RECORDING_LETTERS.length}`;
     }
 
     const lastExport = getLastExportTimestamp();
@@ -1402,7 +1413,7 @@ async function updateParentHubStatus(context = {}) {
     }
 
     if (elHubStatusNext) {
-      elHubStatusNext.textContent = recordedCount < 26 ? 'Aufnahmen vervollständigen' : 'Backup exportieren';
+      elHubStatusNext.textContent = recordedCount < RECORDING_LETTERS.length ? 'Aufnahmen vervollständigen' : 'Backup exportieren';
     }
   } catch (err) {
     console.warn('[ParentHubStatus]', err);
@@ -1487,7 +1498,7 @@ async function syncActiveGameWithSet(newSetId) {
   if (!game) return;
   const setData = await loadSetData(newSetId);
   const clips = setData && Array.isArray(setData.clips) ? setData.clips : [];
-  const recordedSet = new Set(clips.map(clip => clip.letter));
+  const recordedSet = new Set(clips.map(clip => normalizeRecordingLetter(clip.letter)));
 
   if (recordedSet.size === 0) {
     alert('Für dieses Set gibt es noch keine Aufnahmen. Das laufende Spiel wurde beendet.');
@@ -1501,12 +1512,12 @@ async function syncActiveGameWithSet(newSetId) {
 
   if (mode === 'LERNWEG') {
     const unlockedCount = progress && progress.unlocked ? progress.unlocked : 4;
-    const unlockedLetters = LETTERS.slice(0, unlockedCount);
-    pool = unlockedLetters.filter(letter => recordedSet.has(letter));
+    const unlockedLetters = getLernwegUnlockedLetters({ ...progress, unlocked: unlockedCount });
+    pool = unlockedLetters.filter(letter => hasRecording(recordedSet, letter));
   } else {
     const desiredCount = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
-    const targetLetters = LETTERS.slice(0, desiredCount);
-    pool = targetLetters.filter(letter => recordedSet.has(letter));
+    const targetLetters = getFreeModeLetters({ freeLetterCount: desiredCount });
+    pool = targetLetters.filter(letter => hasRecording(recordedSet, letter));
   }
 
   if (pool.length === 0) {
@@ -1956,7 +1967,7 @@ async function getActiveSet() {
 async function getSetRecordingCount(setId) {
   const data = await loadSetData(setId);
   if (!data) return 0;
-  const uniqueLetters = new Set(data.clips.map(clip => clip.letter));
+  const uniqueLetters = new Set(data.clips.map(clip => normalizeRecordingLetter(clip.letter)));
   return uniqueLetters.size;
 }
 
@@ -2225,6 +2236,30 @@ async function incrementLetterStat(letter) {
   return stats[letter];
 }
 
+// Profilbasierter Attempt-Log für Eltern-Statistiken
+async function getProfileAttemptLog(profileId) {
+  const log = await idbGet(makeProfileScopedKey('attemptLog', profileId));
+  return Array.isArray(log) ? log : [];
+}
+
+async function appendProfileAttempt({ target, chosen, correct }) {
+  const normalisedTarget = normaliseLetterInput(target);
+  if (!normalisedTarget) return;
+  const entry = {
+    target: normalisedTarget,
+    chosen: normaliseLetterInput(chosen),
+    correct: !!correct,
+    timestamp: Date.now(),
+  };
+  const log = await getProfileAttemptLog();
+  log.push(entry);
+  const MAX_LOG = 400;
+  if (log.length > MAX_LOG) {
+    log.splice(0, log.length - MAX_LOG);
+  }
+  await idbSet(makeProfileScopedKey('attemptLog'), log);
+}
+
 function shouldReduceMotion() {
   return prefersReducedMotion;
 }
@@ -2312,7 +2347,7 @@ function getStarRevealWidget() {
         if (shouldReduceMotion()) return;
         playStarRevealSound();
       },
-      revealDelay: 1000,
+      revealDelay: 800,
     });
   }
   return starRevealWidget;
@@ -2389,7 +2424,7 @@ async function renderSetsList() {
       </div>
       <span class="set-emoji">${set.emoji}</span>
       <div class="set-name">${set.name}</div>
-      <div class="set-count">${count} / 26 Buchstaben</div>
+      <div class="set-count">${count} / ${RECORDING_LETTERS.length} Buchstaben</div>
     `;
 
     // Klick auf Karte: Set aktivieren
@@ -2499,19 +2534,26 @@ async function renderAlbum() {
   // Sterne anzeigen
   document.getElementById('starCount').textContent = stars;
 
+  const albumSection = document.getElementById('album');
+  if (albumSection) {
+    albumSection.setAttribute('data-album-theme', currentAlbumTheme);
+  }
+
   // Pack-Button aktivieren/deaktivieren
   const btnOpenPack = document.getElementById('btnOpenPack');
   btnOpenPack.disabled = stars < STARS_PER_PACK;
 
   // Themen-Tabs rendern
   const albumTabs = document.getElementById('albumTabs');
+  albumTabs.className = 'album-tabs';
   albumTabs.innerHTML = '';
   for (const [key, theme] of Object.entries(STICKER_CATALOG)) {
     const btn = document.createElement('button');
-    btn.className = 'btn secondary album-tab-btn';
+    btn.className = 'album-tab-btn';
     btn.dataset.albumTheme = key;
+    btn.dataset.theme = key;
     if (key === currentAlbumTheme) btn.classList.add('active');
-    btn.textContent = `${theme.emoji} ${theme.name}`;
+    btn.innerHTML = `<span class="album-tab-emoji">${theme.emoji}</span><span>${theme.name}</span>`;
     btn.onclick = () => { currentAlbumTheme = key; renderAlbum(); };
     albumTabs.appendChild(btn);
   }
@@ -2519,8 +2561,9 @@ async function renderAlbum() {
   // Sticker-Grid rendern
   const theme = STICKER_CATALOG[currentAlbumTheme];
   const albumContent = document.getElementById('albumContent');
-  albumContent.innerHTML = `<div class="album-grid"></div>`;
+  albumContent.innerHTML = `<div class="album-sheet"><div class="album-grid"></div><p class="muted album-progress"></p></div>`;
   const grid = albumContent.querySelector('.album-grid');
+  const progressEl = albumContent.querySelector('.album-progress');
 
   for (const sticker of theme.stickers) {
     const slot = document.createElement('div');
@@ -2541,11 +2584,9 @@ async function renderAlbum() {
 
   // Fortschritt anzeigen
   const themeCollected = theme.stickers.filter(s => collectedSet.has(s.id)).length;
-  const progress = document.createElement('p');
-  progress.className = 'muted';
-  progress.style.marginTop = '16px';
-  progress.textContent = `${themeCollected} von ${theme.stickers.length} Stickern gesammelt`;
-  albumContent.appendChild(progress);
+  if (progressEl) {
+    progressEl.textContent = `${themeCollected} von ${theme.stickers.length} Stickern gesammelt`;
+  }
 }
 
 async function animateStickerUnlock(stickers) {
@@ -2557,28 +2598,38 @@ async function animateStickerUnlock(stickers) {
     switchToTab('album');
     await sleep(150);
   }
+
+  // Einmalig rendern und dann Slots animieren
+  await renderAlbum();
+
+  // Tabs kurz highlighten
+  const tabBtn = document.querySelector(`[data-album-theme="${currentAlbumTheme}"]`);
+  if (tabBtn) {
+    tabBtn.classList.add('album-tab-highlight');
+    setTimeout(() => tabBtn.classList.remove('album-tab-highlight'), 900);
+  }
+
+  // Slots im bestehenden Grid animieren
   for (const sticker of stickers) {
     const themeKey = getStickerThemeKey(sticker.id);
     if (themeKey) {
       currentAlbumTheme = themeKey;
+      // Theme umschalten, aber Tabs/Sheet behalten
+      albumSection?.setAttribute('data-album-theme', currentAlbumTheme);
     }
-    await renderAlbum();
-    const tabBtn = document.querySelector(`[data-album-theme="${currentAlbumTheme}"]`);
-    if (tabBtn) {
-      tabBtn.classList.add('album-tab-highlight');
-      setTimeout(() => tabBtn.classList.remove('album-tab-highlight'), 1200);
-    }
-    await sleep(60);
+    await new Promise(resolve => requestAnimationFrame(resolve));
     const slot = document.querySelector(`[data-sticker-id=\"${sticker.id}\"]`);
     if (slot) {
       slot.classList.add('reveal');
       playStickerPopSound();
-      await sleep(1100);
+      await sleep(700);
       slot.classList.remove('reveal');
     } else {
-      await sleep(300);
+      await sleep(200);
     }
   }
+
+  // finaler Stand
   await renderAlbum();
 }
 
@@ -2595,17 +2646,24 @@ document.getElementById('btnOpenPack').addEventListener('click', async () => {
   // 3 zufällige Sticker ziehen
   const pack = openStickerPack();
   const newStickers = [];
+  let hasDuplicates = false;
 
   for (const stickerId of pack) {
     const isNew = await addSticker(stickerId);
     if (isNew) {
       newStickers.push(getStickerById(stickerId));
+    } else {
+      hasDuplicates = true;
     }
   }
 
   if (newStickers.length > 0) {
     await animateStickerUnlock(newStickers);
+    if (hasDuplicates) {
+      playDuplicateSound();
+    }
   } else {
+    playDuplicateSound();
     alert('🎁 Pack geöffnet!\n\nLeider nur Duplikate. Versuche es erneut!');
     await renderAlbum();
   }
@@ -2918,10 +2976,10 @@ async function updatePracticeLetterButtons() {
   const setId = await getActiveSet();
   const setData = await loadSetData(setId);
   if (!setData || !setData.clips) return;
-  const hasSet = new Set(setData.clips.map(clip => clip.letter));
+  const hasSet = new Set(setData.clips.map(clip => normalizeRecordingLetter(clip.letter)));
   document.querySelectorAll('#practiceLetters .btn-letter').forEach(btn => {
     const letter = btn.getAttribute('data-letter');
-    btn.disabled = !hasSet.has(letter);
+    btn.disabled = !hasRecording(hasSet, letter);
   });
 }
 
@@ -2929,7 +2987,7 @@ function renderPracticeGrid() {
   const elPracticeLetters = document.getElementById('practiceLetters');
   if (!elPracticeLetters) return;
   elPracticeLetters.innerHTML = '';
-  LETTERS.forEach(ch => {
+  RECORDING_LETTERS.forEach(ch => {
     const b = document.createElement('button');
     b.className = 'btn-letter';
     b.textContent = ch;
@@ -2941,12 +2999,16 @@ function renderPracticeGrid() {
   updatePracticeLetterButtons();
 }
 
-// ——————————————————————————————————————————
-// UI – Buchstabenraster
-// ——————————————————————————————————————————
-function renderLetterGrid() {
+// ------------------------------------------
+// UI - Buchstabenraster
+// ------------------------------------------
+let letterGridKey = '';
+
+function renderLetterGrid(letters = RECORDING_LETTERS) {
+  const list = Array.isArray(letters) && letters.length ? letters : RECORDING_LETTERS;
+  letterGridKey = list.join('');
   elLetters.innerHTML = '';
-  LETTERS.forEach(ch => {
+  list.forEach(ch => {
     const b = document.createElement('button');
     b.className = 'btn-letter';
     b.textContent = ch;
@@ -2956,25 +3018,32 @@ function renderLetterGrid() {
     elLetters.appendChild(b);
   });
 }
-renderLetterGrid();
+
+function syncLetterGrid(progress) {
+  const letters = getLetterGridLetters(progress);
+  const key = letters.join('');
+  if (key === letterGridKey) return;
+  renderLetterGrid(letters);
+}
+
+syncLetterGrid(getProgress());
 
 // Buchstaben-Buttons basierend auf verfügbaren Aufnahmen aktivieren/deaktivieren
 async function updateLetterButtons() {
   const setId = await getActiveSet();
   const setData = await loadSetData(setId);
-  const hasSet = new Set((setData && setData.clips ? setData.clips : []).map(clip => clip.letter));
+  const hasSet = new Set((setData && setData.clips ? setData.clips : []).map(clip => normalizeRecordingLetter(clip.letter)));
   const progress = getProgress();
-  const unlockedCount = progress && progress.unlocked ? progress.unlocked : 4;
-  const freeCount = progress && typeof progress.freeLetterCount === 'number' ? progress.freeLetterCount : 4;
   const mode = progress && progress.mode ? progress.mode : 'FREI';
+  syncLetterGrid(progress);
   const allowedSet = mode === 'LERNWEG'
-    ? new Set(LETTERS.slice(0, unlockedCount))
+    ? new Set(getLernwegUnlockedLetters(progress))
     : mode === 'FREI'
-      ? new Set(LETTERS.slice(0, freeCount))
+      ? new Set(getFreeModeLetters(progress))
       : null;
   document.querySelectorAll('.btn-letter').forEach(btn => {
     const letter = btn.getAttribute('data-letter');
-    let disabled = !hasSet.has(letter);
+    let disabled = !hasRecording(hasSet, letter);
     if (!disabled && allowedSet && !allowedSet.has(letter)) {
       disabled = true;
     }
@@ -3039,7 +3108,8 @@ const DIFFICULTY_DESCRIPTIONS = {
   AFFIG: 'Affig (Extra Schwer)',
 };
 
-const LERNWEG_STEPS = [4, 8, 12, 16, 20, 24, 26]; // Defined LERNWEG_STEPS
+const LERNWEG_STEPS = [4, 8, 12, 16, 20, 24, 26];
+const LERNWEG_SET_COUNT = 2;
 
 function deriveLernwegMeta(progress) {
   const unlockedRaw = progress && Number.isFinite(progress.unlocked) ? progress.unlocked : 4;
@@ -3047,23 +3117,26 @@ function deriveLernwegMeta(progress) {
     ? unlockedRaw
     : LERNWEG_STEPS.find(step => step > unlockedRaw) || 4;
   const stepIndex = Math.max(0, LERNWEG_STEPS.indexOf(unlocked));
-  const step = stepIndex + 1;
-  const completedStages = step; // Simplified, as audio sets are removed
-  const percent = Math.min(100, Math.round((completedStages / LERNWEG_STEPS.length) * 100));
+  const setIndex = getLernwegSetId(progress) === LERNWEG_SECONDARY_SET ? 1 : 0;
+  const step = stepIndex + 1 + (setIndex * LERNWEG_STEPS.length);
+  const stepTotal = LERNWEG_STEPS.length * LERNWEG_SET_COUNT;
+  const completedStages = step;
+  const percent = Math.min(100, Math.round((completedStages / stepTotal) * 100));
   const flawless = progress && Number.isFinite(progress.flawlessStreak) ? Math.max(0, progress.flawlessStreak) : 0;
   const roundsRemaining = Math.max(0, 2 - flawless);
-  const atFinalStage = step >= LERNWEG_STEPS.length;
+  const atFinalStage = setIndex === LERNWEG_SET_COUNT - 1 && stepIndex >= LERNWEG_STEPS.length - 1;
   const nextStep = stepIndex < LERNWEG_STEPS.length - 1 ? LERNWEG_STEPS[stepIndex + 1] : LERNWEG_STEPS[stepIndex];
 
   return {
     unlocked,
     step,
-    stepTotal: LERNWEG_STEPS.length,
+    stepTotal,
     percent,
     roundsRemaining,
     atFinalStage,
     nextStep,
     flawless,
+    setLabel: getLernwegSetLabel(progress),
   };
 }
 
@@ -3080,7 +3153,7 @@ function updateLernwegProgress(progress) {
   const meta = deriveLernwegMeta(progress);
   elLernwegTrack.classList.remove('hidden');
 
-  elLernwegDetail.textContent = `Stufe ${meta.step} von ${meta.stepTotal}`;
+  elLernwegDetail.textContent = `Stufe ${meta.step} von ${meta.stepTotal} (${meta.setLabel})`;
   elLernwegFill.style.width = `${meta.percent}%`;
   const progressBar = elLernwegTrack.querySelector('.lernweg-bar');
   if (progressBar) {
@@ -3106,7 +3179,8 @@ function updateStartButtonLabel(progress) {
   const difficulty = progress && progress.difficulty ? progress.difficulty : 'LEICHT';
   const desc = formatDifficultyLabel(difficulty);
   if (mode === 'LERNWEG') {
-    elBtnStart.textContent = `Spiel starten – Lernweg (${desc})`;
+    const setLabel = getLernwegSetLabel(progress);
+    elBtnStart.textContent = `Spiel starten - Lernweg (${desc}, ${setLabel})`;
   } else {
     const count = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
     elBtnStart.textContent = `Spiel starten – ${count} Buchstaben (${desc})`;
@@ -3221,9 +3295,9 @@ function formatClipTimestamp(created) {
 
 function renderStatusGrid(hasSet = new Set(), byDifficulty = new Map()) {
   elStatusGrid.innerHTML = '';
-  LETTERS.forEach(ch => {
+  RECORDING_LETTERS.forEach(ch => {
     const t = document.createElement('div');
-    const hasLetter = hasSet.has(ch);
+    const hasLetter = hasRecording(hasSet, ch);
     const isActive = currentLetter === ch;
     const classes = ['status-tile'];
     if (hasLetter) classes.push('has');
@@ -3433,7 +3507,7 @@ function setRecordDifficulty(difficulty, options = {}) {
 function aggregateClipsByLetter(clips) {
   const map = new Map();
   clips.forEach(clip => {
-    const letter = clip.letter;
+    const letter = normalizeRecordingLetter(clip.letter);
     if (!map.has(letter)) {
       map.set(letter, {});
     }
@@ -3750,7 +3824,8 @@ function difficultySearchOrder(difficulty) {
 
 
 async function fetchClipForLetter({ setId, letter, difficulty, setData, historyKey }) {
-  const clips = setData.clips.filter(c => c.letter === letter);
+  const resolvedLetter = normalizeRecordingLetter(letter);
+  const clips = setData.clips.filter(c => c.letter === resolvedLetter);
   const clip = pickClip(clips, difficulty, { historyKey });
   if (!clip) return null;
   const blob = await getClipBlob(setId, clip.id);
@@ -4030,12 +4105,12 @@ async function editClipDifficulty(clipId) {
 
 async function selectNextLetter(fromLetter) {
   const letter = fromLetter || currentLetter;
-  const idx = LETTERS.indexOf(letter);
+  const idx = RECORDING_LETTERS.indexOf(letter);
   if (idx === -1) {
     await selectLetter(currentLetter || 'A');
     return;
   }
-  const nextLetter = LETTERS[(idx + 1) % LETTERS.length];
+  const nextLetter = RECORDING_LETTERS[(idx + 1) % RECORDING_LETTERS.length];
   await selectLetter(nextLetter);
 }
 
@@ -4327,7 +4402,7 @@ async function updateStatusGridFromDB() {
   const setId = await getActiveSet();
   const data = await loadSetData(setId);
   const clips = data && data.clips ? data.clips : [];
-  const hasSet = new Set(clips.map(clip => clip.letter));
+  const hasSet = new Set(clips.map(clip => normalizeRecordingLetter(clip.letter)));
   const byDifficulty = aggregateClipsByLetter(clips);
   renderStatusGrid(hasSet, byDifficulty);
   updateParentHubStatus({ recordedCount: hasSet.size, setId });
@@ -5125,7 +5200,7 @@ function endGame() {
   game = null;
   currentLetter = null;
   currentAudio = null;
-  renderLetterGrid();
+  syncLetterGrid(getProgress());
   updateMissionStatus();
 
   // Update UI
@@ -5152,16 +5227,16 @@ async function startGame() {
   let pool = recorded.slice();
 
   if (mode === 'LERNWEG') {
-    const unlockedLetters = LETTERS.slice(0, unlockedCount);
-    pool = unlockedLetters.filter(letter => recordedSet.has(letter));
+    const unlockedLetters = getLernwegUnlockedLetters({ ...progress, unlocked: unlockedCount });
+    pool = unlockedLetters.filter(letter => hasRecording(recordedSet, letter));
     if (pool.length === 0) {
       alert('Für den Lernweg brauchst du Aufnahmen der freigeschalteten Buchstaben. Bitte nimm zuerst diese Buchstaben auf.');
       return;
     }
   } else {
     const desiredCount = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
-    const targetLetters = LETTERS.slice(0, desiredCount);
-    pool = targetLetters.filter(letter => recordedSet.has(letter));
+    const targetLetters = getFreeModeLetters({ freeLetterCount: desiredCount });
+    pool = targetLetters.filter(letter => hasRecording(recordedSet, letter));
     if (pool.length === 0) {
       alert('Für die gewählte Buchstabenmenge fehlen Aufnahmen. Bitte passe die Auswahl an oder nimm die Buchstaben auf.');
       return;
@@ -5387,6 +5462,7 @@ async function onLetterClick(e) {
     }
     // Buchstaben-Statistik für Belohnungssystem tracken
     await incrementLetterStat(targetLetter);
+    await appendProfileAttempt({ target: targetLetter, chosen: letter, correct: true });
   } else {
     game.bad++;
     game.progress = markWrong(targetLetter, letter);
@@ -5394,6 +5470,7 @@ async function onLetterClick(e) {
       game.pendingMotivations = new Set();
     }
     game.pendingMotivations.add(targetLetter);
+    await appendProfileAttempt({ target: targetLetter, chosen: letter, correct: false });
   }
 
   game.errorHistory = [wasErrorPick, ...(game.errorHistory || [])].slice(0, 3);
@@ -5504,11 +5581,14 @@ async function finishGame() {
     });
     const saved = saveProgress(advanced);
     const unlockedIncreased = saved.unlocked > beforeUnlocked;
-    if (unlockedIncreased) {
-      const parts = [];
-      if (unlockedIncreased) {
-        parts.push(`${saved.unlocked} Buchstaben aktiv.`);
-      }
+    const setChanged = saved.audioSet !== progressBefore.audioSet;
+    const parts = [];
+    if (setChanged) {
+      parts.push('Kleinbuchstaben freigeschaltet.');
+    } else if (unlockedIncreased) {
+      parts.push(`${saved.unlocked} Buchstaben aktiv.`);
+    }
+    if (parts.length) {
       showUnlockBanner(parts.join(' '));
     }
     game.progress = saved;

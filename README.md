@@ -6,9 +6,27 @@ Die Web-App liegt in einer UI-Variante (Classic):
 
 - **Classic** - bestehende Oberflaeche, aktuell Standard  
   - Code am Root (`index.html`, `app/` .)  
-  - Zusaetzlich gespiegelt unter `apps/classic/`
+  - Zusaetzlich gespiegelt unter `apps/classic/` (per Sync-Script, nicht manuell bearbeiten)
 
 ---
+
+## Classic Sync
+
+```bash
+npm run sync:classic
+```
+
+Optional (remove stale files in `apps/classic/`):
+
+```bash
+npm run sync:classic:clean
+```
+
+## Git Hooks (optional)
+
+```bash
+npm run hooks:install
+```
 
 ## 1. Vorbereitung (CLI & App)
 

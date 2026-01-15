@@ -6,11 +6,12 @@ This repository contains the Classic variant and related specification files. Pl
 
 - **Classic (standard variant)**
   - Root app under `index.html` and `app/`.
-  - Reference copy under `apps/classic/`.
+  - Generated copy under `apps/classic/` (do not edit manually).
 
 Changes:
 
-- Maintain functional/logic changes in the root (`app/`) and sync `apps/classic/` as needed.
+- Treat the root (`index.html`, `app/`) as the single source of truth.
+- Update `apps/classic/` only via the sync script (`npm run sync:classic` or `scripts/sync-classic.ps1`).
 - Keep Classic visuals stable; do not introduce new variants.
 
 ## 2. Continuous Quality Improvement (CQI)

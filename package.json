@@ -2,7 +2,10 @@
   "scripts": {
     "start": "http-server",
     "generate:letters": "node scripts/tts-generator/generateLetters.js",
-    "split:variants": "node scripts/tts-generator/splitVariantSets.js"
+    "split:variants": "node scripts/tts-generator/splitVariantSets.js",
+    "sync:classic": "node scripts/sync-classic.js",
+    "sync:classic:clean": "node scripts/sync-classic.js --clean",
+    "hooks:install": "node scripts/install-git-hooks.js"
   },
   "dependencies": {
     "-": "^0.0.1",

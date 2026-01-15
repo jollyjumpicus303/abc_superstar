@@ -2,6 +2,7 @@ const MAX_UNLOCKED = 26;
 const STEP = 4;
 const DEFAULT_AUDIO_SET = 'ANLAUT';
 const SECONDARY_AUDIO_SET = 'OHNE_ANLAUT';
+// Lernweg nutzt die Sets, um nach Grossbuchstaben zu Kleinbuchstaben zu wechseln.
 
 function clampUnlocked(value) {
   const numeric = Number.isFinite(value) ? Math.floor(value) : STEP;

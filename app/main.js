@@ -24,6 +24,17 @@ import {
 import { pickNext } from './letterPool.js';
 import { advanceAfterRun } from './progression.js';
 import { computeRunStars, MAX_RUN_STARS } from './rewardUtils.js';
+import {
+  RECORDING_LETTERS,
+  LERNWEG_SECONDARY_SET,
+  normalizeRecordingLetter,
+  getLernwegSetId,
+  getLernwegSetLabel,
+  getLernwegUnlockedLetters,
+  getFreeModeLetters,
+  getLetterGridLetters,
+  hasRecording,
+} from './letterSets.js';
 import StarReveal from './js/starRevealCanvas.js';
 // ——————————————————————————————————————————
 // ABC-Abenteuer – Logik
@@ -193,8 +204,6 @@ function playMedalIntroSound() {
 }
 
 const sleep = (ms = 0) => new Promise(resolve => setTimeout(resolve, ms));
-
-const LETTERS = Array.from("ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 const RECORD_MODES = {
   SINGLE: 'single',
   SERIES: 'series',
@@ -1281,9 +1290,10 @@ async function updateUIForRecordingState() {
   const setId = await getActiveSet();
   const setData = await loadSetData(setId);
   const clips = setData && setData.clips ? setData.clips : [];
-  const recordedLetters = clips.map(clip => clip.letter);
+  const recordedLetters = clips.map(clip => normalizeRecordingLetter(clip.letter));
   const recordedSet = new Set(recordedLetters);
   const recordedCount = recordedSet.size;
+  const totalLetters = RECORDING_LETTERS.length;
   const hasRecordings = recordedCount > 0;
 
   // Spiel-Tab: Empty State anzeigen/verstecken
@@ -1299,16 +1309,16 @@ async function updateUIForRecordingState() {
   const baseWarnings = [];
   if (hasRecordings) {
     if (mode === 'FREI') {
-      const targetLetters = LETTERS.slice(0, desiredFreeCount);
-      const missingBase = targetLetters.filter(letter => !recordedSet.has(letter));
+      const targetLetters = getFreeModeLetters({ freeLetterCount: desiredFreeCount });
+      const missingBase = targetLetters.filter(letter => !hasRecording(recordedSet, letter));
       if (missingBase.length) {
-        baseWarnings.push(desiredFreeCount === 26
-          ? `Für alle 26 Buchstaben fehlen noch ${missingBase.length}.`
+        baseWarnings.push(desiredFreeCount === totalLetters
+          ? `Für alle ${totalLetters} Buchstaben fehlen noch ${missingBase.length}.`
           : `Es fehlen Aufnahmen für: ${missingBase.join(', ')}`);
       }
     } else if (mode === 'LERNWEG') {
-      const requiredLetters = LETTERS.slice(0, unlockedForPath);
-      const missingBase = requiredLetters.filter(letter => !recordedSet.has(letter));
+      const requiredLetters = getLernwegUnlockedLetters({ ...progress, unlocked: unlockedForPath });
+      const missingBase = requiredLetters.filter(letter => !hasRecording(recordedSet, letter));
       if (missingBase.length) {
         baseWarnings.push(`Für den Lernweg fehlen Aufnahmen für: ${missingBase.join(', ')}`);
       }
@@ -1333,7 +1343,7 @@ async function updateUIForRecordingState() {
   }
 
   // Fortschrittsanzeige in Einstellungen
-  elProgressBadge.textContent = `${recordedCount} von 26 Buchstaben aufgenommen`;
+  elProgressBadge.textContent = `${recordedCount} von ${totalLetters} Buchstaben aufgenommen`;
   elProgressBadge.classList.toggle('empty', recordedCount === 0);
 
   updateParentHubStatus({ recordedCount, setId });
@@ -1394,7 +1404,7 @@ async function updateParentHubStatus(context = {}) {
     }
 
     if (elHubStatusRecordings) {
-      elHubStatusRecordings.textContent = `${recordedCount}/26`;
+      elHubStatusRecordings.textContent = `${recordedCount}/${RECORDING_LETTERS.length}`;
     }
 
     const lastExport = getLastExportTimestamp();
@@ -1403,7 +1413,7 @@ async function updateParentHubStatus(context = {}) {
     }
 
     if (elHubStatusNext) {
-      elHubStatusNext.textContent = recordedCount < 26 ? 'Aufnahmen vervollständigen' : 'Backup exportieren';
+      elHubStatusNext.textContent = recordedCount < RECORDING_LETTERS.length ? 'Aufnahmen vervollständigen' : 'Backup exportieren';
     }
   } catch (err) {
     console.warn('[ParentHubStatus]', err);
@@ -1488,7 +1498,7 @@ async function syncActiveGameWithSet(newSetId) {
   if (!game) return;
   const setData = await loadSetData(newSetId);
   const clips = setData && Array.isArray(setData.clips) ? setData.clips : [];
-  const recordedSet = new Set(clips.map(clip => clip.letter));
+  const recordedSet = new Set(clips.map(clip => normalizeRecordingLetter(clip.letter)));
 
   if (recordedSet.size === 0) {
     alert('Für dieses Set gibt es noch keine Aufnahmen. Das laufende Spiel wurde beendet.');
@@ -1502,12 +1512,12 @@ async function syncActiveGameWithSet(newSetId) {
 
   if (mode === 'LERNWEG') {
     const unlockedCount = progress && progress.unlocked ? progress.unlocked : 4;
-    const unlockedLetters = LETTERS.slice(0, unlockedCount);
-    pool = unlockedLetters.filter(letter => recordedSet.has(letter));
+    const unlockedLetters = getLernwegUnlockedLetters({ ...progress, unlocked: unlockedCount });
+    pool = unlockedLetters.filter(letter => hasRecording(recordedSet, letter));
   } else {
     const desiredCount = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
-    const targetLetters = LETTERS.slice(0, desiredCount);
-    pool = targetLetters.filter(letter => recordedSet.has(letter));
+    const targetLetters = getFreeModeLetters({ freeLetterCount: desiredCount });
+    pool = targetLetters.filter(letter => hasRecording(recordedSet, letter));
   }
 
   if (pool.length === 0) {
@@ -1957,7 +1967,7 @@ async function getActiveSet() {
 async function getSetRecordingCount(setId) {
   const data = await loadSetData(setId);
   if (!data) return 0;
-  const uniqueLetters = new Set(data.clips.map(clip => clip.letter));
+  const uniqueLetters = new Set(data.clips.map(clip => normalizeRecordingLetter(clip.letter)));
   return uniqueLetters.size;
 }
 
@@ -2414,7 +2424,7 @@ async function renderSetsList() {
       </div>
       <span class="set-emoji">${set.emoji}</span>
       <div class="set-name">${set.name}</div>
-      <div class="set-count">${count} / 26 Buchstaben</div>
+      <div class="set-count">${count} / ${RECORDING_LETTERS.length} Buchstaben</div>
     `;
 
     // Klick auf Karte: Set aktivieren
@@ -2966,10 +2976,10 @@ async function updatePracticeLetterButtons() {
   const setId = await getActiveSet();
   const setData = await loadSetData(setId);
   if (!setData || !setData.clips) return;
-  const hasSet = new Set(setData.clips.map(clip => clip.letter));
+  const hasSet = new Set(setData.clips.map(clip => normalizeRecordingLetter(clip.letter)));
   document.querySelectorAll('#practiceLetters .btn-letter').forEach(btn => {
     const letter = btn.getAttribute('data-letter');
-    btn.disabled = !hasSet.has(letter);
+    btn.disabled = !hasRecording(hasSet, letter);
   });
 }
 
@@ -2977,7 +2987,7 @@ function renderPracticeGrid() {
   const elPracticeLetters = document.getElementById('practiceLetters');
   if (!elPracticeLetters) return;
   elPracticeLetters.innerHTML = '';
-  LETTERS.forEach(ch => {
+  RECORDING_LETTERS.forEach(ch => {
     const b = document.createElement('button');
     b.className = 'btn-letter';
     b.textContent = ch;
@@ -2989,12 +2999,16 @@ function renderPracticeGrid() {
   updatePracticeLetterButtons();
 }
 
-// ——————————————————————————————————————————
-// UI – Buchstabenraster
-// ——————————————————————————————————————————
-function renderLetterGrid() {
+// ------------------------------------------
+// UI - Buchstabenraster
+// ------------------------------------------
+let letterGridKey = '';
+
+function renderLetterGrid(letters = RECORDING_LETTERS) {
+  const list = Array.isArray(letters) && letters.length ? letters : RECORDING_LETTERS;
+  letterGridKey = list.join('');
   elLetters.innerHTML = '';
-  LETTERS.forEach(ch => {
+  list.forEach(ch => {
     const b = document.createElement('button');
     b.className = 'btn-letter';
     b.textContent = ch;
@@ -3004,25 +3018,32 @@ function renderLetterGrid() {
     elLetters.appendChild(b);
   });
 }
-renderLetterGrid();
+
+function syncLetterGrid(progress) {
+  const letters = getLetterGridLetters(progress);
+  const key = letters.join('');
+  if (key === letterGridKey) return;
+  renderLetterGrid(letters);
+}
+
+syncLetterGrid(getProgress());
 
 // Buchstaben-Buttons basierend auf verfügbaren Aufnahmen aktivieren/deaktivieren
 async function updateLetterButtons() {
   const setId = await getActiveSet();
   const setData = await loadSetData(setId);
-  const hasSet = new Set((setData && setData.clips ? setData.clips : []).map(clip => clip.letter));
+  const hasSet = new Set((setData && setData.clips ? setData.clips : []).map(clip => normalizeRecordingLetter(clip.letter)));
   const progress = getProgress();
-  const unlockedCount = progress && progress.unlocked ? progress.unlocked : 4;
-  const freeCount = progress && typeof progress.freeLetterCount === 'number' ? progress.freeLetterCount : 4;
   const mode = progress && progress.mode ? progress.mode : 'FREI';
+  syncLetterGrid(progress);
   const allowedSet = mode === 'LERNWEG'
-    ? new Set(LETTERS.slice(0, unlockedCount))
+    ? new Set(getLernwegUnlockedLetters(progress))
     : mode === 'FREI'
-      ? new Set(LETTERS.slice(0, freeCount))
+      ? new Set(getFreeModeLetters(progress))
       : null;
   document.querySelectorAll('.btn-letter').forEach(btn => {
     const letter = btn.getAttribute('data-letter');
-    let disabled = !hasSet.has(letter);
+    let disabled = !hasRecording(hasSet, letter);
     if (!disabled && allowedSet && !allowedSet.has(letter)) {
       disabled = true;
     }
@@ -3087,7 +3108,8 @@ const DIFFICULTY_DESCRIPTIONS = {
   AFFIG: 'Affig (Extra Schwer)',
 };
 
-const LERNWEG_STEPS = [4, 8, 12, 16, 20, 24, 26]; // Defined LERNWEG_STEPS
+const LERNWEG_STEPS = [4, 8, 12, 16, 20, 24, 26];
+const LERNWEG_SET_COUNT = 2;
 
 function deriveLernwegMeta(progress) {
   const unlockedRaw = progress && Number.isFinite(progress.unlocked) ? progress.unlocked : 4;
@@ -3095,23 +3117,26 @@ function deriveLernwegMeta(progress) {
     ? unlockedRaw
     : LERNWEG_STEPS.find(step => step > unlockedRaw) || 4;
   const stepIndex = Math.max(0, LERNWEG_STEPS.indexOf(unlocked));
-  const step = stepIndex + 1;
-  const completedStages = step; // Simplified, as audio sets are removed
-  const percent = Math.min(100, Math.round((completedStages / LERNWEG_STEPS.length) * 100));
+  const setIndex = getLernwegSetId(progress) === LERNWEG_SECONDARY_SET ? 1 : 0;
+  const step = stepIndex + 1 + (setIndex * LERNWEG_STEPS.length);
+  const stepTotal = LERNWEG_STEPS.length * LERNWEG_SET_COUNT;
+  const completedStages = step;
+  const percent = Math.min(100, Math.round((completedStages / stepTotal) * 100));
   const flawless = progress && Number.isFinite(progress.flawlessStreak) ? Math.max(0, progress.flawlessStreak) : 0;
   const roundsRemaining = Math.max(0, 2 - flawless);
-  const atFinalStage = step >= LERNWEG_STEPS.length;
+  const atFinalStage = setIndex === LERNWEG_SET_COUNT - 1 && stepIndex >= LERNWEG_STEPS.length - 1;
   const nextStep = stepIndex < LERNWEG_STEPS.length - 1 ? LERNWEG_STEPS[stepIndex + 1] : LERNWEG_STEPS[stepIndex];
 
   return {
     unlocked,
     step,
-    stepTotal: LERNWEG_STEPS.length,
+    stepTotal,
     percent,
     roundsRemaining,
     atFinalStage,
     nextStep,
     flawless,
+    setLabel: getLernwegSetLabel(progress),
   };
 }
 
@@ -3128,7 +3153,7 @@ function updateLernwegProgress(progress) {
   const meta = deriveLernwegMeta(progress);
   elLernwegTrack.classList.remove('hidden');
 
-  elLernwegDetail.textContent = `Stufe ${meta.step} von ${meta.stepTotal}`;
+  elLernwegDetail.textContent = `Stufe ${meta.step} von ${meta.stepTotal} (${meta.setLabel})`;
   elLernwegFill.style.width = `${meta.percent}%`;
   const progressBar = elLernwegTrack.querySelector('.lernweg-bar');
   if (progressBar) {
@@ -3154,7 +3179,8 @@ function updateStartButtonLabel(progress) {
   const difficulty = progress && progress.difficulty ? progress.difficulty : 'LEICHT';
   const desc = formatDifficultyLabel(difficulty);
   if (mode === 'LERNWEG') {
-    elBtnStart.textContent = `Spiel starten – Lernweg (${desc})`;
+    const setLabel = getLernwegSetLabel(progress);
+    elBtnStart.textContent = `Spiel starten - Lernweg (${desc}, ${setLabel})`;
   } else {
     const count = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
     elBtnStart.textContent = `Spiel starten – ${count} Buchstaben (${desc})`;
@@ -3269,9 +3295,9 @@ function formatClipTimestamp(created) {
 
 function renderStatusGrid(hasSet = new Set(), byDifficulty = new Map()) {
   elStatusGrid.innerHTML = '';
-  LETTERS.forEach(ch => {
+  RECORDING_LETTERS.forEach(ch => {
     const t = document.createElement('div');
-    const hasLetter = hasSet.has(ch);
+    const hasLetter = hasRecording(hasSet, ch);
     const isActive = currentLetter === ch;
     const classes = ['status-tile'];
     if (hasLetter) classes.push('has');
@@ -3481,7 +3507,7 @@ function setRecordDifficulty(difficulty, options = {}) {
 function aggregateClipsByLetter(clips) {
   const map = new Map();
   clips.forEach(clip => {
-    const letter = clip.letter;
+    const letter = normalizeRecordingLetter(clip.letter);
     if (!map.has(letter)) {
       map.set(letter, {});
     }
@@ -3798,7 +3824,8 @@ function difficultySearchOrder(difficulty) {
 
 
 async function fetchClipForLetter({ setId, letter, difficulty, setData, historyKey }) {
-  const clips = setData.clips.filter(c => c.letter === letter);
+  const resolvedLetter = normalizeRecordingLetter(letter);
+  const clips = setData.clips.filter(c => c.letter === resolvedLetter);
   const clip = pickClip(clips, difficulty, { historyKey });
   if (!clip) return null;
   const blob = await getClipBlob(setId, clip.id);
@@ -4078,12 +4105,12 @@ async function editClipDifficulty(clipId) {
 
 async function selectNextLetter(fromLetter) {
   const letter = fromLetter || currentLetter;
-  const idx = LETTERS.indexOf(letter);
+  const idx = RECORDING_LETTERS.indexOf(letter);
   if (idx === -1) {
     await selectLetter(currentLetter || 'A');
     return;
   }
-  const nextLetter = LETTERS[(idx + 1) % LETTERS.length];
+  const nextLetter = RECORDING_LETTERS[(idx + 1) % RECORDING_LETTERS.length];
   await selectLetter(nextLetter);
 }
 
@@ -4375,7 +4402,7 @@ async function updateStatusGridFromDB() {
   const setId = await getActiveSet();
   const data = await loadSetData(setId);
   const clips = data && data.clips ? data.clips : [];
-  const hasSet = new Set(clips.map(clip => clip.letter));
+  const hasSet = new Set(clips.map(clip => normalizeRecordingLetter(clip.letter)));
   const byDifficulty = aggregateClipsByLetter(clips);
   renderStatusGrid(hasSet, byDifficulty);
   updateParentHubStatus({ recordedCount: hasSet.size, setId });
@@ -5173,7 +5200,7 @@ function endGame() {
   game = null;
   currentLetter = null;
   currentAudio = null;
-  renderLetterGrid();
+  syncLetterGrid(getProgress());
   updateMissionStatus();
 
   // Update UI
@@ -5200,16 +5227,16 @@ async function startGame() {
   let pool = recorded.slice();
 
   if (mode === 'LERNWEG') {
-    const unlockedLetters = LETTERS.slice(0, unlockedCount);
-    pool = unlockedLetters.filter(letter => recordedSet.has(letter));
+    const unlockedLetters = getLernwegUnlockedLetters({ ...progress, unlocked: unlockedCount });
+    pool = unlockedLetters.filter(letter => hasRecording(recordedSet, letter));
     if (pool.length === 0) {
       alert('Für den Lernweg brauchst du Aufnahmen der freigeschalteten Buchstaben. Bitte nimm zuerst diese Buchstaben auf.');
       return;
     }
   } else {
     const desiredCount = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
-    const targetLetters = LETTERS.slice(0, desiredCount);
-    pool = targetLetters.filter(letter => recordedSet.has(letter));
+    const targetLetters = getFreeModeLetters({ freeLetterCount: desiredCount });
+    pool = targetLetters.filter(letter => hasRecording(recordedSet, letter));
     if (pool.length === 0) {
       alert('Für die gewählte Buchstabenmenge fehlen Aufnahmen. Bitte passe die Auswahl an oder nimm die Buchstaben auf.');
       return;
@@ -5554,11 +5581,14 @@ async function finishGame() {
     });
     const saved = saveProgress(advanced);
     const unlockedIncreased = saved.unlocked > beforeUnlocked;
-    if (unlockedIncreased) {
-      const parts = [];
-      if (unlockedIncreased) {
-        parts.push(`${saved.unlocked} Buchstaben aktiv.`);
-      }
+    const setChanged = saved.audioSet !== progressBefore.audioSet;
+    const parts = [];
+    if (setChanged) {
+      parts.push('Kleinbuchstaben freigeschaltet.');
+    } else if (unlockedIncreased) {
+      parts.push(`${saved.unlocked} Buchstaben aktiv.`);
+    }
+    if (parts.length) {
       showUnlockBanner(parts.join(' '));
     }
     game.progress = saved;
