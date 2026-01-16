@@ -13,6 +13,7 @@ Die Auswahl des Spielmodus ist ein zentraler Einstiegspunkt für die Nutzer.
   - 🦸 **Meister:** Bietet eine Herausforderung mit schwierigen Einstellungen im freien Spiel.
 - **Feedback:** Die jeweils aktive Auswahl wird deutlich hervorgehoben, um dem Nutzer eine klare Orientierung zu geben.
 - **Runden-Default:** Im freien Modus startet die Rundenzahl bei 5.
+- **Buchstaben-Typ:** Im freien Modus kann zwischen Gross-, Klein- und gemischten Buchstaben gewechselt werden; bei gemischt ist die Buchstabenanzahl in 4er-Schritten waehlbar.
 
 ## Belohnungen und Feedback
 
