@@ -2,6 +2,7 @@ const MAX_UNLOCKED = 26;
 const STEP = 4;
 const DEFAULT_AUDIO_SET = 'ANLAUT';
 const SECONDARY_AUDIO_SET = 'OHNE_ANLAUT';
+const MIXED_AUDIO_SET = 'MIXED';
 // Lernweg nutzt die Sets, um nach Grossbuchstaben zu Kleinbuchstaben zu wechseln.
 
 function clampUnlocked(value) {
@@ -25,7 +26,9 @@ function normaliseState(state) {
     ...base,
     unlocked,
     flawlessStreak: flawless,
-    audioSet,
+    audioSet: [DEFAULT_AUDIO_SET, SECONDARY_AUDIO_SET, MIXED_AUDIO_SET].includes(audioSet)
+      ? audioSet
+      : DEFAULT_AUDIO_SET,
   };
 }
 
@@ -58,9 +61,14 @@ function advanceAfterRun({ result, state }) {
 
     const atMax = unlocked >= MAX_UNLOCKED;
     const inPrimarySet = audioSet === DEFAULT_AUDIO_SET;
+    const inSecondarySet = audioSet === SECONDARY_AUDIO_SET;
 
     if (atMax && inPrimarySet && flawless >= 2) {
       audioSet = SECONDARY_AUDIO_SET;
+      unlocked = STEP;
+      flawless = 0;
+    } else if (atMax && inSecondarySet && flawless >= 2) {
+      audioSet = MIXED_AUDIO_SET;
       unlocked = STEP;
       flawless = 0;
     } else if (flawless >= 2) {

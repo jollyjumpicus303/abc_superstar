@@ -27,10 +27,12 @@ import { computeRunStars, MAX_RUN_STARS } from './rewardUtils.js';
 import {
   RECORDING_LETTERS,
   LERNWEG_SECONDARY_SET,
+  LERNWEG_MIXED_SET,
   normalizeRecordingLetter,
   getLernwegSetId,
   getLernwegSetLabel,
   getLernwegUnlockedLetters,
+  getFreeModeLetterCaseLabel,
   getFreeModeLetters,
   getLetterGridLetters,
   hasRecording,
@@ -255,6 +257,7 @@ const elModeDialogStart = document.getElementById('modeDialogStart');
 const elModeDialogCancel = document.getElementById('modeDialogCancel');
 const elModeControls = document.getElementById('modeControls');
 const elFreeCountGroup = document.getElementById('freeCountGroup');
+const elFreeCaseGroup = document.getElementById('freeCaseGroup');
 const elDifficultyGroup = document.getElementById('difficultyGroup');
 const elDifficultyWrapper = document.getElementById('difficultyWrapper');
 const elIndividualPanel = document.getElementById('individualPanel');
@@ -1225,6 +1228,7 @@ if (elModeDialogStart) {
 
     if (pendingModeSelection.mode === 'FREI') {
       updates.freeLetterCount = pendingModeSelection.freeLetterCount || 4;
+      updates.freeLetterCase = pendingModeSelection.freeLetterCase || 'UPPER';
     } else {
       // Lernweg uses its own progression for letter count
     }
@@ -1243,6 +1247,23 @@ if (elFreeCountGroup) {
     if (!count) return;
     pendingModeSelection.freeLetterCount = count;
     setActiveChip(elFreeCountGroup, c => c === chip);
+  });
+}
+
+if (elFreeCaseGroup) {
+  elFreeCaseGroup.addEventListener('click', (e) => {
+    const chip = e.target.closest('[data-letter-case]');
+    if (!chip || !pendingModeSelection) return;
+    const value = chip.dataset.letterCase;
+    if (!value) return;
+    pendingModeSelection.freeLetterCase = value;
+    setActiveChip(elFreeCaseGroup, c => c === chip);
+    const progress = getProgress();
+    const desiredCount = value === 'MIXED'
+      ? (progress && progress.freeMixedUnlocked ? progress.freeMixedUnlocked : 4)
+      : (progress && progress.freeLetterCount ? progress.freeLetterCount : 4);
+    pendingModeSelection.freeLetterCount = desiredCount;
+    setActiveChip(elFreeCountGroup, c => Number(c.dataset.freeCount || 0) === desiredCount);
   });
 }
 
@@ -1301,7 +1322,9 @@ async function updateUIForRecordingState() {
 
   const progress = getProgress();
   const mode = progress?.mode || 'FREI';
-  const desiredFreeCount = progress?.freeLetterCount || 4;
+  const desiredFreeCount = progress && progress.freeLetterCase === 'MIXED'
+    ? (progress.freeMixedUnlocked || 4)
+    : (progress?.freeLetterCount || 4);
   const unlockedForPath = progress?.unlocked || 4;
   updateStartButtonLabel(progress);
   updateLernwegProgress(progress);
@@ -1309,7 +1332,7 @@ async function updateUIForRecordingState() {
   const baseWarnings = [];
   if (hasRecordings) {
     if (mode === 'FREI') {
-      const targetLetters = getFreeModeLetters({ freeLetterCount: desiredFreeCount });
+      const targetLetters = getFreeModeLetters({ ...progress, freeLetterCount: desiredFreeCount });
       const missingBase = targetLetters.filter(letter => !hasRecording(recordedSet, letter));
       if (missingBase.length) {
         baseWarnings.push(desiredFreeCount === totalLetters
@@ -1515,8 +1538,10 @@ async function syncActiveGameWithSet(newSetId) {
     const unlockedLetters = getLernwegUnlockedLetters({ ...progress, unlocked: unlockedCount });
     pool = unlockedLetters.filter(letter => hasRecording(recordedSet, letter));
   } else {
-    const desiredCount = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
-    const targetLetters = getFreeModeLetters({ freeLetterCount: desiredCount });
+    const desiredCount = progress && progress.freeLetterCase === 'MIXED'
+      ? (progress.freeMixedUnlocked || 4)
+      : (progress && progress.freeLetterCount ? progress.freeLetterCount : 4);
+    const targetLetters = getFreeModeLetters({ ...progress, freeLetterCount: desiredCount });
     pool = targetLetters.filter(letter => hasRecording(recordedSet, letter));
   }
 
@@ -3084,9 +3109,13 @@ function applyModeToUI(progress) {
   }
 
   if (mode === 'FREI') {
-    const desiredCount = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
+    const desiredCase = progress && progress.freeLetterCase ? progress.freeLetterCase : 'UPPER';
+    const desiredCount = desiredCase === 'MIXED'
+      ? (progress && progress.freeMixedUnlocked ? progress.freeMixedUnlocked : 4)
+      : (progress && progress.freeLetterCount ? progress.freeLetterCount : 4);
 
-    setActiveChip(elFreeCountGroup, chip => Number(chip.dataset.freeLetterCount || 0) === desiredCount);
+    setActiveChip(elFreeCountGroup, chip => Number(chip.dataset.freeCount || 0) === desiredCount);
+    setActiveChip(elFreeCaseGroup, chip => (chip.dataset.letterCase || '') === desiredCase);
     setActiveChip(elDifficultyGroup, chip => (chip.dataset.difficulty || '') === diff);
   }
 
@@ -3109,7 +3138,7 @@ const DIFFICULTY_DESCRIPTIONS = {
 };
 
 const LERNWEG_STEPS = [4, 8, 12, 16, 20, 24, 26];
-const LERNWEG_SET_COUNT = 2;
+const LERNWEG_SET_COUNT = 3;
 
 function deriveLernwegMeta(progress) {
   const unlockedRaw = progress && Number.isFinite(progress.unlocked) ? progress.unlocked : 4;
@@ -3117,7 +3146,8 @@ function deriveLernwegMeta(progress) {
     ? unlockedRaw
     : LERNWEG_STEPS.find(step => step > unlockedRaw) || 4;
   const stepIndex = Math.max(0, LERNWEG_STEPS.indexOf(unlocked));
-  const setIndex = getLernwegSetId(progress) === LERNWEG_SECONDARY_SET ? 1 : 0;
+  const setId = getLernwegSetId(progress);
+  const setIndex = setId === LERNWEG_SECONDARY_SET ? 1 : setId === LERNWEG_MIXED_SET ? 2 : 0;
   const step = stepIndex + 1 + (setIndex * LERNWEG_STEPS.length);
   const stepTotal = LERNWEG_STEPS.length * LERNWEG_SET_COUNT;
   const completedStages = step;
@@ -3182,16 +3212,22 @@ function updateStartButtonLabel(progress) {
     const setLabel = getLernwegSetLabel(progress);
     elBtnStart.textContent = `Spiel starten - Lernweg (${desc}, ${setLabel})`;
   } else {
-    const count = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
-    elBtnStart.textContent = `Spiel starten – ${count} Buchstaben (${desc})`;
+    const count = getFreeModeLetters(progress).length;
+    const caseLabel = getFreeModeLetterCaseLabel(progress);
+    elBtnStart.textContent = `Spiel starten - ${count} Buchstaben (${desc}, ${caseLabel})`;
   }
 }
 
 function extractSelectionFromProgress(progress) {
   const difficulty = progress && progress.difficulty ? progress.difficulty : 'LEICHT';
+  const freeLetterCase = progress && progress.freeLetterCase ? progress.freeLetterCase : 'UPPER';
+  const freeLetterCount = freeLetterCase === 'MIXED'
+    ? (progress && progress.freeMixedUnlocked ? progress.freeMixedUnlocked : 4)
+    : (progress && progress.freeLetterCount ? progress.freeLetterCount : 4);
   return {
     mode: progress && progress.mode ? progress.mode : 'FREI',
-    freeLetterCount: progress && progress.freeLetterCount ? progress.freeLetterCount : 4,
+    freeLetterCount,
+    freeLetterCase,
     difficulty,
   };
 }
@@ -3208,7 +3244,9 @@ function toggleIndividualPanel(forceOpen) {
     pendingModeSelection.mode = 'FREI';
     const desiredCount = pendingModeSelection.freeLetterCount || 4;
     const diff = pendingModeSelection.difficulty || 'LEICHT';
+    const desiredCase = pendingModeSelection.freeLetterCase || 'UPPER';
     setActiveChip(elFreeCountGroup, chip => Number(chip.dataset.freeCount || 0) === desiredCount);
+    setActiveChip(elFreeCaseGroup, chip => (chip.dataset.letterCase || '') === desiredCase);
     setActiveChip(elDifficultyGroup, chip => (chip.dataset.difficulty || '') === diff);
 
     updateModeDialogCards(pendingModeSelection);
@@ -3261,11 +3299,30 @@ function closeModeDialog() {
   pendingModeSelection = null;
 }
 
+function clampMixedCount(value) {
+  const numeric = Number.isFinite(value) ? Math.floor(value) : 4;
+  if (numeric <= 0) return 4;
+  if (numeric >= 26) return 26;
+  const remainder = numeric % 4;
+  const base = numeric - remainder;
+  return remainder === 0 ? base : base + 4;
+}
+
 function saveAndApply(partial) {
   const current = getProgress();
   const updates = { ...partial };
   if (updates.difficulty) {
     updates.difficulty = updates.difficulty.toUpperCase();
+  }
+  if (updates.freeLetterCase) {
+    updates.freeLetterCase = updates.freeLetterCase.toUpperCase();
+  }
+  const targetCase = updates.freeLetterCase || current.freeLetterCase;
+  const hasFreeLetterCount = Object.prototype.hasOwnProperty.call(updates, 'freeLetterCount');
+  if (targetCase === 'MIXED' && (updates.freeLetterCase || hasFreeLetterCount)) {
+    const desired = hasFreeLetterCount ? updates.freeLetterCount : current.freeMixedUnlocked;
+    updates.freeMixedUnlocked = clampMixedCount(Number(desired));
+    updates.freeMixedStreak = 0;
   }
   const saved = saveProgress(updates);
   applyModeToUI(saved);
@@ -5234,8 +5291,10 @@ async function startGame() {
       return;
     }
   } else {
-    const desiredCount = progress && progress.freeLetterCount ? progress.freeLetterCount : 4;
-    const targetLetters = getFreeModeLetters({ freeLetterCount: desiredCount });
+    const desiredCount = progress && progress.freeLetterCase === 'MIXED'
+      ? (progress.freeMixedUnlocked || 4)
+      : (progress && progress.freeLetterCount ? progress.freeLetterCount : 4);
+    const targetLetters = getFreeModeLetters({ ...progress, freeLetterCount: desiredCount });
     pool = targetLetters.filter(letter => hasRecording(recordedSet, letter));
     if (pool.length === 0) {
       alert('Für die gewählte Buchstabenmenge fehlen Aufnahmen. Bitte passe die Auswahl an oder nimm die Buchstaben auf.');
@@ -5311,9 +5370,11 @@ async function nextRound() {
     pick = pool[0];
   }
 
-  if (pick && game && game.mode === 'LERNWEG' && getLernwegSetId(game.progress) === LERNWEG_SECONDARY_SET) {
+  if (pick) {
     const match = pool.find(letter => normalizeRecordingLetter(letter) === normalizeRecordingLetter(pick));
-    pick = match || pick.toLowerCase();
+    if (match) {
+      pick = match;
+    }
   }
 
   if (!pick) {
@@ -5457,8 +5518,10 @@ async function onLetterClick(e) {
 
   const targetLetter = game.target;
   const wrongCountsBefore = game.progress && game.progress.wrongCounts ? game.progress.wrongCounts : {};
-  const wasErrorPick = (wrongCountsBefore[targetLetter] || 0) > 0;
-  const correct = letter === targetLetter;
+  const normalizedTarget = normalizeRecordingLetter(targetLetter);
+  const normalizedChosen = normalizeRecordingLetter(letter);
+  const wasErrorPick = normalizedTarget ? (wrongCountsBefore[normalizedTarget] || 0) > 0 : false;
+  const correct = normalizedChosen && normalizedTarget ? normalizedChosen === normalizedTarget : false;
   if (correct) {
     game.ok++;
     game.progress = markCorrect(targetLetter, letter);
@@ -5546,6 +5609,32 @@ function showFeedback(ok, correctLetter) {
   return show(elOverlayBad, false); // Muss weggeklickt werden
 }
 
+function advanceFreeMixedProgress({ result, state }) {
+  const success = result && typeof result === 'object' && Number(result.mistakes) === 0;
+  const current = state && typeof state === 'object' ? state : {};
+  let unlocked = Number.isFinite(current.freeMixedUnlocked) ? Math.floor(current.freeMixedUnlocked) : 4;
+  let streak = Number.isFinite(current.freeMixedStreak) ? Math.floor(current.freeMixedStreak) : 0;
+
+  unlocked = Math.min(26, Math.max(4, unlocked));
+  streak = Math.max(0, streak);
+
+  if (success) {
+    streak += 1;
+    if (streak >= 2) {
+      unlocked = Math.min(26, unlocked + 4);
+      streak = 0;
+    }
+  } else {
+    streak = 0;
+  }
+
+  return {
+    ...current,
+    freeMixedUnlocked: unlocked,
+    freeMixedStreak: streak,
+  };
+}
+
 async function finishGame() {
   if (!game) return;
   toggleResultGift(false);
@@ -5589,12 +5678,24 @@ async function finishGame() {
     const setChanged = saved.audioSet !== progressBefore.audioSet;
     const parts = [];
     if (setChanged) {
-      parts.push('Kleinbuchstaben freigeschaltet.');
+      parts.push(`${getLernwegSetLabel(saved)} freigeschaltet.`);
     } else if (unlockedIncreased) {
       parts.push(`${saved.unlocked} Buchstaben aktiv.`);
     }
     if (parts.length) {
       showUnlockBanner(parts.join(' '));
+    }
+    game.progress = saved;
+  } else if (progressBefore && progressBefore.mode === 'FREI' && progressBefore.freeLetterCase === 'MIXED') {
+    const beforeUnlocked = progressBefore.freeMixedUnlocked || 4;
+    const advanced = advanceFreeMixedProgress({
+      result: { mistakes: game.bad },
+      state: progressBefore,
+    });
+    const saved = saveProgress(advanced);
+    const unlockedIncreased = saved.freeMixedUnlocked > beforeUnlocked;
+    if (unlockedIncreased) {
+      showUnlockBanner(`${saved.freeMixedUnlocked} Buchstaben aktiv.`);
     }
     game.progress = saved;
   }

@@ -1,5 +1,7 @@
+import { buildMixedLetterSet, isValidMixedLetterSet, LERNWEG_MIXED_SET } from './letterSets.js';
+
 const STORAGE_KEY = 'abc_abenteuer_progress';
-const CURRENT_VERSION = 4;
+const CURRENT_VERSION = 6;
 
 const DEFAULT_STATE = Object.freeze({
   version: CURRENT_VERSION,
@@ -12,6 +14,11 @@ const DEFAULT_STATE = Object.freeze({
   correctStreaks: {},
   askedCounts: {},
   freeLetterCount: 4,
+  freeLetterCase: 'UPPER',
+  freeMixedUnlocked: 4,
+  freeMixedStreak: 0,
+  freeMixedLetters: [],
+  lernwegMixedLetters: [],
   audioStyle: 'AUTO',
   attemptLog: [],
 });
@@ -20,6 +27,15 @@ let memoryFallback = cloneState(DEFAULT_STATE);
 
 function cloneState(state) {
   return JSON.parse(JSON.stringify(state));
+}
+
+function clampMixedUnlocked(value) {
+  const numeric = Number.isFinite(value) ? Math.floor(value) : DEFAULT_STATE.freeMixedUnlocked;
+  if (numeric <= 0) return DEFAULT_STATE.freeMixedUnlocked;
+  if (numeric >= 26) return 26;
+  const remainder = numeric % 4;
+  const base = numeric - remainder;
+  return remainder === 0 ? base : base + 4;
 }
 
 function safeStorage() {
@@ -61,6 +77,27 @@ function migrate(raw) {
     }
   }
 
+  if (version < 5) {
+    if (typeof migrated.freeLetterCase !== 'string') {
+      migrated.freeLetterCase = DEFAULT_STATE.freeLetterCase;
+    }
+  }
+
+  if (version < 6) {
+    if (typeof migrated.freeMixedUnlocked !== 'number') {
+      migrated.freeMixedUnlocked = DEFAULT_STATE.freeMixedUnlocked;
+    }
+    if (typeof migrated.freeMixedStreak !== 'number') {
+      migrated.freeMixedStreak = DEFAULT_STATE.freeMixedStreak;
+    }
+    if (!Array.isArray(migrated.freeMixedLetters)) {
+      migrated.freeMixedLetters = [];
+    }
+    if (!Array.isArray(migrated.lernwegMixedLetters)) {
+      migrated.lernwegMixedLetters = [];
+    }
+  }
+
   if (!migrated.wrongCounts || typeof migrated.wrongCounts !== 'object') {
     migrated.wrongCounts = {};
   }
@@ -90,6 +127,47 @@ function migrate(raw) {
     migrated.difficulty = DEFAULT_STATE.difficulty;
   } else {
     migrated.difficulty = migrated.difficulty.trim().toUpperCase();
+  }
+
+  if (typeof migrated.freeLetterCase !== 'string' || !migrated.freeLetterCase.trim()) {
+    migrated.freeLetterCase = DEFAULT_STATE.freeLetterCase;
+  } else {
+    migrated.freeLetterCase = migrated.freeLetterCase.trim().toUpperCase();
+    if (!['UPPER', 'LOWER', 'MIXED'].includes(migrated.freeLetterCase)) {
+      migrated.freeLetterCase = DEFAULT_STATE.freeLetterCase;
+    }
+  }
+
+  migrated.freeMixedUnlocked = clampMixedUnlocked(migrated.freeMixedUnlocked);
+
+  if (!Number.isFinite(migrated.freeMixedStreak) || migrated.freeMixedStreak < 0) {
+    migrated.freeMixedStreak = DEFAULT_STATE.freeMixedStreak;
+  } else {
+    migrated.freeMixedStreak = Math.floor(migrated.freeMixedStreak);
+  }
+
+  if (!Array.isArray(migrated.freeMixedLetters)) {
+    migrated.freeMixedLetters = [];
+  }
+
+  if (!Array.isArray(migrated.lernwegMixedLetters)) {
+    migrated.lernwegMixedLetters = [];
+  }
+
+  if (migrated.freeLetterCase === 'MIXED') {
+    if (!isValidMixedLetterSet(migrated.freeMixedLetters)) {
+      migrated.freeMixedLetters = buildMixedLetterSet();
+    }
+  } else if (!isValidMixedLetterSet(migrated.freeMixedLetters)) {
+    migrated.freeMixedLetters = [];
+  }
+
+  if (migrated.audioSet === LERNWEG_MIXED_SET) {
+    if (!isValidMixedLetterSet(migrated.lernwegMixedLetters)) {
+      migrated.lernwegMixedLetters = buildMixedLetterSet();
+    }
+  } else if (!isValidMixedLetterSet(migrated.lernwegMixedLetters)) {
+    migrated.lernwegMixedLetters = [];
   }
 
   if (!Array.isArray(migrated.attemptLog)) {

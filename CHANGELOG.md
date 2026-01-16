@@ -6,6 +6,9 @@ All notable changes to this project are documented here. Releases are tagged via
 - [repo] Classic-Sync-Script mit optionalem Clean und Git-Hook-Installation ergänzt.
 - [gameplay][classic] Lernweg fuehrt nach 26 Grossbuchstaben mit Kleinbuchstaben weiter (4er-Stufen).
 - [gameplay][classic] Lernweg akzeptiert Kleinbuchstaben als Eingabe im Kleinbuchstaben-Abschnitt.
+- [gameplay][classic] Lernweg fuehrt nach Kleinbuchstaben mit gemischten Gross/Kleinbuchstaben weiter (zufaellig pro Buchstabe, 4er-Stufen).
+- [ui][classic] Individuelles Spiel kann zwischen Gross- und Kleinbuchstaben umschalten.
+- [ui][classic] Individuelles Spiel unterstuetzt gemischte Gross/Kleinbuchstaben mit 4er-Stufen und waehlbarer Buchstabenanzahl.
 - [ui][classic] Default-Runden auf 5 reduziert.
 - [repo] Island-Variante und zugehoerige Design-Dokumente entfernt.
 - [classic] Sonnig/Nachthimmel Farb-Tokens an Island-Palette angeglichen (Root-CSS-Tokens & Theme-Color).
