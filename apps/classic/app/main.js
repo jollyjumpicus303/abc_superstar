@@ -5311,6 +5311,11 @@ async function nextRound() {
     pick = pool[0];
   }
 
+  if (pick && game && game.mode === 'LERNWEG' && getLernwegSetId(game.progress) === LERNWEG_SECONDARY_SET) {
+    const match = pool.find(letter => normalizeRecordingLetter(letter) === normalizeRecordingLetter(pick));
+    pick = match || pick.toLowerCase();
+  }
+
   if (!pick) {
     return finishGame();
   }
