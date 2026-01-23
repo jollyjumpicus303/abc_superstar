@@ -50,6 +50,7 @@ Die App soll für alle Nutzer zugänglich sein.
 In kurzen Querformat-Ansichten werden Header, Abstaende und das Buchstaben-Grid kompakter, damit Spiel/Üben/Album moeglichst ohne Scrollen sichtbar bleiben.
 
 Dialoge (z.B. Ergebnis, Modus-Auswahl, Welcome) begrenzen ihre Hoehe auf die Viewport-Hoehe und werden bei kurzen Screens komprimiert bzw. scrollbar.
+Feedback-Overlays (richtig/falsch) und Profil-Dialoge werden bei kurzen Screens ebenfalls verkleinert.
 
 ## Elternbereich – Statistiken
 

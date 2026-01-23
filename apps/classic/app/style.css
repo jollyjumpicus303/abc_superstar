@@ -625,7 +625,7 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
 /* Overlays (Regenbogen, Monster, Pokal) */
 .overlay{
   position:fixed; inset:0; display:grid; place-items:center; background:rgba(255,255,255,.0);
-  pointer-events:none; z-index:50;
+  pointer-events:none; z-index:50; padding:16px;
 }
 .overlay .panel{
   display:grid; gap:12px; place-items:center;
@@ -636,6 +636,7 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
   background:var(--overlay-panel-bg);
   box-shadow:0 22px 50px rgba(15,23,42,.25);
   backdrop-filter:blur(6px);
+  max-width:92vw;
 }
 .unlock-banner{
   position:fixed;
@@ -1215,6 +1216,29 @@ html[data-theme='nebula'] .dialog h3{
   .welcome-options{gap:12px; margin-top:16px;}
   .welcome-card{padding:18px 12px;}
   .welcome-card .emoji{font-size:38px;}
+  .overlay{padding:10px;}
+  .overlay .panel{padding:14px; gap:8px; font-size:16px; border-radius:18px;}
+  .overlay .panel svg{width:min(200px, 60vw); height:auto;}
+  .overlay-card{margin-top:10px; padding:14px; width:min(260px,84vw);}
+  .overlay-card__label{font-size:15px; margin-bottom:6px;}
+  .overlay-letter{font-size:56px;}
+  .overlay-hint{margin-top:12px; font-size:12px;}
+  .profile-modal{padding:16px;}
+  .profile-modal__content{
+    padding:20px;
+    border-radius:22px;
+    max-height:min(88vh, 520px);
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
+  .profile-editor{padding:14px;}
+  .profile-editor__card{
+    padding:18px;
+    border-radius:20px;
+    max-height:min(88vh, 520px);
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+  }
 }
 
 /* Reduced motion */

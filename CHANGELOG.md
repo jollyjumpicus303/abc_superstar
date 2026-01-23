@@ -26,3 +26,4 @@ All notable changes to this project are documented here. Releases are tagged via
 - [ui][classic] Kompakter Querformat-Modus fuer kurze Screens: Header/Spacing/Lettergrid verkleinert, damit die Hauptansichten eher ohne Scrollen passen.
 - [ui][classic] Dialoge (Ergebnis/Modus/Welcome) begrenzen ihre Hoehe und werden bei kurzen Screens kompakter.
 - [gameplay][classic] Lernweg-Runden skalieren nun mit freigeschalteten Buchstaben (Slider bleibt Mindestwert).
+- [ui][classic] Feedback-Overlays und Profil-Dialoge werden bei kurzen Screens kompakter, damit nichts abgeschnitten wird.
