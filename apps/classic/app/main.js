@@ -3139,6 +3139,15 @@ const DIFFICULTY_DESCRIPTIONS = {
 
 const LERNWEG_STEPS = [4, 8, 12, 16, 20, 24, 26];
 const LERNWEG_SET_COUNT = 3;
+const LERNWEG_ROUND_TARGET_MIN = 8;
+const LERNWEG_ROUND_TARGET_MAX = 20;
+const LERNWEG_ROUND_TARGET_BASE = 6;
+
+function getLernwegTargetRounds(unlockedCount) {
+  const safeUnlocked = Number.isFinite(unlockedCount) ? unlockedCount : 4;
+  const target = LERNWEG_ROUND_TARGET_BASE + Math.ceil(safeUnlocked / 2);
+  return Math.max(LERNWEG_ROUND_TARGET_MIN, Math.min(LERNWEG_ROUND_TARGET_MAX, target));
+}
 
 function deriveLernwegMeta(progress) {
   const unlockedRaw = progress && Number.isFinite(progress.unlocked) ? progress.unlocked : 4;
@@ -5302,7 +5311,15 @@ async function startGame() {
     }
   }
 
-  const rounds = parseInt(elRounds.value, 10);
+  let rounds = parseInt(elRounds.value, 10);
+  if (mode === 'LERNWEG') {
+    const targetRounds = getLernwegTargetRounds(pool.length || unlockedCount);
+    rounds = Number.isFinite(rounds) ? Math.max(rounds, targetRounds) : targetRounds;
+    if (elRounds.value !== String(rounds)) {
+      elRounds.value = rounds;
+      elRoundsOut.textContent = rounds;
+    }
+  }
   game = {
     setId,
     recorded: pool.slice(),

@@ -49,6 +49,8 @@ Die App soll für alle Nutzer zugänglich sein.
 
 In kurzen Querformat-Ansichten werden Header, Abstaende und das Buchstaben-Grid kompakter, damit Spiel/Üben/Album moeglichst ohne Scrollen sichtbar bleiben.
 
+Dialoge (z.B. Ergebnis, Modus-Auswahl, Welcome) begrenzen ihre Hoehe auf die Viewport-Hoehe und werden bei kurzen Screens komprimiert bzw. scrollbar.
+
 ## Elternbereich – Statistiken
 
 - Statistiken im Eltern-Hub lesen einen profilbezogenen Attempt-Log (IndexedDB) aus; jeder Versuch wird mit Ziel, Wahl, Ergebnis gespeichert.

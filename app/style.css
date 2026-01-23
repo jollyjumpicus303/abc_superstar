@@ -722,7 +722,15 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
 }
 
 /* Modal */
-.modal{position:fixed; inset:0; display:grid; place-items:center; z-index:60; background:rgba(0,0,0,.25)}
+.modal{
+  position:fixed;
+  inset:0;
+  display:grid;
+  place-items:center;
+  z-index:60;
+  background:rgba(0,0,0,.25);
+  padding:16px;
+}
 .profile-modal{
   position:fixed;
   inset:0;
@@ -1060,8 +1068,18 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
   .parent-hub__nav{position:static; top:auto;}
 }
 .profile-modal__content .small{font-size:12px;}
-.dialog{background:#fff; border-radius:24px; box-shadow:var(--shadow);
-  width:min(560px,92vw); padding:20px; text-align:center}
+.dialog{
+  background:#fff;
+  border-radius:24px;
+  box-shadow:var(--shadow);
+  width:min(560px,92vw);
+  padding:20px;
+  text-align:center;
+  max-height:min(90vh, 720px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+}
 .dialog h3{
   margin:.2rem 0 0.3rem;
   font-size:26px;
@@ -1172,6 +1190,31 @@ html[data-theme='nebula'] .dialog h3{
   0%{transform:scale(1);}
   40%{transform:scale(1.05);}
   100%{transform:scale(1);}
+}
+
+@media (max-height: 640px){
+  .modal{padding:10px;}
+  .dialog{padding:16px; border-radius:20px;}
+  .dialog h3{font-size:22px;}
+  .trophy-animation{
+    width:min(110px, 36vw);
+    height:min(110px, 36vw);
+    margin:-6px auto 0;
+  }
+  .result-stars{gap:8px; margin:4px 0 6px; padding:8px 10px;}
+  #starCanvas{max-width:300px;}
+  .result-gift__button{padding:10px 12px; gap:12px;}
+  .result-gift__lottie{width:54px; height:54px;}
+  .result-gift__text{font-size:13px;}
+  .result-gift__text strong{font-size:15px;}
+  .result-line{font-size:16px;}
+  .mode-dialog .dialog{padding:20px;}
+  .mode-dialog h3{font-size:22px;}
+  .mode-dialog-card{padding:14px;}
+  .welcome-dialog .dialog{padding:20px;}
+  .welcome-options{gap:12px; margin-top:16px;}
+  .welcome-card{padding:18px 12px;}
+  .welcome-card .emoji{font-size:38px;}
 }
 
 /* Reduced motion */
