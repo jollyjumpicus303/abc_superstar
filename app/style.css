@@ -205,6 +205,38 @@ main{max-width:1100px; margin:24px auto; padding:0 16px 80px}
 .muted{color:var(--muted); font-size:14px}
 .hidden{display:none !important}
 
+@media (max-height: 600px) and (orientation: landscape){
+  header{padding:10px 14px;}
+  header h1{font-size:16px; line-height:1.2;}
+  .header-actions{gap:6px;}
+  .profile-btn{padding:4px 10px; gap:8px;}
+  .profile-btn__emoji{font-size:20px;}
+  .profile-btn__label small{font-size:10px;}
+  .profile-btn__label strong{font-size:13px;}
+  .install-btn{padding:6px 10px; font-size:12px;}
+  .theme-switcher__trigger{padding:6px 10px; font-size:12px;}
+  .theme-switcher__icon{font-size:14px;}
+  .settings-btn{width:36px; height:36px; padding:8px;}
+  .settings-btn__icon{width:16px; height:16px;}
+  main{margin:12px auto; padding:0 12px 28px;}
+  .tabs{gap:8px; margin-bottom:10px;}
+  .tabs button{padding:8px 14px; font-size:13px;}
+  main > .card:not(.parent-hub){padding:14px;}
+  main > .card:not(.parent-hub) .controls{gap:8px;}
+  main > .card:not(.parent-hub) .btn{padding:10px 14px; font-size:13px;}
+  main > .card:not(.parent-hub) .grid-letters{
+    grid-template-columns:repeat(auto-fit,minmax(56px,1fr));
+    gap:8px;
+  }
+  main > .card:not(.parent-hub) .btn-letter{font-size:34px; border-radius:16px;}
+  main > .card:not(.parent-hub) .hud{margin:6px 0 10px;}
+  main > .card:not(.parent-hub) .hud-row{gap:10px;}
+  main > .card:not(.parent-hub) .mission{font-size:13px;}
+  main > .card:not(.parent-hub) .mission-label{font-size:11px;}
+  #album h2{font-size:20px;}
+  #album .album-star-widget{padding:12px 14px; margin-bottom:12px;}
+}
+
 /* Einstellungen */
 .settings-wrap{display:grid; grid-template-columns:1fr 370px; gap:16px}
 @media (max-width: 980px){ .settings-wrap{grid-template-columns:1fr} }

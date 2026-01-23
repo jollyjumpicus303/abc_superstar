@@ -45,6 +45,10 @@ Die App soll für alle Nutzer zugänglich sein.
 - **Klare Kontraste:** Die Farbkontraste zwischen Text und Hintergrund sind ausreichend hoch, um eine gute Lesbarkeit zu gewährleisten.
 - **Reduzierte Bewegung:** Die App respektiert die `prefers-reduced-motion`-Einstellung des Betriebssystems, um Animationen für empfindliche Nutzer zu deaktivieren.
 
+## Responsives Verhalten (Hauptansicht)
+
+In kurzen Querformat-Ansichten werden Header, Abstaende und das Buchstaben-Grid kompakter, damit Spiel/Üben/Album moeglichst ohne Scrollen sichtbar bleiben.
+
 ## Elternbereich – Statistiken
 
 - Statistiken im Eltern-Hub lesen einen profilbezogenen Attempt-Log (IndexedDB) aus; jeder Versuch wird mit Ziel, Wahl, Ergebnis gespeichert.

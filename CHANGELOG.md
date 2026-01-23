@@ -23,3 +23,4 @@ All notable changes to this project are documented here. Releases are tagged via
 - [parent-hub] Statistiken nutzen jetzt einen profilbezogenen Attempt-Log (per IndexedDB); Auswertung und „Super-Buchstaben“ basieren pro Spieler auf echten Versuchen.
 - [sticker-album] Tabs/Blätter farbig differenziert, Slot-Animationen geglättet (einmaliges Rendern, kürzere Reveal), Duplikate mit eigenem Boink-Sound.
 - [trophy] Abschluss spielt parallel einen Trophy-Sound; Geschenk-Lottie-Pfad korrigiert (GiftLotti), Reward-Doppelung beim Sticker-Abholen entfernt.
+- [ui][classic] Kompakter Querformat-Modus fuer kurze Screens: Header/Spacing/Lettergrid verkleinert, damit die Hauptansichten eher ohne Scrollen passen.
